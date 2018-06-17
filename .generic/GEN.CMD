@@ -2,7 +2,8 @@
 @cd internal
 @pwd
 @Echo.
-go generate .
+go generate -run "genny.*" .
+go generate -run "bundle.*" .
 
 @Echo.
 @cd ..
