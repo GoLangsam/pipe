@@ -1,0 +1,61 @@
+// Copyright 2017 Andreas Pannewitz. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package pipe
+
+// ===========================================================================
+// FanIn2Any returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+func FanIn2Any(inp1, inp2 Anymode) (out Anymode) {
+	cha := MakeAnymodeChan()
+	go fanIn2Any(cha, inp1, inp2)
+	return cha
+}
+
+/* not used any more - kept for reference only.
+// fanin2Any as seen in Go Concurrency Patterns
+func fanin2Any(out chan<- Any, inp1, inp2 Anymode) {
+	for {
+		select {
+		case e := <-inp1:
+			out <- e
+		case e := <-inp2:
+			out <- e
+		}
+	}
+} */
+
+func fanIn2Any(out Anymode, inp1, inp2 Anymode) {
+	defer out.Close()
+
+	var (
+		closed bool // we found a chan closed
+		ok     bool // did we read sucessfully?
+		e      Any  // what we've read
+	)
+
+	for !closed {
+		select {
+		case e, ok = <-inp1.dat:
+			if ok {
+				out.Provide(e)
+			} else {
+				inp1 = inp2   // swap inp2 into inp1
+				closed = true // break out of the loop
+			}
+		case e, ok = <-inp2.dat:
+			if ok {
+				out.Provide(e)
+			} else {
+				closed = true // break out of the loop				}
+			}
+		}
+	}
+
+	// inp1 might not be closed yet. Drain it.
+	for e, ok = inp1.Request(); ok; e, ok = inp1.Request() {
+		out.Provide(e)
+	}
+}
+
+// ===========================================================================
