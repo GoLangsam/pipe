@@ -238,6 +238,7 @@ func MakeAnyChannelChan() (out AnyChannel) {
 	return &AnySupply{make(chan Any)}
 }
 
+// MakeAnyChannelBuff returns a new open buffered channel with capacity `cap`.
 func MakeAnyChannelBuff(cap int) (out AnyChannel) {
 	return &AnySupply{make(chan Any, cap)}
 }

@@ -48,7 +48,7 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 
 	close(out)
 
-	for _ = range inp {
+	for range inp {
 		// drain inp
 	}
 

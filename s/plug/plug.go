@@ -47,7 +47,7 @@ func plugAny(out chan<- Any, done chan<- struct{}, inp <-chan Any, stop <-chan s
 
 	close(out)
 
-	for _ = range inp {
+	for range inp {
 		// drain inp
 	}
 

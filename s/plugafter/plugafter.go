@@ -50,7 +50,7 @@ func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-
 
 	close(out)
 
-	for _ = range inp {
+	for range inp {
 		// drain inp
 	}
 

@@ -563,7 +563,7 @@ func plugThing(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, stop <-
 
 	close(out)
 
-	for _ = range inp {
+	for range inp {
 		// drain inp
 	}
 
@@ -610,7 +610,7 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 
 	close(out)
 
-	for _ = range inp {
+	for range inp {
 		// drain inp
 	}
 
