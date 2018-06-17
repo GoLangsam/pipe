@@ -26,6 +26,11 @@ go generate .
 @pause
 
 @Echo.
+@xcopy	/Y	xxs\internal\01-any-mode.go	xxsl\internal\01-any-supply.go
+@xcopy	/Y	xxl\internal\01-any-mode.go	xxsl\internal\01-any-demand.go
+@Echo.
+
+go generate .\...
 
 @cd .generic
 @pwd
@@ -34,11 +39,7 @@ go generate .
 @cd ..
 @pwd
 @Echo.
-@xcopy	/Y	xxs\internal\01-any-mode.go	xxsl\internal\01-any-supply.go
-@xcopy	/Y	xxl\internal\01-any-mode.go	xxsl\internal\01-any-demand.go
-@Echo.
 
-go generate .\...
 go test .\...
 
 @Echo.
