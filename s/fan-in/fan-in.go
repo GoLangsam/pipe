@@ -24,7 +24,7 @@ type Any generic.Type
 func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 
-	var wg sync.WaitGroup
+	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
 	go func(wg *sync.WaitGroup, out chan Any) { // Spawn "close(out)" once all inps are done

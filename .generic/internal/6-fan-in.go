@@ -22,7 +22,7 @@ import "sync"
 func FanThingsIn(inps ...<-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
 
-	var wg sync.WaitGroup
+	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
 	go func(wg *sync.WaitGroup, out chan Thing) { // Spawn "close(out)" once all inps are done

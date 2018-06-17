@@ -897,7 +897,7 @@ func TubeAnySeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (o
 func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 
-	var wg sync.WaitGroup
+	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
 	go func(wg *sync.WaitGroup, out chan Any) { // Spawn "close(out)" once all inps are done
