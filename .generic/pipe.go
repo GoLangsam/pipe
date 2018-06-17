@@ -896,7 +896,7 @@ func FanThingsIn(inps ...<-chan Thing) (out <-chan Thing) {
 	var wg sync.WaitGroup
 	wg.Add(len(inps))
 
-	go func(wg sync.WaitGroup, out chan Thing) { // Spawn "close(out)" once all inps are done
+	go func(wg *sync.WaitGroup, out chan Thing) { // Spawn "close(out)" once all inps are done
 		wg.Wait()
 		close(out)
 	}(wg, cha)
