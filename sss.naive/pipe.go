@@ -311,6 +311,7 @@ func ForkAny(inp chan Any) (chan Any, chan Any) {
 // ===========================================================================
 
 // ===========================================================================
+
 // FanIn2Any as seen in Go Concurrency Patterns
 //
 // Warning: For instruction and teaching only!

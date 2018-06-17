@@ -24,7 +24,7 @@ func PipeAnyFunc(inp <-chan Any, act func(a Any) Any) (out <-chan Any) {
 func pipeAnyFunc(out chan<- Any, inp <-chan Any, act func(a Any) Any) {
 	defer close(out)
 	for i := range inp {
-			out <- act(i) // apply action
+		out <- act(i) // apply action
 	}
 }
 

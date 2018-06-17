@@ -31,18 +31,20 @@ func PlugAnyAfter(inp <-chan Any, after <-chan time.Time) (out <-chan Any, done 
 func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-chan time.Time) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Any   // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Any    // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-after:
-			break
+			end = true
 		}
 	}
 

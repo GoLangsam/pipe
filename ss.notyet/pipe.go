@@ -307,7 +307,8 @@ func ForkAny(inp <-chan Any) (out1, out2 <-chan Any) {
 // ===========================================================================
 
 // ===========================================================================
-// FanIn2Any as seen in Go Concurrency Patterns
+
+// FanIn2Any as seen in Go Concurrency Patterns.
 //
 // Warning: For instruction and teaching only!
 // Do not use in any serious project, as

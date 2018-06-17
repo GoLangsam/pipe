@@ -279,10 +279,50 @@ func FiniStringFunc(act func(a string)) func(inp <-chan string) (done <-chan str
 // ===========================================================================
 
 // ===========================================================================
+// Beg of PairString functions
+
+// PairString returns a pair of channels to receive every result of inp before close.
+//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+func PairString(inp <-chan string) (out1, out2 <-chan string) {
+	cha1 := make(chan string)
+	cha2 := make(chan string)
+	go pairstring(cha1, cha2, inp)
+	return cha1, cha2
+}
+
+/* not used any more - kept for reference only.
+func pairstring(out1, out2 chan<- string, inp <-chan string) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		out1 <- i
+		out2 <- i
+	}
+} */
+
+func pairstring(out1, out2 chan<- string, inp <-chan string) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		select { // send first to whomever is ready to receive
+		case out1 <- i:
+			out2 <- i
+		case out2 <- i:
+			out1 <- i
+		}
+	}
+}
+
+// End of PairString functions
+// ===========================================================================
+
+// ===========================================================================
 // Beg of ForkString functions
 
-// ForkString returns two channels to receive every result of inp before close.
-//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+// ForkString returns two channels
+// either of which is to receive
+// every result of inp
+// before close.
 func ForkString(inp <-chan string) (out1, out2 <-chan string) {
 	cha1 := make(chan string)
 	cha2 := make(chan string)
@@ -344,7 +384,7 @@ func fanIn2string(out chan<- string, inp1, inp2 <-chan string) {
 
 	var (
 		closed bool   // we found a chan closed
-		ok     bool   // did we read sucessfully?
+		ok     bool   // did we read successfully?
 		e      string // what we've read
 	)
 

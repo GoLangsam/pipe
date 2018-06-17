@@ -56,41 +56,41 @@ func (c Crawler) Run() error {
 	}
 
 	/*
-	// Collect results via channel since it is not guarantied that the output writer works concurrent
-	results := make(chan string)
-	defer close(results)
-	go func() {
-		for r := range results {
-	// => c.reporter
-			if _, err := fmt.Fprintln(c.Out, r); err != nil {
-				c.Log.Printf("failed to write output '%s': %v\n", r, err)
+		// Collect results via channel since it is not guarantied that the output writer works concurrent
+		results := make(chan string)
+		defer close(results)
+		go func() {
+			for r := range results {
+		// => c.reporter
+				if _, err := fmt.Fprintln(c.Out, r); err != nil {
+					c.Log.Printf("failed to write output '%s': %v\n", r, err)
+				}
+			}
+		}()
+
+		queue, sites, wait := makeQueue()
+
+		wait <- len(urls)
+
+		var wg sync.WaitGroup
+		for i := 0; i < parallel(c.Parallel); i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				// Pass channels to each worker
+				c.worker(sites, queue, wait, results)
+			}()
+		}
+
+		for _, u := range urls {
+			queue <- site{
+				URL:    u,
+				Parent: nil,
+				Depth:  c.Depth,
 			}
 		}
-	}()
 
-	queue, sites, wait := makeQueue()
-
-	wait <- len(urls)
-
-	var wg sync.WaitGroup
-	for i := 0; i < parallel(c.Parallel); i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			// Pass channels to each worker
-			c.worker(sites, queue, wait, results)
-		}()
-	}
-
-	for _, u := range urls {
-		queue <- site{
-			URL:    u,
-			Parent: nil,
-			Depth:  c.Depth,
-		}
-	}
-
-	wg.Wait()
+		wg.Wait()
 
 	*/
 	<-c.crawling(urls)

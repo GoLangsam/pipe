@@ -289,10 +289,50 @@ func FiniAnyFunc(act func(a Any)) func(inp <-chan Any) (done <-chan struct{}) {
 // ===========================================================================
 
 // ===========================================================================
+// Beg of PairAny functions
+
+// PairAny returns a pair of channels to receive every result of inp before close.
+//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+func PairAny(inp <-chan Any) (out1, out2 <-chan Any) {
+	cha1 := make(chan Any)
+	cha2 := make(chan Any)
+	go pairAny(cha1, cha2, inp)
+	return cha1, cha2
+}
+
+/* not used any more - kept for reference only.
+func pairAny(out1, out2 chan<- Any, inp <-chan Any) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		out1 <- i
+		out2 <- i
+	}
+} */
+
+func pairAny(out1, out2 chan<- Any, inp <-chan Any) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		select { // send first to whomever is ready to receive
+		case out1 <- i:
+			out2 <- i
+		case out2 <- i:
+			out1 <- i
+		}
+	}
+}
+
+// End of PairAny functions
+// ===========================================================================
+
+// ===========================================================================
 // Beg of ForkAny functions
 
-// ForkAny returns two channels to receive every result of inp before close.
-//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+// ForkAny returns two channels
+// either of which is to receive
+// every result of inp
+// before close.
 func ForkAny(inp <-chan Any) (out1, out2 <-chan Any) {
 	cha1 := make(chan Any)
 	cha2 := make(chan Any)
@@ -354,7 +394,7 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 
 	var (
 		closed bool // we found a chan closed
-		ok     bool // did we read sucessfully?
+		ok     bool // did we read successfully?
 		e      Any  // what we've read
 	)
 
@@ -480,8 +520,8 @@ func PipeAnyDone(inp <-chan Any) (out <-chan Any, done <-chan struct{}) {
 }
 
 func pipeAnyDone(out chan<- Any, done chan<- struct{}, inp <-chan Any) {
-	defer close(done)
 	defer close(out)
+	defer close(done)
 	for i := range inp {
 		out <- i
 	}
@@ -508,18 +548,20 @@ func PlugAny(inp <-chan Any, stop <-chan struct{}) (out <-chan Any, done <-chan 
 func plugAny(out chan<- Any, done chan<- struct{}, inp <-chan Any, stop <-chan struct{}) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Any   // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Any    // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-stop:
-			break
+			end = true
 		}
 	}
 
@@ -553,18 +595,20 @@ func PlugAnyAfter(inp <-chan Any, after <-chan time.Time) (out <-chan Any, done 
 func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-chan time.Time) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Any   // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Any    // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-after:
-			break
+			end = true
 		}
 	}
 
@@ -842,15 +886,15 @@ func TubeAnySeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (o
 // End of PipeAnySeen/ForkAnySeen - an "I've seen this Any before" filter / fork
 
 // ===========================================================================
-// Beg of FanAnyIns
+// Beg of FanAnysIn
 
-// FanAnyIns returns a channel to receive all inputs arriving
+// FanAnysIn returns a channel to receive all inputs arriving
 // on variadic inps
-// before closing
+// before close.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func FanAnyIns(inps ...<-chan Any) (out <-chan Any) {
+func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 
 	var wg sync.WaitGroup
@@ -873,7 +917,7 @@ func FanAnyIns(inps ...<-chan Any) (out <-chan Any) {
 	return cha
 }
 
-// End of FanAnyIns
+// End of FanAnysIn
 
 // ===========================================================================
 // Beg of Fan2Any easy fan-in's
@@ -958,7 +1002,7 @@ func mergeAny2(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
 		var (
 			clos1, clos2 bool // we found the chan closed
 			buff1, buff2 bool // we've read 'from', but not sent (yet)
-			ok           bool // did we read sucessfully?
+			ok           bool // did we read successfully?
 			from1, from2 Any  // what we've read
 		)
 
@@ -1178,3 +1222,4 @@ func DaisyChaiNAny(inp chan Any, somany int,
 }
 
 // End of DaisyChainAny
+// ===========================================================================

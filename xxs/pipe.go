@@ -29,7 +29,7 @@ type AnySupply struct {
 func MakeAnySupplyChan() *AnySupply {
 	d := AnySupply{
 		dat: make(chan Any),
-		//	req: make(chan struct{}),
+		// : make(chan struct{}),
 	}
 	return &d
 }
@@ -41,7 +41,7 @@ func MakeAnySupplyChan() *AnySupply {
 func MakeAnySupplyBuff(cap int) *AnySupply {
 	d := AnySupply{
 		dat: make(chan Any, cap),
-		//	req: make(chan struct{}),
+		// : make(chan struct{}),
 	}
 	return &d
 }

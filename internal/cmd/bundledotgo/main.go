@@ -214,10 +214,10 @@ func bundle(src, dst, dstpkg, prefix string) ([]byte, error) {
 	// InitialPackages is guaranteed to hold the sole requested package.
 	info := lprog.InitialPackages()[0]
 	if prefix == "" {
-	/* no default - leave prefix empty
+		/* no default - leave prefix empty
 		pkgName := info.Files[0].Name.Name
 		prefix = pkgName + "_"
-	*/
+		*/
 	}
 
 	objsToUpdate := make(map[types.Object]bool)

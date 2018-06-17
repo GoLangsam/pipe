@@ -32,7 +32,7 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 
 	var (
 		closed bool // we found a chan closed
-		ok     bool // did we read sucessfully?
+		ok     bool // did we read successfully?
 		e      Any  // what we've read
 	)
 

@@ -49,13 +49,14 @@ func process() {
 // ===========================================================================
 // Beg of Worker
 
+// A Worker works on received requests
 type Worker struct {
 	requests chan Request // work to do (a buffered channel)
 	pending  int          // count of pending tasks
 	index    int          // index in the heap
 }
 
-// work keeps receving requests, and for each does:
+// work keeps receiving requests, and for each does:
 //  - reply on the requestor-provided channel the result into the request
 //  - inform on the balancer-provided channel by sending itself when done
 func (w *Worker) work(done chan<- *Worker) {
@@ -166,16 +167,16 @@ func (b *Balancer) completed(w *Worker) {
 }
 
 func (b *Balancer) print() {
-	total_pending := 0
-	sumsq_pending := 0
+	totalPending := 0
+	sumsqPending := 0
 	for _, w := range b.pool { // worker
 		fmt.Printf("%d  ", w.pending)
-		total_pending += w.pending
-		sumsq_pending += w.pending * w.pending
+		totalPending += w.pending
+		sumsqPending += w.pending * w.pending
 	}
-	fmt.Printf("| %d  ", total_pending)
-	avg := float64(total_pending) / float64(b.pool.Len())
-	variance := float64(sumsq_pending)/float64(len(b.pool)) - avg*avg
+	fmt.Printf("| %d  ", totalPending)
+	avg := float64(totalPending) / float64(b.pool.Len())
+	variance := float64(sumsqPending)/float64(len(b.pool)) - avg*avg
 	fmt.Printf("| %.2f %.2f\n", avg, variance)
 
 }

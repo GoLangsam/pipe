@@ -26,18 +26,20 @@ func PlugThing(inp <-chan Thing, stop <-chan struct{}) (out <-chan Thing, done <
 func plugThing(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, stop <-chan struct{}) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Thing // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Thing  // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-stop:
-			break
+			end = true
 		}
 	}
 

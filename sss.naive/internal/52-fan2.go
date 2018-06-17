@@ -5,6 +5,7 @@
 package pipe
 
 // ===========================================================================
+
 // FanIn2Any as seen in Go Concurrency Patterns
 //
 // Warning: For instruction and teaching only!

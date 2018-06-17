@@ -38,7 +38,7 @@ func (s site) print() site {
 }
 
 // ---------------------------------------------------------------------------
-// *crawling learning some straight-foreward behaviour, and how to crawl :-)
+// *crawling learning some straight-forward behaviour, and how to crawl :-)
 
 // add registers new entries and launches their dispatcher
 // (which we've left untouched).

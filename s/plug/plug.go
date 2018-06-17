@@ -28,18 +28,20 @@ func PlugAny(inp <-chan Any, stop <-chan struct{}) (out <-chan Any, done <-chan 
 func plugAny(out chan<- Any, done chan<- struct{}, inp <-chan Any, stop <-chan struct{}) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Any   // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Any    // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-stop:
-			break
+			end = true
 		}
 	}
 

@@ -279,10 +279,50 @@ func FiniThingFunc(act func(a Thing)) func(inp <-chan Thing) (done <-chan struct
 // ===========================================================================
 
 // ===========================================================================
+// Beg of PairThing functions
+
+// PairThing returns a pair of channels to receive every result of inp before close.
+//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+func PairThing(inp <-chan Thing) (out1, out2 <-chan Thing) {
+	cha1 := make(chan Thing)
+	cha2 := make(chan Thing)
+	go pairThing(cha1, cha2, inp)
+	return cha1, cha2
+}
+
+/* not used any more - kept for reference only.
+func pairThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		out1 <- i
+		out2 <- i
+	}
+} */
+
+func pairThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		select { // send first to whomever is ready to receive
+		case out1 <- i:
+			out2 <- i
+		case out2 <- i:
+			out1 <- i
+		}
+	}
+}
+
+// End of PairThing functions
+// ===========================================================================
+
+// ===========================================================================
 // Beg of ForkThing functions
 
-// ForkThing returns two channels to receive every result of inp before close.
-//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+// ForkThing returns two channels
+// either of which is to receive
+// every result of inp
+// before close.
 func ForkThing(inp <-chan Thing) (out1, out2 <-chan Thing) {
 	cha1 := make(chan Thing)
 	cha2 := make(chan Thing)
@@ -344,7 +384,7 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 
 	var (
 		closed bool  // we found a chan closed
-		ok     bool  // did we read sucessfully?
+		ok     bool  // did we read successfully?
 		e      Thing // what we've read
 	)
 

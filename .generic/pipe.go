@@ -285,10 +285,50 @@ func FiniThingFunc(act func(a Thing)) func(inp <-chan Thing) (done <-chan struct
 // ===========================================================================
 
 // ===========================================================================
+// Beg of PairThing functions
+
+// PairThing returns a pair of channels to receive every result of inp before close.
+//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+func PairThing(inp <-chan Thing) (out1, out2 <-chan Thing) {
+	cha1 := make(chan Thing)
+	cha2 := make(chan Thing)
+	go pairThing(cha1, cha2, inp)
+	return cha1, cha2
+}
+
+/* not used any more - kept for reference only.
+func pairThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		out1 <- i
+		out2 <- i
+	}
+} */
+
+func pairThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+	defer close(out1)
+	defer close(out2)
+	for i := range inp {
+		select { // send first to whomever is ready to receive
+		case out1 <- i:
+			out2 <- i
+		case out2 <- i:
+			out1 <- i
+		}
+	}
+}
+
+// End of PairThing functions
+// ===========================================================================
+
+// ===========================================================================
 // Beg of ForkThing functions
 
-// ForkThing returns two channels to receive every result of inp before close.
-//  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
+// ForkThing returns two channels
+// either of which is to receive
+// every result of inp
+// before close.
 func ForkThing(inp <-chan Thing) (out1, out2 <-chan Thing) {
 	cha1 := make(chan Thing)
 	cha2 := make(chan Thing)
@@ -350,7 +390,7 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 
 	var (
 		closed bool  // we found a chan closed
-		ok     bool  // did we read sucessfully?
+		ok     bool  // did we read successfully?
 		e      Thing // what we've read
 	)
 
@@ -476,8 +516,8 @@ func PipeThingDone(inp <-chan Thing) (out <-chan Thing, done <-chan struct{}) {
 }
 
 func pipeThingDone(out chan<- Thing, done chan<- struct{}, inp <-chan Thing) {
-	defer close(done)
 	defer close(out)
+	defer close(done)
 	for i := range inp {
 		out <- i
 	}
@@ -504,18 +544,20 @@ func PlugThing(inp <-chan Thing, stop <-chan struct{}) (out <-chan Thing, done <
 func plugThing(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, stop <-chan struct{}) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Thing // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Thing  // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-stop:
-			break
+			end = true
 		}
 	}
 
@@ -549,18 +591,20 @@ func PlugThingAfter(inp <-chan Thing, after <-chan time.Time) (out <-chan Thing,
 func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, after <-chan time.Time) {
 	defer close(done)
 
-	var ok bool // did we read sucessfully?
-	var e Thing // what we've read
-	for {
+	var end bool // shall we end?
+	var ok bool  // did we read successfully?
+	var e Thing  // what we've read
+
+	for !end {
 		select {
 		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				break
+				end = true
 			}
 		case <-after:
-			break
+			end = true
 		}
 	}
 
@@ -838,15 +882,15 @@ func TubeThingSeenAttr(attr func(a Thing) interface{}) (tube func(inp <-chan Thi
 // End of PipeThingSeen/ForkThingSeen - an "I've seen this Thing before" filter / fork
 
 // ===========================================================================
-// Beg of FanThingIns
+// Beg of FanThingsIn
 
-// FanThingIns returns a channel to receive all inputs arriving
+// FanThingsIn returns a channel to receive all inputs arriving
 // on variadic inps
-// before closing
+// before close.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func FanThingIns(inps ...<-chan Thing) (out <-chan Thing) {
+func FanThingsIn(inps ...<-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
 
 	var wg sync.WaitGroup
@@ -869,7 +913,7 @@ func FanThingIns(inps ...<-chan Thing) (out <-chan Thing) {
 	return cha
 }
 
-// End of FanThingIns
+// End of FanThingsIn
 
 // ===========================================================================
 // Beg of Fan2Thing easy fan-in's
@@ -954,7 +998,7 @@ func mergeThing2(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Th
 		var (
 			clos1, clos2 bool  // we found the chan closed
 			buff1, buff2 bool  // we've read 'from', but not sent (yet)
-			ok           bool  // did we read sucessfully?
+			ok           bool  // did we read successfully?
 			from1, from2 Thing // what we've read
 		)
 

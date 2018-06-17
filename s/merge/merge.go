@@ -40,7 +40,7 @@ func mergeAny2(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
 		var (
 			clos1, clos2 bool // we found the chan closed
 			buff1, buff2 bool // we've read 'from', but not sent (yet)
-			ok           bool // did we read sucessfully?
+			ok           bool // did we read successfully?
 			from1, from2 Any  // what we've read
 		)
 
