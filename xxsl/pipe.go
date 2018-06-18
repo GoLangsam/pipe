@@ -62,6 +62,7 @@ type AnyChanCore interface {
 // End of AnyChannel interface
 // ===========================================================================
 
+// Any is the generic type flowing thru the pipe network.
 type Any generic.Type
 
 // ===========================================================================

@@ -90,4 +90,4 @@ func TubeSiteLeave(wg SiteWaiter) (tube func(inp <-chan site) (out <-chan site))
 	}
 }
 
-// ===========================================================================
+// End of PipeSiteEnter/Leave - Flapdoors observed by a Waiter
