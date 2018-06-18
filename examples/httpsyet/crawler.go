@@ -61,7 +61,7 @@ func (c Crawler) Run() error {
 		defer close(results)
 		go func() {
 			for r := range results {
-		// => c.reporter
+			// => c.reporter
 				if _, err := fmt.Fprintln(c.Out, r); err != nil {
 					c.Log.Printf("failed to write output '%s': %v\n", r, err)
 				}

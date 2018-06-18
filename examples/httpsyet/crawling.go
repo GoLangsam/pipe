@@ -31,7 +31,7 @@ func (s site) attr() interface{} {
 	return s.URL.String()
 }
 
-// print may be used via e.g. PipeSiteFunc for tracing
+// print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
 func (s site) print() site {
 	fmt.Println(s)
 	return s
@@ -41,7 +41,7 @@ func (s site) print() site {
 // *crawling learning some straight-forward behaviour, and how to crawl :-)
 
 // add registers new entries and launches their dispatcher
-// (which we've left untouched).
+// (which we intentionally left untouched).
 func (c *crawling) add(urls []*url.URL, parent *url.URL, depth int) {
 	c.Add(len(urls))
 	go queueURLs(c.sites, urls, parent, depth)
@@ -112,10 +112,10 @@ func (c *crawling) crawling(urls []*url.URL, size int) (done <-chan struct{}) {
 // its cirular due to c.crawl's feedback.
 func (c *crawling) processor(size int) {
 	sites, seen := ForkSiteSeenAttr(c.sites, site.attr)
-	for _, inp := range ScatterSite(PipeSiteFunc(sites, site.print), size) {
+	for _, inp := range ScatterSite(sites, size) {
 		DoneSiteFunc(inp, c.crawl) // sites leave inside crawler's crawl
 	}
-	DoneSite(PipeSiteLeave(PipeSiteFunc(seen, site.print), c)) // seen leave without further processing
+	DoneSite(PipeSiteLeave(seen, c)) // seen leave without further processing
 }
 
 // ===========================================================================
