@@ -12,6 +12,7 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
+// Anymode is the generic channel type connecting the pipe network components.
 type Anymode generic.Type
 
 // ===========================================================================

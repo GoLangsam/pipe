@@ -10,4 +10,5 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
+// Thing is the generic type flowing thru the pipe network.
 type Thing generic.Type

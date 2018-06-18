@@ -13,6 +13,8 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
+// Any is the generic type flowing thru the pipe network.
 type Any interface{}
 
+// Anymode is the generic channel type connecting the pipe network components.
 type Anymode generic.Type

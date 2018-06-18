@@ -6,6 +6,9 @@
 
 package pipe
 
-import "github.com/cheekybits/genny/generic"
+import (
+	"github.com/cheekybits/genny/generic"
+)
 
+// Any is the generic type flowing thru the pipe network.
 type Any generic.Type

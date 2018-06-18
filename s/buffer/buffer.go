@@ -11,14 +11,14 @@
 
 package pipe
 
+// Note: SendAnyProxy imports "container/ring" for the expanding buffer.
 import (
 	"container/ring"
 
 	"github.com/cheekybits/genny/generic"
 )
 
-// Note: SendAnyProxy imports "container/ring" for the expanding buffer.
-
+// Any is the generic type flowing thru the pipe network.
 type Any generic.Type
 
 // ===========================================================================
