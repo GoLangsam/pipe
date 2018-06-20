@@ -15,15 +15,20 @@ package httpsyet
 // attends Flapdoors and keeps track of
 // how many enter and how many leave.
 //
-// Use Your provided `*sync.WaitGroup.Wait()`
+// Use DoneSiteWait to learn about
+// when the facilities are closed.
+//
+// Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
+// Just: DoneSiteWait is more convenient
+// as it also closes the primary channel.
 //
 // Just make sure to have _all_ entrances and exits attended,
-// and don't `wg.Wait()` before You've flooded the facilities.
+// and `Wait()` only *after* You've started flooding the facilities.
 type SiteWaiter interface {
 	Add(delta int)
 	Done()
-	// Wait() // here no need
+	Wait()
 }
 
 // Note: Name is generic in order to avoid multiple-declaration clashes.
@@ -87,6 +92,33 @@ func TubeSiteLeave(wg SiteWaiter) (tube func(inp <-chan site) (out <-chan site))
 
 	return func(inp <-chan site) (out <-chan site) {
 		return PipeSiteLeave(inp, wg)
+	}
+}
+
+// DoneSiteWait returns a channel to receive
+// one signal
+// after wg.Wait() has returned and inp has been closed
+// before close.
+//
+// Note: Use only *after* You've started flooding the facilities.
+func DoneSiteWait(inp chan<- site, wg SiteWaiter) (done <-chan struct{}) {
+	cha := make(chan struct{})
+	go donesiteWait(cha, inp, wg)
+	return cha
+}
+
+func donesiteWait(done chan<- struct{}, inp chan<- site, wg SiteWaiter) {
+	defer close(done)
+	wg.Wait()
+	close(inp)
+	done <- struct{}{} // not really needed - but looks better
+}
+
+// FiniSiteWait returns a closure around `DonesiteWait(_, wg)`.
+func FiniSiteWait(wg SiteWaiter) func(inp chan<- site) (done <-chan struct{}) {
+
+	return func(inp chan<- site) (done <-chan struct{}) {
+		return DoneSiteWait(inp, wg)
 	}
 }
 

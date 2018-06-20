@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	// "qvl.io/httpsyet/httpsyet"
-	"github.com/GoLangsam/pipe/examples/httpsyet"
+	"github.com/GoLangsam/pipe/examples/httpsyet/v1"
 )
 
 const (

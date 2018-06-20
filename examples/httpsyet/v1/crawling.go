@@ -112,7 +112,7 @@ func (c *crawling) crawling(urls []*url.URL, size int) (done <-chan struct{}) {
 // its cirular due to c.crawl's feedback.
 func (c *crawling) processor(size int) {
 	sites, seen := ForkSiteSeenAttr(c.sites, site.attr)
-	for _, inp := range ScatterSite(sites, size) {
+	for _, inp := range StrewSite(sites, size) {
 		DoneSiteFunc(inp, c.crawl) // sites leave inside crawler's crawl
 	}
 	DoneSite(PipeSiteLeave(seen, c)) // seen leave without further processing

@@ -11,17 +11,17 @@ package httpsyet
 import "time"
 
 // ===========================================================================
-// Beg of ScatterSite
+// Beg of StrewSite
 
-// ScatterSite returns a slice (of size = size) of channels
+// StrewSite returns a slice (of size = size) of channels
 // one of which shall receive any inp before close.
-func ScatterSite(inp <-chan site, size int) (outS [](<-chan site)) {
+func StrewSite(inp <-chan site, size int) (outS [](<-chan site)) {
 	chaS := make([]chan site, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan site)
 	}
 
-	go scattersite(inp, chaS...)
+	go strewsite(inp, chaS...)
 
 	outS = make([]<-chan site, size)
 	for i := 0; i < size; i++ {
@@ -31,14 +31,14 @@ func ScatterSite(inp <-chan site, size int) (outS [](<-chan site)) {
 	return outS
 }
 
-// c scattersite(inp <-chan site, outS ...chan<- site) {
+// c strewsite(inp <-chan site, outS ...chan<- site) {
 // Note: go does not convert the passed slice `[]chan site` to `[]chan<- site` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func scattersite(inp <-chan site, outS ...chan site) {
+func strewsite(inp <-chan site, outS ...chan site) {
 
 	for i := range inp {
 		for !trySendsite(i, outS...) {
-			time.Sleep(time.Millisecond) // wait a little before retry
+			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
@@ -62,4 +62,4 @@ func trySendsite(inp site, outS ...chan site) bool {
 	return false
 }
 
-// End of FanSiteOut
+// End of StrewSite
