@@ -10,10 +10,12 @@ import (
 )
 
 // Traffic as it goes around inside a circular site pipe network,
-// e. g. a crawling Crawler
+// e. g. a crawling Crawler.
+// Composed of Travel, a channel for those who travel in the traffic,
+// and an embedded *sync.WaitGroup to keep track of congestion.
 type Traffic struct {
 	Travel          chan site // to be processed
-	*sync.WaitGroup           // monitor siteEnter & siteLeave
+	*sync.WaitGroup           // monitor SiteEnter & SiteLeave
 }
 
 // Feed registers new entries and launches their dispatcher
