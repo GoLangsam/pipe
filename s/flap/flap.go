@@ -18,15 +18,20 @@ type Any generic.Type
 // attends Flapdoors and keeps track of
 // how many enter and how many leave.
 //
-// Use Your provided `*sync.WaitGroup.Wait()`
+// Use DoneAnyWait to learn about
+// when the facilities are closed.
+//
+// Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
+// Just: DoneAnyWait is more convenient
+// as it also closes the primary channel.
 //
 // Just make sure to have _all_ entrances and exits attended,
-// and don't `wg.Wait()` before You've flooded the facilities.
+// and `Wait()` only *after* You've started flooding the facilities.
 type AnyWaiter interface {
 	Add(delta int)
 	Done()
-	// Wait() // here no need
+	Wait()
 }
 
 // Note: Name is generic in order to avoid multiple-declaration clashes.
@@ -90,6 +95,33 @@ func TubeAnyLeave(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
 		return PipeAnyLeave(inp, wg)
+	}
+}
+
+// DoneAnyWait returns a channel to receive
+// one signal
+// after wg.Wait() has returned and inp has been closed
+// before close.
+//
+// Note: Use only *after* You've started flooding the facilities.
+func DoneAnyWait(inp chan<- Any, wg AnyWaiter) (done <-chan struct{}) {
+	cha := make(chan struct{})
+	go doneAnyWait(cha, inp, wg)
+	return cha
+}
+
+func doneAnyWait(done chan<- struct{}, inp chan<- Any, wg AnyWaiter) {
+	defer close(done)
+	wg.Wait()
+	close(inp)
+	done <- struct{}{} // not really needed - but looks better
+}
+
+// FiniAnyWait returns a closure around `DoneAnyWait(_, wg)`.
+func FiniAnyWait(wg AnyWaiter) func(inp chan<- Any) (done <-chan struct{}) {
+
+	return func(inp chan<- Any) (done <-chan struct{}) {
+		return DoneAnyWait(inp, wg)
 	}
 }
 
