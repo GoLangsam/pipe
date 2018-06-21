@@ -9,9 +9,9 @@ import (
 	"net/url"
 )
 
-// site represents what travels: an URL
+// Site represents what travels: an URL
 // which may have a Parent URL, and a Depth.
-type site struct {
+type Site struct {
 	URL    *url.URL
 	Parent *url.URL
 	Depth  int
@@ -22,12 +22,12 @@ type site struct {
 
 // Attr implements the attribute relevant for ForkSiteSeenAttr,
 // the "I've seen this site before" discriminator.
-func (s site) Attr() interface{} {
+func (s Site) Attr() interface{} {
 	return s.URL.String()
 }
 
-// Print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
-func (s site) Print() site {
+// print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
+func (s Site) Print() Site {
 	fmt.Println(s)
 	return s
 }

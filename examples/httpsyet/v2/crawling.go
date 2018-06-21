@@ -11,11 +11,15 @@ import (
 	"time"
 )
 
-// Note: much of the prolog may safely be moved into `crawler.go`
+// ---------------------------------------------------------------------------
 
-// ===========================================================================
+// alias types in order to leave source code unaffected
+type site = Site
+type traffic = Traffic
 
-// make `result` an explicit type, and teach `Crawler` how to `report` it
+// ---------------------------------------------------------------------------
+// make `result` an explicit type, and
+// teach `Crawler` how to `report` a result.
 
 // result is the type of the output of a crawling Crawler
 type result string
@@ -33,7 +37,7 @@ func (c Crawler) report(r result) {
 // crawling represents a crawling Crawler ... busy crawling ...
 type crawling struct {
 	Crawler             // config
-	Traffic             // to be crawled
+	traffic             // to be crawled
 	results chan result // to be reported
 }
 
@@ -70,7 +74,7 @@ func (c *crawling) crawl(s site) {
 func (c Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 	crawling := crawling{
 		c, // "Crawler is used as configuration ..."
-		Traffic{
+		traffic{
 			make(chan site),     // the feedback traffic
 			new(sync.WaitGroup), // monitor traffic
 		},
