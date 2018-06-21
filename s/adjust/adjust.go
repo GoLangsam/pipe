@@ -11,7 +11,7 @@
 
 package pipe
 
-// Note: anyThingPipeAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeanyThingAdjust imports "container/ring" for the expanding buffer.
 import (
 	"container/ring"
 
@@ -69,7 +69,7 @@ func sendanyThingProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("anyThingSendProxy: too manyThing sizes")
+		panic("anyThingSendProxy: too many sizes")
 	}
 
 	return
