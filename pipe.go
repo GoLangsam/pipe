@@ -22,14 +22,14 @@ import (
 type Any generic.Type
 
 // ===========================================================================
-// Beg of MakeAny creators
+// Beg of AnyMake creators
 
-// MakeAnyChan returns a new open channel
+// AnyMakeChan returns a new open channel
 // (simply a 'chan Any' that is).
 // Note: No 'Any-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-var myAnyPipelineStartsHere := MakeAnyChan()
+var myAnyPipelineStartsHere := AnyMakeChan()
 // ... lot's of code to design and build Your favourite "myAnyWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
@@ -41,22 +41,22 @@ close(myAnyPipelineStartsHere)
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
-// Note: as always (except for PipeAnyBuffer) the channel is unbuffered.
+// Note: as always (except for AnyPipeBuffer) the channel is unbuffered.
 //
-func MakeAnyChan() (out chan Any) {
+func AnyMakeChan() (out chan Any) {
 	return make(chan Any)
 }
 
-// End of MakeAny creators
+// End of AnyMake creators
 // ===========================================================================
 
 // ===========================================================================
-// Beg of ChanAny producers
+// Beg of AnyChan producers
 
-// ChanAny returns a channel to receive
+// AnyChan returns a channel to receive
 // all inputs
 // before close.
-func ChanAny(inp ...Any) (out <-chan Any) {
+func AnyChan(inp ...Any) (out <-chan Any) {
 	cha := make(chan Any)
 	go chanAny(cha, inp...)
 	return cha
@@ -69,10 +69,10 @@ func chanAny(out chan<- Any, inp ...Any) {
 	}
 }
 
-// ChanAnySlice returns a channel to receive
+// AnyChanSlice returns a channel to receive
 // all inputs
 // before close.
-func ChanAnySlice(inp ...[]Any) (out <-chan Any) {
+func AnyChanSlice(inp ...[]Any) (out <-chan Any) {
 	cha := make(chan Any)
 	go chanAnySlice(cha, inp...)
 	return cha
@@ -87,11 +87,11 @@ func chanAnySlice(out chan<- Any, inp ...[]Any) {
 	}
 }
 
-// ChanAnyFuncNok returns a channel to receive
+// AnyChanFuncNok returns a channel to receive
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func ChanAnyFuncNok(gen func() (Any, bool)) (out <-chan Any) {
+func AnyChanFuncNok(gen func() (Any, bool)) (out <-chan Any) {
 	cha := make(chan Any)
 	go chanAnyFuncNok(cha, gen)
 	return cha
@@ -108,11 +108,11 @@ func chanAnyFuncNok(out chan<- Any, gen func() (Any, bool)) {
 	}
 }
 
-// ChanAnyFuncErr returns a channel to receive
+// AnyChanFuncErr returns a channel to receive
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func ChanAnyFuncErr(gen func() (Any, error)) (out <-chan Any) {
+func AnyChanFuncErr(gen func() (Any, error)) (out <-chan Any) {
 	cha := make(chan Any)
 	go chanAnyFuncErr(cha, gen)
 	return cha
@@ -129,18 +129,18 @@ func chanAnyFuncErr(out chan<- Any, gen func() (Any, error)) {
 	}
 }
 
-// End of ChanAny producers
+// End of AnyChan producers
 // ===========================================================================
 
 // ===========================================================================
-// Beg of PipeAny functions
+// Beg of AnyPipe functions
 
-// PipeAnyFunc returns a channel to receive
+// AnyPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
 // Note: it 'could' be PipeAnyMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func PipeAnyFunc(inp <-chan Any, act func(a Any) Any) (out <-chan Any) {
+func AnyPipeFunc(inp <-chan Any, act func(a Any) Any) (out <-chan Any) {
 	cha := make(chan Any)
 	if act == nil { // Make `nil` value useful
 		act = func(a Any) Any { return a }
@@ -156,10 +156,10 @@ func pipeAnyFunc(out chan<- Any, inp <-chan Any, act func(a Any) Any) {
 	}
 }
 
-// PipeAnyBuffer returns a buffered channel with capacity `cap` to receive
+// AnyPipeBuffer returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func PipeAnyBuffer(inp <-chan Any, cap int) (out <-chan Any) {
+func AnyPipeBuffer(inp <-chan Any, cap int) (out <-chan Any) {
 	cha := make(chan Any, cap)
 	go pipeAnyBuffer(cha, inp)
 	return cha
@@ -176,39 +176,39 @@ func pipeAnyBuffer(out chan<- Any, inp <-chan Any) {
 // ===========================================================================
 
 // ===========================================================================
-// Beg of TubeAny closures
+// Beg of AnyTube closures around AnyPipe
 
-// TubeAnyFunc returns a closure around PipeAnyFunc (_, act).
-func TubeAnyFunc(act func(a Any) Any) (tube func(inp <-chan Any) (out <-chan Any)) {
+// AnyTubeFunc returns a closure around PipeAnyFunc (_, act).
+func AnyTubeFunc(act func(a Any) Any) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnyFunc(inp, act)
+		return AnyPipeFunc(inp, act)
 	}
 }
 
-// TubeAnyBuffer returns a closure around PipeAnyBuffer (_, cap).
-func TubeAnyBuffer(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
+// AnyTubeBuffer returns a closure around PipeAnyBuffer (_, cap).
+func AnyTubeBuffer(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnyBuffer(inp, cap)
+		return AnyPipeBuffer(inp, cap)
 	}
 }
 
-// End of TubeAny closures
+// End of AnyTube closures around AnyPipe
 // ===========================================================================
 
 // ===========================================================================
-// Beg of DoneAny terminators
+// Beg of AnyDone terminators
 
-// DoneAny returns a channel to receive
+// AnyDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func DoneAny(inp <-chan Any) (done <-chan struct{}) {
+func AnyDone(inp <-chan Any) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doitAny(sig, inp)
+	go doneAny(sig, inp)
 	return sig
 }
 
-func doitAny(done chan<- struct{}, inp <-chan Any) {
+func doneAny(done chan<- struct{}, inp <-chan Any) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -216,18 +216,18 @@ func doitAny(done chan<- struct{}, inp <-chan Any) {
 	done <- struct{}{}
 }
 
-// DoneAnySlice returns a channel to receive
+// AnyDoneSlice returns a channel to receive
 // a slice with every Any received on `inp`
 // before close.
 //
-// Note: Unlike DoneAny, DoneAnySlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func DoneAnySlice(inp <-chan Any) (done <-chan []Any) {
+// Note: Unlike AnyDone, DoneAnySlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func AnyDoneSlice(inp <-chan Any) (done <-chan []Any) {
 	sig := make(chan []Any)
-	go doitAnySlice(sig, inp)
+	go doneAnySlice(sig, inp)
 	return sig
 }
 
-func doitAnySlice(done chan<- []Any, inp <-chan Any) {
+func doneAnySlice(done chan<- []Any, inp <-chan Any) {
 	defer close(done)
 	slice := []Any{}
 	for i := range inp {
@@ -236,19 +236,19 @@ func doitAnySlice(done chan<- []Any, inp <-chan Any) {
 	done <- slice
 }
 
-// DoneAnyFunc returns a channel to receive
+// AnyDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func DoneAnyFunc(inp <-chan Any, act func(a Any)) (done <-chan struct{}) {
+func AnyDoneFunc(inp <-chan Any, act func(a Any)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a Any) { return }
 	}
-	go doitAnyFunc(sig, inp, act)
+	go doneAnyFunc(sig, inp, act)
 	return sig
 }
 
-func doitAnyFunc(done chan<- struct{}, inp <-chan Any, act func(a Any)) {
+func doneAnyFunc(done chan<- struct{}, inp <-chan Any, act func(a Any)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action
@@ -256,52 +256,52 @@ func doitAnyFunc(done chan<- struct{}, inp <-chan Any, act func(a Any)) {
 	done <- struct{}{}
 }
 
-// End of DoneAny terminators
+// End of AnyDone terminators
 // ===========================================================================
 
 // ===========================================================================
-// Beg of FiniAny closures
+// Beg of AnyFini closures
 
-// FiniAny returns a closure around `DoneAny(_)`.
-func FiniAny() func(inp <-chan Any) (done <-chan struct{}) {
+// AnyFini returns a closure around `AnyDone(_)`.
+func AnyFini() func(inp <-chan Any) (done <-chan struct{}) {
 
 	return func(inp <-chan Any) (done <-chan struct{}) {
-		return DoneAny(inp)
+		return AnyDone(inp)
 	}
 }
 
-// FiniAnySlice returns a closure around `DoneAnySlice(_)`.
-func FiniAnySlice() func(inp <-chan Any) (done <-chan []Any) {
+// AnyFiniSlice returns a closure around `AnyDoneSlice(_)`.
+func AnyFiniSlice() func(inp <-chan Any) (done <-chan []Any) {
 
 	return func(inp <-chan Any) (done <-chan []Any) {
-		return DoneAnySlice(inp)
+		return AnyDoneSlice(inp)
 	}
 }
 
-// FiniAnyFunc returns a closure around `DoneAnyFunc(_, act)`.
-func FiniAnyFunc(act func(a Any)) func(inp <-chan Any) (done <-chan struct{}) {
+// AnyFiniFunc returns a closure around `AnyDoneFunc(_, act)`.
+func AnyFiniFunc(act func(a Any)) func(inp <-chan Any) (done <-chan struct{}) {
 
 	return func(inp <-chan Any) (done <-chan struct{}) {
-		return DoneAnyFunc(inp, act)
+		return AnyDoneFunc(inp, act)
 	}
 }
 
-// End of FiniAny closures
+// End of AnyFini closures
 // ===========================================================================
 
 // ===========================================================================
-// Beg of PairAny functions
+// Beg of AnyPair functions
 
-// PairAny returns a pair of channels to receive every result of inp before close.
+// AnyPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func PairAny(inp <-chan Any) (out1, out2 <-chan Any) {
+func AnyPair(inp <-chan Any) (out1, out2 <-chan Any) {
 	cha1 := make(chan Any)
 	cha2 := make(chan Any)
 	go pairAny(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-/* not used any more - kept for reference only.
+/* not used - kept for reference only.
 func pairAny(out1, out2 chan<- Any, inp <-chan Any) {
 	defer close(out1)
 	defer close(out2)
@@ -324,24 +324,24 @@ func pairAny(out1, out2 chan<- Any, inp <-chan Any) {
 	}
 }
 
-// End of PairAny functions
+// End of AnyPair functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of ForkAny functions
+// Beg of AnyFork functions
 
-// ForkAny returns two channels
+// AnyFork returns two channels
 // either of which is to receive
 // every result of inp
 // before close.
-func ForkAny(inp <-chan Any) (out1, out2 <-chan Any) {
+func AnyFork(inp <-chan Any) (out1, out2 <-chan Any) {
 	cha1 := make(chan Any)
 	cha2 := make(chan Any)
 	go forkAny(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-/* not used any more - kept for reference only.
+/* not used - kept for reference only.
 func forkAny(out1, out2 chan<- Any, inp <-chan Any) {
 	defer close(out1)
 	defer close(out2)
@@ -364,20 +364,20 @@ func forkAny(out1, out2 chan<- Any, inp <-chan Any) {
 	}
 }
 
-// End of ForkAny functions
+// End of AnyFork functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of FanIn2Any simple binary Fan-In
+// Beg of AnyFanIn2 simple binary Fan-In
 
-// FanIn2Any returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func FanIn2Any(inp1, inp2 <-chan Any) (out <-chan Any) {
+// AnyFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+func AnyFanIn2(inp1, inp2 <-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 	go fanIn2Any(cha, inp1, inp2)
 	return cha
 }
 
-/* not used any more - kept for reference only.
+/* not used - kept for reference only.
 // fanin2Any as seen in Go Concurrency Patterns
 func fanin2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 	for {
@@ -423,47 +423,52 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 	}
 }
 
-// End of FanIn2Any simple binary Fan-In
+// End of AnyFanIn2 simple binary Fan-In
 
 // ===========================================================================
-// Beg of PipeAnyEnter/Leave - Flapdoors observed by a Waiter
+// Beg of AnyPipeEnter/Leave - Flapdoors observed by a Waiter
 
 // AnyWaiter - as implemented by `*sync.WaitGroup` -
-// attends Flapdoors and keeps track of
-// how many enter and how many leave.
+// attends Flapdoors and keeps counting
+// who enters and who leaves.
 //
-// Use Your provided `*sync.WaitGroup.Wait()`
+// Use DoneAnyWait to learn about
+// when the facilities are closed.
+//
+// Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
+// Just: DoneAnyWait is more convenient
+// as it also closes the primary channel.
 //
 // Just make sure to have _all_ entrances and exits attended,
-// and don't `wg.Wait()` before You've flooded the facilities.
+// and `Wait()` only *after* You've started flooding the facilities.
 type AnyWaiter interface {
 	Add(delta int)
 	Done()
-	// Wait() // here no need
+	Wait()
 }
 
 // Note: Name is generic in order to avoid multiple-declaration clashes.
 
-// PipeAnyEnter returns a channel to receive
+// AnyPipeEnter returns a channel to receive
 // all `inp`
 // and registers throughput
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func PipeAnyEnter(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
+func AnyPipeEnter(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
 	cha := make(chan Any)
 	go pipeAnyEnter(cha, wg, inp)
 	return cha
 }
 
-// PipeAnyLeave returns a channel to receive
+// AnyPipeLeave returns a channel to receive
 // all `inp`
 // and registers throughput
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func PipeAnyLeave(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
+func AnyPipeLeave(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
 	cha := make(chan Any)
 	go pipeAnyLeave(cha, wg, inp)
 	return cha
@@ -485,35 +490,62 @@ func pipeAnyLeave(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
 	}
 }
 
-// TubeAnyEnter returns a closure around PipeAnyEnter (_, wg)
+// AnyTubeEnter returns a closure around AnyPipeEnter (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as arrival.
-func TubeAnyEnter(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
+func AnyTubeEnter(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnyEnter(inp, wg)
+		return AnyPipeEnter(inp, wg)
 	}
 }
 
-// TubeAnyLeave returns a closure around PipeAnyLeave (_, wg)
+// AnyTubeLeave returns a closure around AnyPipeLeave (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as departure.
-func TubeAnyLeave(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
+func AnyTubeLeave(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnyLeave(inp, wg)
+		return AnyPipeLeave(inp, wg)
 	}
 }
 
-// End of PipeAnyEnter/Leave - Flapdoors observed by a Waiter
+// AnyDoneWait returns a channel to receive
+// one signal
+// after wg.Wait() has returned and inp has been closed
+// before close.
+//
+// Note: Use only *after* You've started flooding the facilities.
+func AnyDoneWait(inp chan<- Any, wg AnyWaiter) (done <-chan struct{}) {
+	cha := make(chan struct{})
+	go doneAnyWait(cha, inp, wg)
+	return cha
+}
+
+func doneAnyWait(done chan<- struct{}, inp chan<- Any, wg AnyWaiter) {
+	defer close(done)
+	wg.Wait()
+	close(inp)
+	done <- struct{}{} // not really needed - but looks better
+}
+
+// AnyFiniWait returns a closure around `DoneAnyWait(_, wg)`.
+func AnyFiniWait(wg AnyWaiter) func(inp chan<- Any) (done <-chan struct{}) {
+
+	return func(inp chan<- Any) (done <-chan struct{}) {
+		return AnyDoneWait(inp, wg)
+	}
+}
+
+// End of AnyPipeEnter/Leave - Flapdoors observed by a Waiter
 
 // ===========================================================================
-// Beg of PipeAnyDone
+// Beg of AnyPipeDone
 
-// PipeAnyDone returns a channel to receive every `inp` before close and a channel to signal this closing.
-func PipeAnyDone(inp <-chan Any) (out <-chan Any, done <-chan struct{}) {
+// AnyPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
+func AnyPipeDone(inp <-chan Any) (out <-chan Any, done <-chan struct{}) {
 	cha := make(chan Any)
 	doit := make(chan struct{})
 	go pipeAnyDone(cha, doit, inp)
@@ -529,17 +561,17 @@ func pipeAnyDone(out chan<- Any, done chan<- struct{}, inp <-chan Any) {
 	done <- struct{}{}
 }
 
-// End of PipeAnyDone
+// End of AnyPipeDone
 
 // ===========================================================================
-// Beg of PlugAny - graceful terminator
+// Beg of AnyPlug - graceful terminator
 
-// PlugAny returns a channel to receive every `inp` before close and a channel to signal this closing.
+// AnyPlug returns a channel to receive every `inp` before close and a channel to signal this closing.
 // Upon receipt of a stop signal,
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func PlugAny(inp <-chan Any, stop <-chan struct{}) (out <-chan Any, done <-chan struct{}) {
+func AnyPlug(inp <-chan Any, stop <-chan struct{}) (out <-chan Any, done <-chan struct{}) {
 	cha := make(chan Any)
 	doit := make(chan struct{})
 	go plugAny(cha, doit, inp, stop)
@@ -575,18 +607,18 @@ func plugAny(out chan<- Any, done chan<- struct{}, inp <-chan Any, stop <-chan s
 	done <- struct{}{}
 }
 
-// End of PlugAny - graceful terminator
+// End of AnyPlug - graceful terminator
 
 // ===========================================================================
-// Beg of PlugAnyAfter - graceful terminator
+// Beg of AnyPlugAfter - graceful terminator
 
-// PlugAnyAfter returns a channel to receive every `inp` before close and a channel to signal this closing.
+// AnyPlugAfter returns a channel to receive every `inp` before close and a channel to signal this closing.
 // Upon receipt of a time signal
 // (e.g. from `time.After(...)`),
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func PlugAnyAfter(inp <-chan Any, after <-chan time.Time) (out <-chan Any, done <-chan struct{}) {
+func AnyPlugAfter(inp <-chan Any, after <-chan time.Time) (out <-chan Any, done <-chan struct{}) {
 	cha := make(chan Any)
 	doit := make(chan struct{})
 	go plugAnyAfter(cha, doit, inp, after)
@@ -622,64 +654,127 @@ func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-
 	done <- struct{}{}
 }
 
-// End of PlugAnyAfter - graceful terminator
+// End of AnyPlugAfter - graceful terminator
 
-// Note: SendAnyProxy imports "container/ring" for the expanding buffer.
+// Note: AnyPipeAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
-// Beg of SendAnyProxy
+// Beg of AnyPipeAdjust
 
-// BufferAnyCAP is the capacity of the buffered proxy channel in `SendAnyProxy`
-const BufferAnyCAP = 10
+// AnyPipeAdjust returns a channel to receive
+// all `inp`
+// buffered by a AnySendProxy process
+// before close.
+func AnyPipeAdjust(inp <-chan Any, sizes ...int) (out <-chan Any) {
+	cap, que := sendAnyProxySizes(sizes...)
+	cha := make(chan Any, cap)
+	go pipeAnyAdjust(cha, inp, que)
+	return cha
+}
 
-// BufferAnyQUE is the allocated size of the circular queue in `SendAnyProxy`
-const BufferAnyQUE = 16
+// AnyTubeAdjust returns a closure around AnyPipeAdjust (_, sizes ...int).
+func AnyTubeAdjust(sizes ...int) (tube func(inp <-chan Any) (out <-chan Any)) {
 
-// SendAnyProxy returns a channel to serve as a sending proxy to 'out'.
+	return func(inp <-chan Any) (out <-chan Any) {
+		return AnyPipeAdjust(inp, sizes...)
+	}
+}
+
+// End of AnyPipeAdjust
+// ===========================================================================
+
+// ===========================================================================
+// Beg of sendAnyProxy
+
+func sendAnyProxySizes(sizes ...int) (cap, que int) {
+
+	// CAP is the minimum capacity of the buffered proxy channel in `AnySendProxy`
+	const CAP = 10
+
+	// QUE is the minimum initially allocated size of the circular queue in `AnySendProxy`
+	const QUE = 16
+
+	cap = CAP
+	que = QUE
+
+	if len(sizes) > 0 && sizes[0] > CAP {
+		que = sizes[0]
+	}
+
+	if len(sizes) > 1 && sizes[1] > QUE {
+		que = sizes[1]
+	}
+
+	if len(sizes) > 2 {
+		panic("AnySendProxy: too mAny sizes")
+	}
+
+	return
+}
+
+// AnySendProxy returns a channel to serve as a sending proxy to 'out'.
 // Uses a goroutine to receive values from 'out' and store them
 // in an expanding buffer, so that sending to 'out' never blocks.
 //  Note: the expanding buffer is implemented via "container/ring"
-func SendAnyProxy(out chan<- Any) chan<- Any {
-	proxy := make(chan Any, BufferAnyCAP)
-	go func() {
-		n := BufferAnyQUE // the allocated size of the circular queue
-		first := ring.New(n)
-		last := first
-		var c chan<- Any
-		var e Any
-		for {
-			c = out
-			if first == last {
-				// buffer empty: disable output
-				c = nil
-			} else {
-				e = first.Value.(Any)
-			}
-			select {
-			case e = <-proxy:
+//
+// Note: AnySendProxy is kept for the Sieve example
+// and other dynamic use to be discovered
+// even so it does not fit the pipe tube pattern as AnyPipeAdjust does.
+func AnySendProxy(out chan<- Any, sizes ...int) chan<- Any {
+	cap, que := sendAnyProxySizes(sizes...)
+	cha := make(chan Any, cap)
+	go pipeAnyAdjust(out, cha, que)
+	return cha
+}
+
+// pipeAnyAdjust uses an adjusting buffer to receive from 'inp'
+// even so 'out' is not ready to receive yet. The buffer may grow
+// until 'inp' is closed and then will shrink by every send to 'out'.
+//  Note: the adjusting buffer is implemented via "container/ring"
+func pipeAnyAdjust(out chan<- Any, inp <-chan Any, QUE int) {
+	defer close(out)
+	n := QUE // the allocated size of the circular queue
+	first := ring.New(n)
+	last := first
+	var c chan<- Any
+	var e Any
+	ok := true
+	for ok {
+		c = out
+		if first == last {
+			c = nil // buffer empty: disable output
+		} else {
+			e = first.Value.(Any)
+		}
+		select {
+		case e, ok = <-inp:
+			if ok {
 				last.Value = e
 				if last.Next() == first {
-					// buffer full: expand it
-					last.Link(ring.New(n))
+					last.Link(ring.New(n)) // buffer full: expand it
 					n *= 2
 				}
 				last = last.Next()
-			case c <- e:
-				first = first.Next()
 			}
+		case c <- e:
+			first = first.Next()
 		}
-	}()
-	return proxy
+	}
+
+	for first != last {
+		out <- first.Value.(Any)
+		first = first.Unlink(1) // first.Next()
+	}
 }
 
-// End of SendAnyProxy
+// End of sendAnyProxy
 
 // ===========================================================================
-// Beg of FanAnyOut
+// Beg of AnyFanOut
 
-// FanAnyOut returns a slice (of size = size) of channels
+// AnyFanOut returns a slice (of size = size) of channels
 // each of which shall receive any inp before close.
-func FanAnyOut(inp <-chan Any, size int) (outS [](<-chan Any)) {
+func AnyFanOut(inp <-chan Any, size int) (outS [](<-chan Any)) {
 	chaS := make([]chan Any, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan Any)
@@ -710,20 +805,20 @@ func fanAnyOut(inp <-chan Any, outs ...chan Any) {
 
 }
 
-// End of FanAnyOut
+// End of AnyFanOut
 
 // ===========================================================================
-// Beg of ScatterAny
+// Beg of AnyStrew - scatter them
 
-// ScatterAny returns a slice (of size = size) of channels
-// one of which shall receive any inp before close.
-func ScatterAny(inp <-chan Any, size int) (outS [](<-chan Any)) {
+// AnyStrew returns a slice (of size = size) of channels
+// one of which shall receive each inp before close.
+func AnyStrew(inp <-chan Any, size int) (outS [](<-chan Any)) {
 	chaS := make([]chan Any, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan Any)
 	}
 
-	go scatterAny(inp, chaS...)
+	go strewAny(inp, chaS...)
 
 	outS = make([]<-chan Any, size)
 	for i := 0; i < size; i++ {
@@ -733,14 +828,14 @@ func ScatterAny(inp <-chan Any, size int) (outS [](<-chan Any)) {
 	return outS
 }
 
-// c scatterAny(inp <-chan Any, outS ...chan<- Any) {
+// c strewAny(inp <-chan Any, outS ...chan<- Any) {
 // Note: go does not convert the passed slice `[]chan Any` to `[]chan<- Any` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func scatterAny(inp <-chan Any, outS ...chan Any) {
+func strewAny(inp <-chan Any, outS ...chan Any) {
 
 	for i := range inp {
 		for !trySendAny(i, outS...) {
-			time.Sleep(time.Millisecond) // wait a little before retry
+			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
@@ -764,39 +859,39 @@ func trySendAny(inp Any, outS ...chan Any) bool {
 	return false
 }
 
-// End of FanAnyOut
+// End of AnyStrew - scatter them
 
 // ===========================================================================
-// Beg of PipeAnySeen/ForkAnySeen - an "I've seen this Any before" filter / fork
+// Beg of AnyPipeSeen/AnyForkSeen - an "I've seen this Any before" filter / forker
 
-// PipeAnySeen returns a channel to receive
+// AnyPipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeAnyFilterNotSeenYet might be a better name, but is fairly long.
-func PipeAnySeen(inp <-chan Any) (out <-chan Any) {
+// Note: AnyPipeFilterNotSeenYet might be a better name, but is fairly long.
+func AnyPipeSeen(inp <-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 	go pipeAnySeenAttr(cha, inp, nil)
 	return cha
 }
 
-// PipeAnySeenAttr returns a channel to receive
+// AnyPipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeAnyFilterAttrNotSeenYet might be a better name, but is fairly long.
-func PipeAnySeenAttr(inp <-chan Any, attr func(a Any) interface{}) (out <-chan Any) {
+// Note: AnyPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func AnyPipeSeenAttr(inp <-chan Any, attr func(a Any) interface{}) (out <-chan Any) {
 	cha := make(chan Any)
 	go pipeAnySeenAttr(cha, inp, attr)
 	return cha
 }
 
-// ForkAnySeen returns two channels, `new` and `old`,
+// AnyForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -805,14 +900,14 @@ func PipeAnySeenAttr(inp <-chan Any, attr func(a Any) interface{}) (out <-chan A
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkAnySeen(inp <-chan Any) (new, old <-chan Any) {
+func AnyForkSeen(inp <-chan Any) (new, old <-chan Any) {
 	cha1 := make(chan Any)
 	cha2 := make(chan Any)
 	go forkAnySeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
-// ForkAnySeenAttr returns two channels, `new` and `old`,
+// AnyForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -822,7 +917,7 @@ func ForkAnySeen(inp <-chan Any) (new, old <-chan Any) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkAnySeenAttr(inp <-chan Any, attr func(a Any) interface{}) (new, old <-chan Any) {
+func AnyForkSeenAttr(inp <-chan Any, attr func(a Any) interface{}) (new, old <-chan Any) {
 	cha1 := make(chan Any)
 	cha2 := make(chan Any)
 	go forkAnySeenAttr(cha1, cha2, inp, attr)
@@ -864,38 +959,38 @@ func forkAnySeenAttr(new, old chan<- Any, inp <-chan Any, attr func(a Any) inter
 	}
 }
 
-// TubeAnySeen returns a closure around PipeAnySeen()
+// AnyTubeSeen returns a closure around AnyPipeSeen()
 // (silently dropping every Any seen before).
-func TubeAnySeen() (tube func(inp <-chan Any) (out <-chan Any)) {
+func AnyTubeSeen() (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnySeen(inp)
+		return AnyPipeSeen(inp)
 	}
 }
 
-// TubeAnySeenAttr returns a closure around PipeAnySeenAttr()
+// AnyTubeSeenAttr returns a closure around AnyPipeSeenAttr()
 // (silently dropping every Any
 // whose attribute `attr` was
 // seen before).
-func TubeAnySeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (out <-chan Any)) {
+func AnyTubeSeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnySeenAttr(inp, attr)
+		return AnyPipeSeenAttr(inp, attr)
 	}
 }
 
-// End of PipeAnySeen/ForkAnySeen - an "I've seen this Any before" filter / fork
+// End of AnyPipeSeen/AnyForkSeen - an "I've seen this Any before" filter / forker
 
 // ===========================================================================
-// Beg of FanAnysIn
+// Beg of AnyFanIn
 
-// FanAnysIn returns a channel to receive all inputs arriving
+// AnyFanIn returns a channel to receive all inputs arriving
 // on variadic inps
 // before close.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
+func AnyFanIn(inps ...<-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 
 	wg := new(sync.WaitGroup)
@@ -918,69 +1013,69 @@ func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
 	return cha
 }
 
-// End of FanAnysIn
+// End of AnyFanIn
 
 // ===========================================================================
-// Beg of Fan2Any easy fan-in's
+// Beg of AnyFan2 easy fan-in's
 
-// Fan2Any returns a channel to receive
+// AnyFan2 returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all inputs
 // before close.
-func Fan2Any(ori <-chan Any, inp ...Any) (out <-chan Any) {
-	return FanIn2Any(ori, ChanAny(inp...))
+func AnyFan2(ori <-chan Any, inp ...Any) (out <-chan Any) {
+	return AnyFanIn2(ori, AnyChan(inp...))
 }
 
-// Fan2AnySlice returns a channel to receive
+// AnyFan2Slice returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all inputs
 // before close.
-func Fan2AnySlice(ori <-chan Any, inp ...[]Any) (out <-chan Any) {
-	return FanIn2Any(ori, ChanAnySlice(inp...))
+func AnyFan2Slice(ori <-chan Any, inp ...[]Any) (out <-chan Any) {
+	return AnyFanIn2(ori, AnyChanSlice(inp...))
 }
 
-// Fan2AnyChan returns a channel to receive
+// AnyFan2Chan returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // from the the input channel `inp`
 // before close.
-// Note: Fan2AnyChan is nothing but FanIn2Any
-func Fan2AnyChan(ori <-chan Any, inp <-chan Any) (out <-chan Any) {
-	return FanIn2Any(ori, inp)
+// Note: AnyFan2Chan is nothing but AnyFanIn2
+func AnyFan2Chan(ori <-chan Any, inp <-chan Any) (out <-chan Any) {
+	return AnyFanIn2(ori, inp)
 }
 
-// Fan2AnyFuncNok returns a channel to receive
+// AnyFan2FuncNok returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func Fan2AnyFuncNok(ori <-chan Any, gen func() (Any, bool)) (out <-chan Any) {
-	return FanIn2Any(ori, ChanAnyFuncNok(gen))
+func AnyFan2FuncNok(ori <-chan Any, gen func() (Any, bool)) (out <-chan Any) {
+	return AnyFanIn2(ori, AnyChanFuncNok(gen))
 }
 
-// Fan2AnyFuncErr returns a channel to receive
+// AnyFan2FuncErr returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func Fan2AnyFuncErr(ori <-chan Any, gen func() (Any, error)) (out <-chan Any) {
-	return FanIn2Any(ori, ChanAnyFuncErr(gen))
+func AnyFan2FuncErr(ori <-chan Any, gen func() (Any, error)) (out <-chan Any) {
+	return AnyFanIn2(ori, AnyChanFuncErr(gen))
 }
 
-// End of Fan2Any easy fan-in's
+// End of AnyFan2 easy fan-in's
 
 // ===========================================================================
-// Beg of MergeAny
+// Beg of AnyMerge
 
-// MergeAny returns a channel to receive all inputs sorted and free of duplicates.
+// AnyMerge returns a channel to receive all inputs sorted and free of duplicates.
 // Each input channel needs to be sorted ascending and free of duplicates.
 // The passed binary boolean function `less` defines the applicable order.
 //  Note: If no inputs are given, a closed channel is returned.
-func MergeAny(less func(i, j Any) bool, inps ...<-chan Any) (out <-chan Any) {
+func AnyMerge(less func(i, j Any) bool, inps ...<-chan Any) (out <-chan Any) {
 
 	if len(inps) < 1 { // none: return a closed channel
 		cha := make(chan Any)
@@ -989,14 +1084,14 @@ func MergeAny(less func(i, j Any) bool, inps ...<-chan Any) (out <-chan Any) {
 	} else if len(inps) < 2 { // just one: return it
 		return inps[0]
 	} else { // tail recurse
-		return mergeAny2(less, inps[0], MergeAny(less, inps[1:]...))
+		return mergeAny(less, inps[0], AnyMerge(less, inps[1:]...))
 	}
 }
 
-// mergeAny2 takes two (eager) channels of comparable types,
+// mergeAny takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func mergeAny2(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
+func mergeAny(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 	go func(out chan<- Any, i1, i2 <-chan Any) {
 		defer close(out)
@@ -1048,22 +1143,23 @@ func mergeAny2(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
 	return cha
 }
 
-// Note: merge2 is not my own. Just: I forgot where found it - please accept my apologies.
+// Note: mergeAny is not my own.
+// Just: I forgot where found the original merge2 - please accept my apologies.
 // I'd love to learn about it's origin/author, so I can give credit.
 // Thus: Your hint, dear reader, is highly appreciated!
 
-// End of MergeAny
+// End of AnyMerge
 
 // ===========================================================================
-// Beg of SameAny comparator
+// Beg of AnySame comparator
 
 // inspired by go/doc/play/tree.go
 
-// SameAny reads values from two channels in lockstep
+// AnySame reads values from two channels in lockstep
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func SameAny(same func(a, b Any) bool, inp1, inp2 <-chan Any) (out <-chan bool) {
+func AnySame(same func(a, b Any) bool, inp1, inp2 <-chan Any) (out <-chan bool) {
 	cha := make(chan bool)
 	go sameAny(cha, same, inp1, inp2)
 	return cha
@@ -1086,13 +1182,13 @@ func sameAny(out chan<- bool, same func(a, b Any) bool, inp1, inp2 <-chan Any) {
 	}
 }
 
-// End of SameAny comparator
+// End of AnySame comparator
 
 // ===========================================================================
-// Beg of JoinAny feedback back-feeders for circular networks
+// Beg of AnyJoin feedback back-feeders for circular networks
 
-// JoinAny sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAny(out chan<- Any, inp ...Any) (done <-chan struct{}) {
+// AnyJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func AnyJoin(out chan<- Any, inp ...Any) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinAny(sig, out, inp...)
 	return sig
@@ -1106,8 +1202,8 @@ func joinAny(done chan<- struct{}, out chan<- Any, inp ...Any) {
 	done <- struct{}{}
 }
 
-// JoinAnySlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAnySlice(out chan<- Any, inp ...[]Any) (done <-chan struct{}) {
+// AnyJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func AnyJoinSlice(out chan<- Any, inp ...[]Any) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinAnySlice(sig, out, inp...)
 	return sig
@@ -1123,8 +1219,8 @@ func joinAnySlice(done chan<- struct{}, out chan<- Any, inp ...[]Any) {
 	done <- struct{}{}
 }
 
-// JoinAnyChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAnyChan(out chan<- Any, inp <-chan Any) (done <-chan struct{}) {
+// AnyJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func AnyJoinChan(out chan<- Any, inp <-chan Any) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinAnyChan(sig, out, inp)
 	return sig
@@ -1138,10 +1234,10 @@ func joinAnyChan(done chan<- struct{}, out chan<- Any, inp <-chan Any) {
 	done <- struct{}{}
 }
 
-// End of JoinAny feedback back-feeders for circular networks
+// End of AnyJoin feedback back-feeders for circular networks
 
 // ===========================================================================
-// Beg of DaisyChainAny
+// Beg of AnyDaisyChain
 
 // ProcAny is the signature of the inner process of any linear pipe-network
 //  Example: the identity core:
@@ -1167,7 +1263,7 @@ func daisyAny(inp <-chan Any,
 	return cha
 }
 
-// DaisyChainAny returns a channel to receive all inp
+// AnyDaisyChain returns a channel to receive all inp
 // after having passed
 // thru the process(es) (`from` right `into` left)
 // before close.
@@ -1175,7 +1271,7 @@ func daisyAny(inp <-chan Any,
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func DaisyChainAny(inp chan Any,
+func AnyDaisyChain(inp chan Any,
 	procs ...func(into chan<- Any, from <-chan Any), // ProcAny processes
 ) (
 	out chan Any) { // to receive all results
@@ -1193,7 +1289,7 @@ func DaisyChainAny(inp chan Any,
 	return cha
 }
 
-// DaisyChaiNAny returns a channel to receive all inp
+// AnyDaisyChaiN returns a channel to receive all inp
 // after having passed
 // `somany` times
 // thru the process(es) (`from` right `into` left)
@@ -1203,8 +1299,8 @@ func DaisyChainAny(inp chan Any,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making null values useful.
 //
-// Note: DaisyChaiNAny(inp, 1, procs) <==> DaisyChainAny(inp, procs)
-func DaisyChaiNAny(inp chan Any, somany int,
+// Note: AnyDaisyChaiN(inp, 1, procs) <==> AnyDaisyChain(inp, procs)
+func AnyDaisyChaiN(inp chan Any, somany int,
 	procs ...func(into chan<- Any, from <-chan Any), // ProcAny processes
 ) (
 	out chan Any) { // to receive all results
@@ -1216,11 +1312,10 @@ func DaisyChaiNAny(inp chan Any, somany int,
 		cha = daisyAny(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {
-			cha = DaisyChainAny(cha, procs...)
+			cha = AnyDaisyChain(cha, procs...)
 		}
 	}
 	return cha
 }
 
-// End of DaisyChainAny
-// ===========================================================================
+// End of AnyDaisyChain
