@@ -20,7 +20,7 @@ type Site struct {
 // ---------------------------------------------------------------------------
 // site learning a little behaviour
 
-// Attr impelemnts the attribute relevant for ForkSiteSeenAttr,
+// Attr implements the attribute relevant for ForkSiteSeenAttr,
 // the "I've seen this site before" discriminator.
 func (s Site) Attr() interface{} {
 	return s.URL.String()
