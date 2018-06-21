@@ -5,11 +5,11 @@
 // Oh my god!		-in github.com/GoLangsam/pipe/s/pipe.go does not work :-(
 // have to keep using	-in ../../../s/pipe.go
 
-//go:generate genny     -in ../../../s/pipe.go		-out gen-pipe.go	-pkg httpsyet gen "Any=site"
-//go:generate genny     -in ../../../s/pipe.go		-out gen-pipe-str.go	-pkg httpsyet gen "Any=string"
-//go:generate genny	-in ../../../s/flap/flap.go	-out gen-flap.go	-pkg httpsyet gen "Any=site"
-//go:generate genny	-in ../../../s/strew/strew.go	-out gen-strew.go	-pkg httpsyet gen "Any=site"
-//go:generate genny	-in ../../../s/seen/seen.go	-out gen-seen.go	-pkg httpsyet gen "Any=site"
+//go:generate genny     -in ../../../s/pipe.go		-out gen-pipe.go	-pkg httpsyet gen "anyThing=site"
+//go:generate genny     -in ../../../s/pipe.go		-out gen-pipe-str.go	-pkg httpsyet gen "anyThing=string"
+//go:generate genny	-in ../../../s/flap/flap.go	-out gen-flap.go	-pkg httpsyet gen "anyThing=site"
+//go:generate genny	-in ../../../s/strew/strew.go	-out gen-strew.go	-pkg httpsyet gen "anyThing=site"
+//go:generate genny	-in ../../../s/seen/seen.go	-out gen-seen.go	-pkg httpsyet gen "anyThing=site"
 
 package httpsyet
 

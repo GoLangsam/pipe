@@ -11,14 +11,14 @@
 package httpsyet
 
 // ===========================================================================
-// Beg of MakeString creators
+// Beg of stringMake creators
 
-// MakeStringChan returns a new open channel
+// stringMakeChan returns a new open channel
 // (simply a 'chan string' that is).
 // Note: No 'string-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-var mystringPipelineStartsHere := MakeStringChan()
+var mystringPipelineStartsHere := stringMakeChan()
 // ... lot's of code to design and build Your favourite "mystringWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
@@ -30,22 +30,22 @@ close(mystringPipelineStartsHere)
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
-// Note: as always (except for PipeStringBuffer) the channel is unbuffered.
+// Note: as always (except for stringPipeBuffer) the channel is unbuffered.
 //
-func MakeStringChan() (out chan string) {
+func stringMakeChan() (out chan string) {
 	return make(chan string)
 }
 
-// End of MakeString creators
+// End of stringMake creators
 // ===========================================================================
 
 // ===========================================================================
-// Beg of ChanString producers
+// Beg of stringChan producers
 
-// ChanString returns a channel to receive
+// stringChan returns a channel to receive
 // all inputs
 // before close.
-func ChanString(inp ...string) (out <-chan string) {
+func stringChan(inp ...string) (out <-chan string) {
 	cha := make(chan string)
 	go chanstring(cha, inp...)
 	return cha
@@ -58,10 +58,10 @@ func chanstring(out chan<- string, inp ...string) {
 	}
 }
 
-// ChanStringSlice returns a channel to receive
+// stringChanSlice returns a channel to receive
 // all inputs
 // before close.
-func ChanStringSlice(inp ...[]string) (out <-chan string) {
+func stringChanSlice(inp ...[]string) (out <-chan string) {
 	cha := make(chan string)
 	go chanstringSlice(cha, inp...)
 	return cha
@@ -76,11 +76,11 @@ func chanstringSlice(out chan<- string, inp ...[]string) {
 	}
 }
 
-// ChanStringFuncNok returns a channel to receive
+// stringChanFuncNok returns a channel to receive
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func ChanStringFuncNok(gen func() (string, bool)) (out <-chan string) {
+func stringChanFuncNok(gen func() (string, bool)) (out <-chan string) {
 	cha := make(chan string)
 	go chanstringFuncNok(cha, gen)
 	return cha
@@ -97,11 +97,11 @@ func chanstringFuncNok(out chan<- string, gen func() (string, bool)) {
 	}
 }
 
-// ChanStringFuncErr returns a channel to receive
+// stringChanFuncErr returns a channel to receive
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func ChanStringFuncErr(gen func() (string, error)) (out <-chan string) {
+func stringChanFuncErr(gen func() (string, error)) (out <-chan string) {
 	cha := make(chan string)
 	go chanstringFuncErr(cha, gen)
 	return cha
@@ -118,18 +118,18 @@ func chanstringFuncErr(out chan<- string, gen func() (string, error)) {
 	}
 }
 
-// End of ChanString producers
+// End of stringChan producers
 // ===========================================================================
 
 // ===========================================================================
-// Beg of PipeString functions
+// Beg of stringPipe functions
 
-// PipeStringFunc returns a channel to receive
+// stringPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
 // Note: it 'could' be PipeStringMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func PipeStringFunc(inp <-chan string, act func(a string) string) (out <-chan string) {
+func stringPipeFunc(inp <-chan string, act func(a string) string) (out <-chan string) {
 	cha := make(chan string)
 	if act == nil { // Make `nil` value useful
 		act = func(a string) string { return a }
@@ -145,10 +145,10 @@ func pipestringFunc(out chan<- string, inp <-chan string, act func(a string) str
 	}
 }
 
-// PipeStringBuffer returns a buffered channel with capacity `cap` to receive
+// stringPipeBuffer returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func PipeStringBuffer(inp <-chan string, cap int) (out <-chan string) {
+func stringPipeBuffer(inp <-chan string, cap int) (out <-chan string) {
 	cha := make(chan string, cap)
 	go pipestringBuffer(cha, inp)
 	return cha
@@ -165,39 +165,39 @@ func pipestringBuffer(out chan<- string, inp <-chan string) {
 // ===========================================================================
 
 // ===========================================================================
-// Beg of TubeString closures
+// Beg of stringTube closures around stringPipe
 
-// TubeStringFunc returns a closure around PipeStringFunc (_, act).
-func TubeStringFunc(act func(a string) string) (tube func(inp <-chan string) (out <-chan string)) {
+// stringTubeFunc returns a closure around PipeStringFunc (_, act).
+func stringTubeFunc(act func(a string) string) (tube func(inp <-chan string) (out <-chan string)) {
 
 	return func(inp <-chan string) (out <-chan string) {
-		return PipeStringFunc(inp, act)
+		return stringPipeFunc(inp, act)
 	}
 }
 
-// TubeStringBuffer returns a closure around PipeStringBuffer (_, cap).
-func TubeStringBuffer(cap int) (tube func(inp <-chan string) (out <-chan string)) {
+// stringTubeBuffer returns a closure around PipeStringBuffer (_, cap).
+func stringTubeBuffer(cap int) (tube func(inp <-chan string) (out <-chan string)) {
 
 	return func(inp <-chan string) (out <-chan string) {
-		return PipeStringBuffer(inp, cap)
+		return stringPipeBuffer(inp, cap)
 	}
 }
 
-// End of TubeString closures
+// End of stringTube closures around stringPipe
 // ===========================================================================
 
 // ===========================================================================
-// Beg of DoneString terminators
+// Beg of stringDone terminators
 
-// DoneString returns a channel to receive
+// stringDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func DoneString(inp <-chan string) (done <-chan struct{}) {
+func stringDone(inp <-chan string) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doitstring(sig, inp)
+	go donestring(sig, inp)
 	return sig
 }
 
-func doitstring(done chan<- struct{}, inp <-chan string) {
+func donestring(done chan<- struct{}, inp <-chan string) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -205,18 +205,18 @@ func doitstring(done chan<- struct{}, inp <-chan string) {
 	done <- struct{}{}
 }
 
-// DoneStringSlice returns a channel to receive
+// stringDoneSlice returns a channel to receive
 // a slice with every string received on `inp`
 // before close.
 //
-// Note: Unlike DoneString, DoneStringSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func DoneStringSlice(inp <-chan string) (done <-chan []string) {
+// Note: Unlike stringDone, DoneStringSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func stringDoneSlice(inp <-chan string) (done <-chan []string) {
 	sig := make(chan []string)
-	go doitstringSlice(sig, inp)
+	go donestringSlice(sig, inp)
 	return sig
 }
 
-func doitstringSlice(done chan<- []string, inp <-chan string) {
+func donestringSlice(done chan<- []string, inp <-chan string) {
 	defer close(done)
 	slice := []string{}
 	for i := range inp {
@@ -225,19 +225,19 @@ func doitstringSlice(done chan<- []string, inp <-chan string) {
 	done <- slice
 }
 
-// DoneStringFunc returns a channel to receive
+// stringDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func DoneStringFunc(inp <-chan string, act func(a string)) (done <-chan struct{}) {
+func stringDoneFunc(inp <-chan string, act func(a string)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a string) { return }
 	}
-	go doitstringFunc(sig, inp, act)
+	go donestringFunc(sig, inp, act)
 	return sig
 }
 
-func doitstringFunc(done chan<- struct{}, inp <-chan string, act func(a string)) {
+func donestringFunc(done chan<- struct{}, inp <-chan string, act func(a string)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action
@@ -245,52 +245,52 @@ func doitstringFunc(done chan<- struct{}, inp <-chan string, act func(a string))
 	done <- struct{}{}
 }
 
-// End of DoneString terminators
+// End of stringDone terminators
 // ===========================================================================
 
 // ===========================================================================
-// Beg of FiniString closures
+// Beg of stringFini closures
 
-// FiniString returns a closure around `Donestring(_)`.
-func FiniString() func(inp <-chan string) (done <-chan struct{}) {
+// stringFini returns a closure around `stringDone(_)`.
+func stringFini() func(inp <-chan string) (done <-chan struct{}) {
 
 	return func(inp <-chan string) (done <-chan struct{}) {
-		return DoneString(inp)
+		return stringDone(inp)
 	}
 }
 
-// FiniStringSlice returns a closure around `DonestringSlice(_)`.
-func FiniStringSlice() func(inp <-chan string) (done <-chan []string) {
+// stringFiniSlice returns a closure around `stringDoneSlice(_)`.
+func stringFiniSlice() func(inp <-chan string) (done <-chan []string) {
 
 	return func(inp <-chan string) (done <-chan []string) {
-		return DoneStringSlice(inp)
+		return stringDoneSlice(inp)
 	}
 }
 
-// FiniStringFunc returns a closure around `DonestringFunc(_, act)`.
-func FiniStringFunc(act func(a string)) func(inp <-chan string) (done <-chan struct{}) {
+// stringFiniFunc returns a closure around `stringDoneFunc(_, act)`.
+func stringFiniFunc(act func(a string)) func(inp <-chan string) (done <-chan struct{}) {
 
 	return func(inp <-chan string) (done <-chan struct{}) {
-		return DoneStringFunc(inp, act)
+		return stringDoneFunc(inp, act)
 	}
 }
 
-// End of FiniString closures
+// End of stringFini closures
 // ===========================================================================
 
 // ===========================================================================
-// Beg of PairString functions
+// Beg of stringPair functions
 
-// PairString returns a pair of channels to receive every result of inp before close.
+// stringPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func PairString(inp <-chan string) (out1, out2 <-chan string) {
+func stringPair(inp <-chan string) (out1, out2 <-chan string) {
 	cha1 := make(chan string)
 	cha2 := make(chan string)
 	go pairstring(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-/* not used any more - kept for reference only.
+/* not used - kept for reference only.
 func pairstring(out1, out2 chan<- string, inp <-chan string) {
 	defer close(out1)
 	defer close(out2)
@@ -313,24 +313,24 @@ func pairstring(out1, out2 chan<- string, inp <-chan string) {
 	}
 }
 
-// End of PairString functions
+// End of stringPair functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of ForkString functions
+// Beg of stringFork functions
 
-// ForkString returns two channels
+// stringFork returns two channels
 // either of which is to receive
 // every result of inp
 // before close.
-func ForkString(inp <-chan string) (out1, out2 <-chan string) {
+func stringFork(inp <-chan string) (out1, out2 <-chan string) {
 	cha1 := make(chan string)
 	cha2 := make(chan string)
 	go forkstring(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-/* not used any more - kept for reference only.
+/* not used - kept for reference only.
 func forkstring(out1, out2 chan<- string, inp <-chan string) {
 	defer close(out1)
 	defer close(out2)
@@ -353,20 +353,20 @@ func forkstring(out1, out2 chan<- string, inp <-chan string) {
 	}
 }
 
-// End of ForkString functions
+// End of stringFork functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of FanIn2String simple binary Fan-In
+// Beg of stringFanIn2 simple binary Fan-In
 
-// FanIn2String returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func FanIn2String(inp1, inp2 <-chan string) (out <-chan string) {
+// stringFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+func stringFanIn2(inp1, inp2 <-chan string) (out <-chan string) {
 	cha := make(chan string)
 	go fanIn2string(cha, inp1, inp2)
 	return cha
 }
 
-/* not used any more - kept for reference only.
+/* not used - kept for reference only.
 // fanin2string as seen in Go Concurrency Patterns
 func fanin2string(out chan<- string, inp1, inp2 <-chan string) {
 	for {
@@ -412,4 +412,4 @@ func fanIn2string(out chan<- string, inp1, inp2 <-chan string) {
 	}
 }
 
-// End of FanIn2String simple binary Fan-In
+// End of stringFanIn2 simple binary Fan-In

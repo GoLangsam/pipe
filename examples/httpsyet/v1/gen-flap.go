@@ -9,11 +9,11 @@
 package httpsyet
 
 // ===========================================================================
-// Beg of PipeSiteEnter/Leave - Flapdoors observed by a Waiter
+// Beg of sitePipeEnter/Leave - Flapdoors observed by a Waiter
 
-// SiteWaiter - as implemented by `*sync.WaitGroup` -
-// attends Flapdoors and keeps track of
-// how many enter and how many leave.
+// siteWaiter - as implemented by `*sync.WaitGroup` -
+// attends Flapdoors and keeps counting
+// who enters and who leaves.
 //
 // Use DoneSiteWait to learn about
 // when the facilities are closed.
@@ -25,7 +25,7 @@ package httpsyet
 //
 // Just make sure to have _all_ entrances and exits attended,
 // and `Wait()` only *after* You've started flooding the facilities.
-type SiteWaiter interface {
+type siteWaiter interface {
 	Add(delta int)
 	Done()
 	Wait()
@@ -33,31 +33,31 @@ type SiteWaiter interface {
 
 // Note: Name is generic in order to avoid multiple-declaration clashes.
 
-// PipeSiteEnter returns a channel to receive
+// sitePipeEnter returns a channel to receive
 // all `inp`
 // and registers throughput
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func PipeSiteEnter(inp <-chan site, wg SiteWaiter) (out <-chan site) {
+func sitePipeEnter(inp <-chan site, wg siteWaiter) (out <-chan site) {
 	cha := make(chan site)
 	go pipesiteEnter(cha, wg, inp)
 	return cha
 }
 
-// PipeSiteLeave returns a channel to receive
+// sitePipeLeave returns a channel to receive
 // all `inp`
 // and registers throughput
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func PipeSiteLeave(inp <-chan site, wg SiteWaiter) (out <-chan site) {
+func sitePipeLeave(inp <-chan site, wg siteWaiter) (out <-chan site) {
 	cha := make(chan site)
 	go pipesiteLeave(cha, wg, inp)
 	return cha
 }
 
-func pipesiteEnter(out chan<- site, wg SiteWaiter, inp <-chan site) {
+func pipesiteEnter(out chan<- site, wg siteWaiter, inp <-chan site) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -65,7 +65,7 @@ func pipesiteEnter(out chan<- site, wg SiteWaiter, inp <-chan site) {
 	}
 }
 
-func pipesiteLeave(out chan<- site, wg SiteWaiter, inp <-chan site) {
+func pipesiteLeave(out chan<- site, wg siteWaiter, inp <-chan site) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -73,53 +73,53 @@ func pipesiteLeave(out chan<- site, wg SiteWaiter, inp <-chan site) {
 	}
 }
 
-// TubeSiteEnter returns a closure around PipeSiteEnter (_, wg)
+// siteTubeEnter returns a closure around sitePipeEnter (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as arrival.
-func TubeSiteEnter(wg SiteWaiter) (tube func(inp <-chan site) (out <-chan site)) {
+func siteTubeEnter(wg siteWaiter) (tube func(inp <-chan site) (out <-chan site)) {
 
 	return func(inp <-chan site) (out <-chan site) {
-		return PipeSiteEnter(inp, wg)
+		return sitePipeEnter(inp, wg)
 	}
 }
 
-// TubeSiteLeave returns a closure around PipeSiteLeave (_, wg)
+// siteTubeLeave returns a closure around sitePipeLeave (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as departure.
-func TubeSiteLeave(wg SiteWaiter) (tube func(inp <-chan site) (out <-chan site)) {
+func siteTubeLeave(wg siteWaiter) (tube func(inp <-chan site) (out <-chan site)) {
 
 	return func(inp <-chan site) (out <-chan site) {
-		return PipeSiteLeave(inp, wg)
+		return sitePipeLeave(inp, wg)
 	}
 }
 
-// DoneSiteWait returns a channel to receive
+// siteDoneWait returns a channel to receive
 // one signal
 // after wg.Wait() has returned and inp has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func DoneSiteWait(inp chan<- site, wg SiteWaiter) (done <-chan struct{}) {
+func siteDoneWait(inp chan<- site, wg siteWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
 	go donesiteWait(cha, inp, wg)
 	return cha
 }
 
-func donesiteWait(done chan<- struct{}, inp chan<- site, wg SiteWaiter) {
+func donesiteWait(done chan<- struct{}, inp chan<- site, wg siteWaiter) {
 	defer close(done)
 	wg.Wait()
 	close(inp)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// FiniSiteWait returns a closure around `DonesiteWait(_, wg)`.
-func FiniSiteWait(wg SiteWaiter) func(inp chan<- site) (done <-chan struct{}) {
+// siteFiniWait returns a closure around `DonesiteWait(_, wg)`.
+func siteFiniWait(wg siteWaiter) func(inp chan<- site) (done <-chan struct{}) {
 
 	return func(inp chan<- site) (done <-chan struct{}) {
-		return DoneSiteWait(inp, wg)
+		return siteDoneWait(inp, wg)
 	}
 }
 
-// End of PipeSiteEnter/Leave - Flapdoors observed by a Waiter
+// End of sitePipeEnter/Leave - Flapdoors observed by a Waiter

@@ -11,11 +11,11 @@ package httpsyet
 import "time"
 
 // ===========================================================================
-// Beg of StrewSite
+// Beg of siteStrew - scatter them
 
-// StrewSite returns a slice (of size = size) of channels
-// one of which shall receive any inp before close.
-func StrewSite(inp <-chan site, size int) (outS [](<-chan site)) {
+// siteStrew returns a slice (of size = size) of channels
+// one of which shall receive each inp before close.
+func siteStrew(inp <-chan site, size int) (outS [](<-chan site)) {
 	chaS := make([]chan site, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan site)
@@ -62,4 +62,4 @@ func trySendsite(inp site, outS ...chan site) bool {
 	return false
 }
 
-// End of StrewSite
+// End of siteStrew - scatter them
