@@ -28,9 +28,9 @@ func (t *Traffic) Feed(urls []*url.URL, parent *url.URL, depth int) {
 // Processor builds the site traffic processing network;
 // it is cirular if crawl uses Feed to provide feedback.
 func (t *Traffic) Processor(crawl func(s site), parallel int) {
-	sites, seen := ForkSiteSeenAttr(t.Travel, site.Attr)
-	for _, inp := range StrewSite(sites, parallel) {
-		DoneSiteFunc(inp, crawl) // `sites` leave inside crawl
+	sites, seen := siteForkSeenAttr(t.Travel, site.Attr)
+	for _, inp := range siteStrew(sites, parallel) {
+		siteDoneFunc(inp, crawl) // `sites` leave inside crawl
 	}
-	DoneSite(PipeSiteLeave(seen, t)) // `seen` leave without further processing
+	siteDone(sitePipeLeave(seen, t)) // `seen` leave without further processing
 }

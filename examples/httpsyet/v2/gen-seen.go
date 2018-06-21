@@ -11,36 +11,36 @@ package httpsyet
 import "sync"
 
 // ===========================================================================
-// Beg of PipeSiteSeen/ForkSiteSeen - an "I've seen this site before" filter / fork
+// Beg of sitePipeSeen/siteForkSeen - an "I've seen this site before" filter / forker
 
-// PipeSiteSeen returns a channel to receive
+// sitePipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeSiteFilterNotSeenYet might be a better name, but is fairly long.
-func PipeSiteSeen(inp <-chan site) (out <-chan site) {
+// Note: sitePipeFilterNotSeenYet might be a better name, but is fairly long.
+func sitePipeSeen(inp <-chan site) (out <-chan site) {
 	cha := make(chan site)
 	go pipesiteSeenAttr(cha, inp, nil)
 	return cha
 }
 
-// PipeSiteSeenAttr returns a channel to receive
+// sitePipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeSiteFilterAttrNotSeenYet might be a better name, but is fairly long.
-func PipeSiteSeenAttr(inp <-chan site, attr func(a site) interface{}) (out <-chan site) {
+// Note: sitePipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func sitePipeSeenAttr(inp <-chan site, attr func(a site) interface{}) (out <-chan site) {
 	cha := make(chan site)
 	go pipesiteSeenAttr(cha, inp, attr)
 	return cha
 }
 
-// ForkSiteSeen returns two channels, `new` and `old`,
+// siteForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -49,14 +49,14 @@ func PipeSiteSeenAttr(inp <-chan site, attr func(a site) interface{}) (out <-cha
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkSiteSeen(inp <-chan site) (new, old <-chan site) {
+func siteForkSeen(inp <-chan site) (new, old <-chan site) {
 	cha1 := make(chan site)
 	cha2 := make(chan site)
 	go forksiteSeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
-// ForkSiteSeenAttr returns two channels, `new` and `old`,
+// siteForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -66,7 +66,7 @@ func ForkSiteSeen(inp <-chan site) (new, old <-chan site) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkSiteSeenAttr(inp <-chan site, attr func(a site) interface{}) (new, old <-chan site) {
+func siteForkSeenAttr(inp <-chan site, attr func(a site) interface{}) (new, old <-chan site) {
 	cha1 := make(chan site)
 	cha2 := make(chan site)
 	go forksiteSeenAttr(cha1, cha2, inp, attr)
@@ -108,24 +108,24 @@ func forksiteSeenAttr(new, old chan<- site, inp <-chan site, attr func(a site) i
 	}
 }
 
-// TubeSiteSeen returns a closure around PipeSiteSeen()
+// siteTubeSeen returns a closure around sitePipeSeen()
 // (silently dropping every site seen before).
-func TubeSiteSeen() (tube func(inp <-chan site) (out <-chan site)) {
+func siteTubeSeen() (tube func(inp <-chan site) (out <-chan site)) {
 
 	return func(inp <-chan site) (out <-chan site) {
-		return PipeSiteSeen(inp)
+		return sitePipeSeen(inp)
 	}
 }
 
-// TubeSiteSeenAttr returns a closure around PipeSiteSeenAttr()
+// siteTubeSeenAttr returns a closure around sitePipeSeenAttr()
 // (silently dropping every site
 // whose attribute `attr` was
 // seen before).
-func TubeSiteSeenAttr(attr func(a site) interface{}) (tube func(inp <-chan site) (out <-chan site)) {
+func siteTubeSeenAttr(attr func(a site) interface{}) (tube func(inp <-chan site) (out <-chan site)) {
 
 	return func(inp <-chan site) (out <-chan site) {
-		return PipeSiteSeenAttr(inp, attr)
+		return sitePipeSeenAttr(inp, attr)
 	}
 }
 
-// End of PipeSiteSeen/ForkSiteSeen - an "I've seen this site before" filter / fork
+// End of sitePipeSeen/siteForkSeen - an "I've seen this site before" filter / forker
