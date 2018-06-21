@@ -11,36 +11,36 @@ package sites
 import "sync"
 
 // ===========================================================================
-// Beg of PipeSiteSeen/ForkSiteSeen - an "I've seen this Site before" filter / fork
+// Beg of SitePipeSeen/SiteForkSeen - an "I've seen this Site before" filter / forker
 
-// PipeSiteSeen returns a channel to receive
+// SitePipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeSiteFilterNotSeenYet might be a better name, but is fairly long.
-func PipeSiteSeen(inp <-chan Site) (out <-chan Site) {
+// Note: SitePipeFilterNotSeenYet might be a better name, but is fairly long.
+func SitePipeSeen(inp <-chan Site) (out <-chan Site) {
 	cha := make(chan Site)
 	go pipeSiteSeenAttr(cha, inp, nil)
 	return cha
 }
 
-// PipeSiteSeenAttr returns a channel to receive
+// SitePipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeSiteFilterAttrNotSeenYet might be a better name, but is fairly long.
-func PipeSiteSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (out <-chan Site) {
+// Note: SitePipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func SitePipeSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (out <-chan Site) {
 	cha := make(chan Site)
 	go pipeSiteSeenAttr(cha, inp, attr)
 	return cha
 }
 
-// ForkSiteSeen returns two channels, `new` and `old`,
+// SiteForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -49,14 +49,14 @@ func PipeSiteSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (out <-cha
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkSiteSeen(inp <-chan Site) (new, old <-chan Site) {
+func SiteForkSeen(inp <-chan Site) (new, old <-chan Site) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
 	go forkSiteSeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
-// ForkSiteSeenAttr returns two channels, `new` and `old`,
+// SiteForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -66,7 +66,7 @@ func ForkSiteSeen(inp <-chan Site) (new, old <-chan Site) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkSiteSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (new, old <-chan Site) {
+func SiteForkSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (new, old <-chan Site) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
 	go forkSiteSeenAttr(cha1, cha2, inp, attr)
@@ -108,24 +108,24 @@ func forkSiteSeenAttr(new, old chan<- Site, inp <-chan Site, attr func(a Site) i
 	}
 }
 
-// TubeSiteSeen returns a closure around PipeSiteSeen()
+// SiteTubeSeen returns a closure around SitePipeSeen()
 // (silently dropping every Site seen before).
-func TubeSiteSeen() (tube func(inp <-chan Site) (out <-chan Site)) {
+func SiteTubeSeen() (tube func(inp <-chan Site) (out <-chan Site)) {
 
 	return func(inp <-chan Site) (out <-chan Site) {
-		return PipeSiteSeen(inp)
+		return SitePipeSeen(inp)
 	}
 }
 
-// TubeSiteSeenAttr returns a closure around PipeSiteSeenAttr()
+// SiteTubeSeenAttr returns a closure around SitePipeSeenAttr()
 // (silently dropping every Site
 // whose attribute `attr` was
 // seen before).
-func TubeSiteSeenAttr(attr func(a Site) interface{}) (tube func(inp <-chan Site) (out <-chan Site)) {
+func SiteTubeSeenAttr(attr func(a Site) interface{}) (tube func(inp <-chan Site) (out <-chan Site)) {
 
 	return func(inp <-chan Site) (out <-chan Site) {
-		return PipeSiteSeenAttr(inp, attr)
+		return SitePipeSeenAttr(inp, attr)
 	}
 }
 
-// End of PipeSiteSeen/ForkSiteSeen - an "I've seen this Site before" filter / fork
+// End of SitePipeSeen/SiteForkSeen - an "I've seen this Site before" filter / forker

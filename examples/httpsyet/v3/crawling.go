@@ -49,7 +49,7 @@ type crawling struct {
 // goWaitAndClose is to be used after initial traffic has been added.
 func (c *crawling) goWaitAndClose() {
 	go func(c *crawling) {
-		<-sites.DoneSiteWait(c.Travel, c)
+		<-sites.SiteDoneWait(c.Travel, c)
 		close(c.results)
 	}(c)
 }
@@ -83,7 +83,7 @@ func (c Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 		make(chan result), // results - the (secondary) output
 	}
 	crawling.crawling(urls, parallel(c.Parallel))
-	return res.DoneResultFunc(crawling.results, c.report)
+	return res.ResultDoneFunc(crawling.results, c.report)
 }
 
 // ===========================================================================

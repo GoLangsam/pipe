@@ -11,11 +11,11 @@ package sites
 import "time"
 
 // ===========================================================================
-// Beg of StrewSite
+// Beg of SiteStrew - scatter them
 
-// StrewSite returns a slice (of size = size) of channels
-// one of which shall receive any inp before close.
-func StrewSite(inp <-chan Site, size int) (outS [](<-chan Site)) {
+// SiteStrew returns a slice (of size = size) of channels
+// one of which shall receive each inp before close.
+func SiteStrew(inp <-chan Site, size int) (outS [](<-chan Site)) {
 	chaS := make([]chan Site, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan Site)
@@ -62,4 +62,4 @@ func trySendSite(inp Site, outS ...chan Site) bool {
 	return false
 }
 
-// End of StrewSite
+// End of SiteStrew - scatter them

@@ -20,28 +20,28 @@ import "container/ring"
 // Note: pipeSiteAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
-// Beg of PipeSiteAdjust
+// Beg of SitePipeAdjust
 
-// PipeSiteAdjust returns a channel to receive
+// SitePipeAdjust returns a channel to receive
 // all `inp`
-// buffered by a SendSiteProxy process
+// buffered by a SiteSendProxy process
 // before close.
-func PipeSiteAdjust(inp <-chan Site, sizes ...int) (out <-chan Site) {
+func SitePipeAdjust(inp <-chan Site, sizes ...int) (out <-chan Site) {
 	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan Site, cap)
 	go pipeSiteAdjust(cha, inp, que)
 	return cha
 }
 
-// TubeSiteAdjust returns a closure around PipeSiteAdjust (_, sizes ...int).
-func TubeSiteAdjust(sizes ...int) (tube func(inp <-chan Site) (out <-chan Site)) {
+// SiteTubeAdjust returns a closure around SitePipeAdjust (_, sizes ...int).
+func SiteTubeAdjust(sizes ...int) (tube func(inp <-chan Site) (out <-chan Site)) {
 
 	return func(inp <-chan Site) (out <-chan Site) {
-		return PipeSiteAdjust(inp, sizes...)
+		return SitePipeAdjust(inp, sizes...)
 	}
 }
 
-// End of PipeSiteAdjust
+// End of SitePipeAdjust
 // ===========================================================================
 
 // ===========================================================================
@@ -49,10 +49,10 @@ func TubeSiteAdjust(sizes ...int) (tube func(inp <-chan Site) (out <-chan Site))
 
 func sendSiteProxySizes(sizes ...int) (cap, que int) {
 
-	// CAP is the minimum capacity of the buffered proxy channel in `SendSiteProxy`
+	// CAP is the minimum capacity of the buffered proxy channel in `SiteSendProxy`
 	const CAP = 10
 
-	// QUE is the minimum initially allocated size of the circular queue in `SendSiteProxy`
+	// QUE is the minimum initially allocated size of the circular queue in `SiteSendProxy`
 	const QUE = 16
 
 	cap = CAP
@@ -67,21 +67,21 @@ func sendSiteProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("SendSiteProxy: too many sizes")
+		panic("SiteSendProxy: too many sizes")
 	}
 
 	return
 }
 
-// sendSiteProxy returns a channel to serve as a sending proxy to 'out'.
+// SiteSendProxy returns a channel to serve as a sending proxy to 'out'.
 // Uses a goroutine to receive values from 'out' and store them
 // in an expanding buffer, so that sending to 'out' never blocks.
 //  Note: the expanding buffer is implemented via "container/ring"
 //
-// Note: SendSiteProxy is kept for the Sieve example
+// Note: SiteSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
-// even so it does not fit the pipe tube pattern as PipeSiteAdjust does.
-func SendSiteProxy(out chan<- Site, sizes ...int) chan<- Site {
+// even so it does not fit the pipe tube pattern as SitePipeAdjust does.
+func SiteSendProxy(out chan<- Site, sizes ...int) chan<- Site {
 	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan Site, cap)
 	go pipeSiteAdjust(out, cha, que)

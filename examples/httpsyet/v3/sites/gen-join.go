@@ -9,10 +9,10 @@
 package sites
 
 // ===========================================================================
-// Beg of JoinSite feedback back-feeders for circular networks
+// Beg of SiteJoin feedback back-feeders for circular networks
 
-// JoinSite sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinSite(out chan<- Site, inp ...Site) (done <-chan struct{}) {
+// SiteJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func SiteJoin(out chan<- Site, inp ...Site) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinSite(sig, out, inp...)
 	return sig
@@ -26,8 +26,8 @@ func joinSite(done chan<- struct{}, out chan<- Site, inp ...Site) {
 	done <- struct{}{}
 }
 
-// JoinSiteSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinSiteSlice(out chan<- Site, inp ...[]Site) (done <-chan struct{}) {
+// SiteJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func SiteJoinSlice(out chan<- Site, inp ...[]Site) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinSiteSlice(sig, out, inp...)
 	return sig
@@ -43,8 +43,8 @@ func joinSiteSlice(done chan<- struct{}, out chan<- Site, inp ...[]Site) {
 	done <- struct{}{}
 }
 
-// JoinSiteChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinSiteChan(out chan<- Site, inp <-chan Site) (done <-chan struct{}) {
+// SiteJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func SiteJoinChan(out chan<- Site, inp <-chan Site) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinSiteChan(sig, out, inp)
 	return sig
@@ -58,4 +58,4 @@ func joinSiteChan(done chan<- struct{}, out chan<- Site, inp <-chan Site) {
 	done <- struct{}{}
 }
 
-// End of JoinSite feedback back-feeders for circular networks
+// End of SiteJoin feedback back-feeders for circular networks
