@@ -9,4 +9,4 @@ import (
 )
 
 // just to be sure :-)
-var _ AnyWaiter = new(sync.WaitGroup)
+var _ anyThingWaiter = new(sync.WaitGroup)

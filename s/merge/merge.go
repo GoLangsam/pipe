@@ -8,41 +8,41 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of MergeAny
+// Beg of anyThingMerge
 
-// MergeAny returns a channel to receive all inputs sorted and free of duplicates.
+// anyThingMerge returns a channel to receive all inputs sorted and free of duplicates.
 // Each input channel needs to be sorted ascending and free of duplicates.
 // The passed binary boolean function `less` defines the applicable order.
 //  Note: If no inputs are given, a closed channel is returned.
-func MergeAny(less func(i, j Any) bool, inps ...<-chan Any) (out <-chan Any) {
+func anyThingMerge(less func(i, j anyThing) bool, inps ...<-chan anyThing) (out <-chan anyThing) {
 
 	if len(inps) < 1 { // none: return a closed channel
-		cha := make(chan Any)
+		cha := make(chan anyThing)
 		defer close(cha)
 		return cha
 	} else if len(inps) < 2 { // just one: return it
 		return inps[0]
 	} else { // tail recurse
-		return mergeAny2(less, inps[0], MergeAny(less, inps[1:]...))
+		return mergeanyThing(less, inps[0], anyThingMerge(less, inps[1:]...))
 	}
 }
 
-// mergeAny2 takes two (eager) channels of comparable types,
+// mergeanyThing takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func mergeAny2(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
-	cha := make(chan Any)
-	go func(out chan<- Any, i1, i2 <-chan Any) {
+func mergeanyThing(less func(i, j anyThing) bool, i1, i2 <-chan anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go func(out chan<- anyThing, i1, i2 <-chan anyThing) {
 		defer close(out)
 		var (
-			clos1, clos2 bool // we found the chan closed
-			buff1, buff2 bool // we've read 'from', but not sent (yet)
-			ok           bool // did we read successfully?
-			from1, from2 Any  // what we've read
+			clos1, clos2 bool     // we found the chan closed
+			buff1, buff2 bool     // we've read 'from', but not sent (yet)
+			ok           bool     // did we read successfully?
+			from1, from2 anyThing // what we've read
 		)
 
 		for !clos1 || !clos2 {
@@ -86,9 +86,10 @@ func mergeAny2(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
 	return cha
 }
 
-// Note: merge2 is not my own. Just: I forgot where found it - please accept my apologies.
+// Note: mergeanyThing is not my own.
+// Just: I forgot where found the original merge2 - please accept my apologies.
 // I'd love to learn about it's origin/author, so I can give credit.
 // Thus: Your hint, dear reader, is highly appreciated!
 
-// End of MergeAny
+// End of anyThingMerge
 // ===========================================================================

@@ -8,8 +8,8 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
 // Beg of has nil versions
@@ -17,17 +17,17 @@ type Any generic.Type
 // Functions suitable only for types which can be == nil.
 // Thus, do not use for basic built-in's such as int, string, ...
 
-// ChanAnyFuncNil returns a channel to receive
+// anyThingChanFuncNil returns a channel to receive
 // all results of generator `gen`
 // until nil
 // before close.
-func ChanAnyFuncNil(gen func() Any) (out <-chan Any) {
-	cha := make(chan Any)
-	go chanAnyFuncNil(cha, gen)
+func anyThingChanFuncNil(gen func() anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go chananyThingFuncNil(cha, gen)
 	return cha
 }
 
-func chanAnyFuncNil(out chan<- Any, gen func() Any) {
+func chananyThingFuncNil(out chan<- anyThing, gen func() anyThing) {
 	defer close(out)
 	for {
 		res := gen() // generate

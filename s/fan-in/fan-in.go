@@ -10,31 +10,31 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of FanAnysIn
+// Beg of anyThingFanIn
 
-// FanAnysIn returns a channel to receive all inputs arriving
+// anyThingFanIn returns a channel to receive all inputs arriving
 // on variadic inps
 // before close.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
-	cha := make(chan Any)
+func anyThingFanIn(inps ...<-chan anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
-	go func(wg *sync.WaitGroup, out chan Any) { // Spawn "close(out)" once all inps are done
+	go func(wg *sync.WaitGroup, out chan anyThing) { // Spawn "close(out)" once all inps are done
 		wg.Wait()
 		close(out)
 	}(wg, cha)
 
 	for i := range inps {
-		go func(out chan<- Any, inp <-chan Any) { // Spawn "output(c)"s
+		go func(out chan<- anyThing, inp <-chan anyThing) { // Spawn "output(c)"s
 			defer wg.Done()
 			for i := range inp {
 				out <- i
@@ -45,5 +45,5 @@ func FanAnysIn(inps ...<-chan Any) (out <-chan Any) {
 	return cha
 }
 
-// End of FanAnysIn
+// End of anyThingFanIn
 // ===========================================================================

@@ -9,15 +9,15 @@ package balance
 
 // Request is a function to be applied and channel on which to return the result.
 type Request struct {
-	fn func() Any // operation to perform
-	c  chan Any   // channel on which to return result
+	fn func() anyThing // operation to perform
+	c  chan anyThing   // channel on which to return result
 }
 
 // Beg of Fake
-func workFn() (a Any) { return }
+func workFn() (a anyThing) { return }
 
 func requester(work chan<- Request) {
-	cha := make(chan Any)
+	cha := make(chan anyThing)
 	for {
 		// time.Sleep ....
 		work <- Request{workFn, cha} // send a work request

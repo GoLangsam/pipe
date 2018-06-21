@@ -15,7 +15,7 @@ type Tree struct {
 
 // Walk traverses a tree depth-first,
 // sending each Value on a channel.
-func Walk(t *Tree, ch chan Any) {
+func Walk(t *Tree, ch chan anyThing) {
 	if t == nil {
 		return
 	}
@@ -26,8 +26,8 @@ func Walk(t *Tree, ch chan Any) {
 
 // Walker launches Walk in a new goroutine,
 // and returns a read-only channel of values.
-func Walker(t *Tree) <-chan Any {
-	ch := make(chan Any)
+func Walker(t *Tree) <-chan anyThing {
+	ch := make(chan anyThing)
 	go func() {
 		Walk(t, ch)
 		close(ch)

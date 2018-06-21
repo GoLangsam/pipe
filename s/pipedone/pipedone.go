@@ -8,21 +8,21 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of PipeAnyDone
+// Beg of anyThingPipeDone
 
-// PipeAnyDone returns a channel to receive every `inp` before close and a channel to signal this closing.
-func PipeAnyDone(inp <-chan Any) (out <-chan Any, done <-chan struct{}) {
-	cha := make(chan Any)
+// anyThingPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
+func anyThingPipeDone(inp <-chan anyThing) (out <-chan anyThing, done <-chan struct{}) {
+	cha := make(chan anyThing)
 	doit := make(chan struct{})
-	go pipeAnyDone(cha, doit, inp)
+	go pipeanyThingDone(cha, doit, inp)
 	return cha, doit
 }
 
-func pipeAnyDone(out chan<- Any, done chan<- struct{}, inp <-chan Any) {
+func pipeanyThingDone(out chan<- anyThing, done chan<- struct{}, inp <-chan anyThing) {
 	defer close(out)
 	defer close(done)
 	for i := range inp {
@@ -31,5 +31,5 @@ func pipeAnyDone(out chan<- Any, done chan<- struct{}, inp <-chan Any) {
 	done <- struct{}{}
 }
 
-// End of PipeAnyDone
+// End of anyThingPipeDone
 // ===========================================================================

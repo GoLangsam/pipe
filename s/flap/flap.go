@@ -8,27 +8,27 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of PipeAnyEnter/Leave - Flapdoors observed by a Waiter
+// Beg of anyThingPipeEnter/Leave - Flapdoors observed by a Waiter
 
-// AnyWaiter - as implemented by `*sync.WaitGroup` -
-// attends Flapdoors and keeps track of
-// how many enter and how many leave.
+// anyThingWaiter - as implemented by `*sync.WaitGroup` -
+// attends Flapdoors and keeps counting
+// who enters and who leaves.
 //
-// Use DoneAnyWait to learn about
+// Use DoneanyThingWait to learn about
 // when the facilities are closed.
 //
 // Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
-// Just: DoneAnyWait is more convenient
+// Just: DoneanyThingWait is more convenient
 // as it also closes the primary channel.
 //
 // Just make sure to have _all_ entrances and exits attended,
 // and `Wait()` only *after* You've started flooding the facilities.
-type AnyWaiter interface {
+type anyThingWaiter interface {
 	Add(delta int)
 	Done()
 	Wait()
@@ -36,31 +36,31 @@ type AnyWaiter interface {
 
 // Note: Name is generic in order to avoid multiple-declaration clashes.
 
-// PipeAnyEnter returns a channel to receive
+// anyThingPipeEnter returns a channel to receive
 // all `inp`
 // and registers throughput
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func PipeAnyEnter(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
-	cha := make(chan Any)
-	go pipeAnyEnter(cha, wg, inp)
+func anyThingPipeEnter(inp <-chan anyThing, wg anyThingWaiter) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go pipeanyThingEnter(cha, wg, inp)
 	return cha
 }
 
-// PipeAnyLeave returns a channel to receive
+// anyThingPipeLeave returns a channel to receive
 // all `inp`
 // and registers throughput
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func PipeAnyLeave(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
-	cha := make(chan Any)
-	go pipeAnyLeave(cha, wg, inp)
+func anyThingPipeLeave(inp <-chan anyThing, wg anyThingWaiter) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go pipeanyThingLeave(cha, wg, inp)
 	return cha
 }
 
-func pipeAnyEnter(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
+func pipeanyThingEnter(out chan<- anyThing, wg anyThingWaiter, inp <-chan anyThing) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -68,7 +68,7 @@ func pipeAnyEnter(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
 	}
 }
 
-func pipeAnyLeave(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
+func pipeanyThingLeave(out chan<- anyThing, wg anyThingWaiter, inp <-chan anyThing) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -76,54 +76,54 @@ func pipeAnyLeave(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
 	}
 }
 
-// TubeAnyEnter returns a closure around PipeAnyEnter (_, wg)
+// anyThingTubeEnter returns a closure around anyThingPipeEnter (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as arrival.
-func TubeAnyEnter(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
+func anyThingTubeEnter(wg anyThingWaiter) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
 
-	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnyEnter(inp, wg)
+	return func(inp <-chan anyThing) (out <-chan anyThing) {
+		return anyThingPipeEnter(inp, wg)
 	}
 }
 
-// TubeAnyLeave returns a closure around PipeAnyLeave (_, wg)
+// anyThingTubeLeave returns a closure around anyThingPipeLeave (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as departure.
-func TubeAnyLeave(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
+func anyThingTubeLeave(wg anyThingWaiter) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
 
-	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnyLeave(inp, wg)
+	return func(inp <-chan anyThing) (out <-chan anyThing) {
+		return anyThingPipeLeave(inp, wg)
 	}
 }
 
-// DoneAnyWait returns a channel to receive
+// anyThingDoneWait returns a channel to receive
 // one signal
 // after wg.Wait() has returned and inp has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func DoneAnyWait(inp chan<- Any, wg AnyWaiter) (done <-chan struct{}) {
+func anyThingDoneWait(inp chan<- anyThing, wg anyThingWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go doneAnyWait(cha, inp, wg)
+	go doneanyThingWait(cha, inp, wg)
 	return cha
 }
 
-func doneAnyWait(done chan<- struct{}, inp chan<- Any, wg AnyWaiter) {
+func doneanyThingWait(done chan<- struct{}, inp chan<- anyThing, wg anyThingWaiter) {
 	defer close(done)
 	wg.Wait()
 	close(inp)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// FiniAnyWait returns a closure around `DoneAnyWait(_, wg)`.
-func FiniAnyWait(wg AnyWaiter) func(inp chan<- Any) (done <-chan struct{}) {
+// anyThingFiniWait returns a closure around `DoneanyThingWait(_, wg)`.
+func anyThingFiniWait(wg anyThingWaiter) func(inp chan<- anyThing) (done <-chan struct{}) {
 
-	return func(inp chan<- Any) (done <-chan struct{}) {
-		return DoneAnyWait(inp, wg)
+	return func(inp chan<- anyThing) (done <-chan struct{}) {
+		return anyThingDoneWait(inp, wg)
 	}
 }
 
-// End of PipeAnyEnter/Leave - Flapdoors observed by a Waiter
+// End of anyThingPipeEnter/Leave - Flapdoors observed by a Waiter
 // ===========================================================================

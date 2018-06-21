@@ -22,10 +22,10 @@ import (
 // walking each in its own goroutine,
 // sending their contents through a channel
 // to a third goroutine that compares them.
-func ExampleSameAny_tree() {
+func ExampleanyThingSame_tree() {
 
 	// same reports iff a and b are equal
-	same := func(a, b Any) bool {
+	same := func(a, b anyThing) bool {
 		v1 := a.(int)
 		v2 := b.(int)
 		return v1 == v2
@@ -36,7 +36,7 @@ func ExampleSameAny_tree() {
 	// if t1 and t2 have the same contents.
 	Compare := func(t1, t2 *Tree) bool {
 		c1, c2 := Walker(t1), Walker(t2)
-		return <-SameAny(same, c1, c2)
+		return <-anyThingSame(same, c1, c2)
 	}
 
 	t1 := New(100, 1)

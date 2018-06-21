@@ -5,18 +5,18 @@
 package pipe
 
 // ===========================================================================
-// Beg of FanIn2Any simple binary Fan-In
+// Beg of anyThingFanIn2 simple binary Fan-In
 
-// FanIn2Any returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func FanIn2Any(inp1, inp2 <-chan Any) (out <-chan Any) {
-	cha := make(chan Any)
-	go fanIn2Any(cha, inp1, inp2)
+// anyThingFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+func anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go fanIn2anyThing(cha, inp1, inp2)
 	return cha
 }
 
-/* not used any more - kept for reference only.
-// fanin2Any as seen in Go Concurrency Patterns
-func fanin2Any(out chan<- Any, inp1, inp2 <-chan Any) {
+/* not used - kept for reference only.
+// fanin2anyThing as seen in Go Concurrency Patterns
+func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 	for {
 		select {
 		case e := <-inp1:
@@ -27,13 +27,13 @@ func fanin2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 	}
 } */
 
-func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
+func fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 	defer close(out)
 
 	var (
-		closed bool // we found a chan closed
-		ok     bool // did we read successfully?
-		e      Any  // what we've read
+		closed bool     // we found a chan closed
+		ok     bool     // did we read successfully?
+		e      anyThing // what we've read
 	)
 
 	for !closed {
@@ -60,5 +60,5 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 	}
 }
 
-// End of FanIn2Any simple binary Fan-In
+// End of anyThingFanIn2 simple binary Fan-In
 // ===========================================================================

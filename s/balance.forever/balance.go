@@ -13,23 +13,23 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
 // Beg of Request
 
 // Request is a function to be applied and channel on which to return the result.
 type Request struct {
-	fn func() Any // operation to perform
-	c  chan Any   // channel on which to return result
+	fn func() anyThing // operation to perform
+	c  chan anyThing   // channel on which to return result
 }
 
 // Beg of Fake
-func workFn() (a Any) { return }
+func workFn() (a anyThing) { return }
 
 func requester(work chan<- Request) {
-	cha := make(chan Any)
+	cha := make(chan anyThing)
 	for {
 		// time.Sleep ....
 		work <- Request{workFn, cha} // send a work request

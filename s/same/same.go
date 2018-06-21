@@ -8,25 +8,25 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of SameAny comparator
+// Beg of anyThingSame comparator
 
 // inspired by go/doc/play/tree.go
 
-// SameAny reads values from two channels in lockstep
+// anyThingSame reads values from two channels in lockstep
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func SameAny(same func(a, b Any) bool, inp1, inp2 <-chan Any) (out <-chan bool) {
+func anyThingSame(same func(a, b anyThing) bool, inp1, inp2 <-chan anyThing) (out <-chan bool) {
 	cha := make(chan bool)
-	go sameAny(cha, same, inp1, inp2)
+	go sameanyThing(cha, same, inp1, inp2)
 	return cha
 }
 
-func sameAny(out chan<- bool, same func(a, b Any) bool, inp1, inp2 <-chan Any) {
+func sameanyThing(out chan<- bool, same func(a, b anyThing) bool, inp1, inp2 <-chan anyThing) {
 	defer close(out)
 	for {
 		v1, ok1 := <-inp1
@@ -43,5 +43,5 @@ func sameAny(out chan<- bool, same func(a, b Any) bool, inp1, inp2 <-chan Any) {
 	}
 }
 
-// End of SameAny comparator
+// End of anyThingSame comparator
 // ===========================================================================

@@ -8,23 +8,23 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of FanAnyOut
+// Beg of anyThingFanOut
 
-// FanAnyOut returns a slice (of size = size) of channels
+// anyThingFanOut returns a slice (of size = size) of channels
 // each of which shall receive any inp before close.
-func FanAnyOut(inp <-chan Any, size int) (outS [](<-chan Any)) {
-	chaS := make([]chan Any, size)
+func anyThingFanOut(inp <-chan anyThing, size int) (outS [](<-chan anyThing)) {
+	chaS := make([]chan anyThing, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Any)
+		chaS[i] = make(chan anyThing)
 	}
 
-	go fanAnyOut(inp, chaS...)
+	go fananyThingOut(inp, chaS...)
 
-	outS = make([]<-chan Any, size)
+	outS = make([]<-chan anyThing, size)
 	for i := 0; i < size; i++ {
 		outS[i] = chaS[i] // convert `chan` to `<-chan`
 	}
@@ -32,8 +32,8 @@ func FanAnyOut(inp <-chan Any, size int) (outS [](<-chan Any)) {
 	return outS
 }
 
-// c fanAnyOut(inp <-chan Any, outs ...chan<- Any) {
-func fanAnyOut(inp <-chan Any, outs ...chan Any) {
+// c fananyThingOut(inp <-chan anyThing, outs ...chan<- anyThing) {
+func fananyThingOut(inp <-chan anyThing, outs ...chan anyThing) {
 
 	for i := range inp {
 		for o := range outs {
@@ -47,5 +47,5 @@ func fanAnyOut(inp <-chan Any, outs ...chan Any) {
 
 }
 
-// End of FanAnyOut
+// End of anyThingFanOut
 // ===========================================================================

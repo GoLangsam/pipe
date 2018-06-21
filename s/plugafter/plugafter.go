@@ -10,31 +10,31 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of PlugAnyAfter - graceful terminator
+// Beg of anyThingPlugAfter - graceful terminator
 
-// PlugAnyAfter returns a channel to receive every `inp` before close and a channel to signal this closing.
+// anyThingPlugAfter returns a channel to receive every `inp` before close and a channel to signal this closing.
 // Upon receipt of a time signal
 // (e.g. from `time.After(...)`),
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func PlugAnyAfter(inp <-chan Any, after <-chan time.Time) (out <-chan Any, done <-chan struct{}) {
-	cha := make(chan Any)
+func anyThingPlugAfter(inp <-chan anyThing, after <-chan time.Time) (out <-chan anyThing, done <-chan struct{}) {
+	cha := make(chan anyThing)
 	doit := make(chan struct{})
-	go plugAnyAfter(cha, doit, inp, after)
+	go pluganyThingAfter(cha, doit, inp, after)
 	return cha, doit
 }
 
-func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-chan time.Time) {
+func pluganyThingAfter(out chan<- anyThing, done chan<- struct{}, inp <-chan anyThing, after <-chan time.Time) {
 	defer close(done)
 
-	var end bool // shall we end?
-	var ok bool  // did we read successfully?
-	var e Any    // what we've read
+	var end bool   // shall we end?
+	var ok bool    // did we read successfully?
+	var e anyThing // what we've read
 
 	for !end {
 		select {
@@ -58,5 +58,5 @@ func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-
 	done <- struct{}{}
 }
 
-// End of PlugAnyAfter - graceful terminator
+// End of anyThingPlugAfter - graceful terminator
 // ===========================================================================

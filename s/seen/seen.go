@@ -10,40 +10,40 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of PipeAnySeen/ForkAnySeen - an "I've seen this Any before" filter / fork
+// Beg of anyThingPipeSeen/anyThingForkSeen - an "I've seen this anyThing before" filter / forker
 
-// PipeAnySeen returns a channel to receive
+// anyThingPipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-//  Note: PipeAnyFilterNotSeenYet might be a better name, but is fairly long.
-func PipeAnySeen(inp <-chan Any) (out <-chan Any) {
-	cha := make(chan Any)
-	go pipeAnySeenAttr(cha, inp, nil)
+//  Note: anyThingPipeFilterNotSeenYet might be a better name, but is fairly long.
+func anyThingPipeSeen(inp <-chan anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go pipeanyThingSeenAttr(cha, inp, nil)
 	return cha
 }
 
-// PipeAnySeenAttr returns a channel to receive
+// anyThingPipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-//  Note: PipeAnyFilterAttrNotSeenYet might be a better name, but is fairly long.
-func PipeAnySeenAttr(inp <-chan Any, attr func(a Any) interface{}) (out <-chan Any) {
-	cha := make(chan Any)
-	go pipeAnySeenAttr(cha, inp, attr)
+//  Note: anyThingPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func anyThingPipeSeenAttr(inp <-chan anyThing, attr func(a anyThing) interface{}) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go pipeanyThingSeenAttr(cha, inp, attr)
 	return cha
 }
 
-// ForkAnySeen returns two channels, `new` and `old`,
+// anyThingForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -52,14 +52,14 @@ func PipeAnySeenAttr(inp <-chan Any, attr func(a Any) interface{}) (out <-chan A
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkAnySeen(inp <-chan Any) (new, old <-chan Any) {
-	cha1 := make(chan Any)
-	cha2 := make(chan Any)
-	go forkAnySeenAttr(cha1, cha2, inp, nil)
+func anyThingForkSeen(inp <-chan anyThing) (new, old <-chan anyThing) {
+	cha1 := make(chan anyThing)
+	cha2 := make(chan anyThing)
+	go forkanyThingSeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
-// ForkAnySeenAttr returns two channels, `new` and `old`,
+// anyThingForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -69,18 +69,18 @@ func ForkAnySeen(inp <-chan Any) (new, old <-chan Any) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkAnySeenAttr(inp <-chan Any, attr func(a Any) interface{}) (new, old <-chan Any) {
-	cha1 := make(chan Any)
-	cha2 := make(chan Any)
-	go forkAnySeenAttr(cha1, cha2, inp, attr)
+func anyThingForkSeenAttr(inp <-chan anyThing, attr func(a anyThing) interface{}) (new, old <-chan anyThing) {
+	cha1 := make(chan anyThing)
+	cha2 := make(chan anyThing)
+	go forkanyThingSeenAttr(cha1, cha2, inp, attr)
 	return cha1, cha2
 }
 
-func pipeAnySeenAttr(out chan<- Any, inp <-chan Any, attr func(a Any) interface{}) {
+func pipeanyThingSeenAttr(out chan<- anyThing, inp <-chan anyThing, attr func(a anyThing) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
-		attr = func(a Any) interface{} { return a }
+		attr = func(a anyThing) interface{} { return a }
 	}
 
 	seen := sync.Map{}
@@ -93,12 +93,12 @@ func pipeAnySeenAttr(out chan<- Any, inp <-chan Any, attr func(a Any) interface{
 	}
 }
 
-func forkAnySeenAttr(new, old chan<- Any, inp <-chan Any, attr func(a Any) interface{}) {
+func forkanyThingSeenAttr(new, old chan<- anyThing, inp <-chan anyThing, attr func(a anyThing) interface{}) {
 	defer close(new)
 	defer close(old)
 
 	if attr == nil { // Make `nil` value useful
-		attr = func(a Any) interface{} { return a }
+		attr = func(a anyThing) interface{} { return a }
 	}
 
 	seen := sync.Map{}
@@ -111,25 +111,25 @@ func forkAnySeenAttr(new, old chan<- Any, inp <-chan Any, attr func(a Any) inter
 	}
 }
 
-// TubeAnySeen returns a closure around PipeAnySeen()
-// (silently dropping every Any seen before).
-func TubeAnySeen() (tube func(inp <-chan Any) (out <-chan Any)) {
+// anyThingTubeSeen returns a closure around anyThingPipeSeen()
+// (silently dropping every anyThing seen before).
+func anyThingTubeSeen() (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
 
-	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnySeen(inp)
+	return func(inp <-chan anyThing) (out <-chan anyThing) {
+		return anyThingPipeSeen(inp)
 	}
 }
 
-// TubeAnySeenAttr returns a closure around PipeAnySeenAttr()
-// (silently dropping every Any
+// anyThingTubeSeenAttr returns a closure around anyThingPipeSeenAttr()
+// (silently dropping every anyThing
 // whose attribute `attr` was
 // seen before).
-func TubeAnySeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (out <-chan Any)) {
+func anyThingTubeSeenAttr(attr func(a anyThing) interface{}) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
 
-	return func(inp <-chan Any) (out <-chan Any) {
-		return PipeAnySeenAttr(inp, attr)
+	return func(inp <-chan anyThing) (out <-chan anyThing) {
+		return anyThingPipeSeenAttr(inp, attr)
 	}
 }
 
-// End of PipeAnySeen/ForkAnySeen - an "I've seen this Any before" filter / fork
+// End of anyThingPipeSeen/anyThingForkSeen - an "I've seen this anyThing before" filter / forker
 // ===========================================================================

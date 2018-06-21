@@ -10,23 +10,23 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of StrewAny
+// Beg of anyThingStrew - scatter them
 
-// StrewAny returns a slice (of size = size) of channels
-// one of which shall receive any inp before close.
-func StrewAny(inp <-chan Any, size int) (outS [](<-chan Any)) {
-	chaS := make([]chan Any, size)
+// anyThingStrew returns a slice (of size = size) of channels
+// one of which shall receive each inp before close.
+func anyThingStrew(inp <-chan anyThing, size int) (outS [](<-chan anyThing)) {
+	chaS := make([]chan anyThing, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Any)
+		chaS[i] = make(chan anyThing)
 	}
 
-	go strewAny(inp, chaS...)
+	go strewanyThing(inp, chaS...)
 
-	outS = make([]<-chan Any, size)
+	outS = make([]<-chan anyThing, size)
 	for i := 0; i < size; i++ {
 		outS[i] = chaS[i] // convert `chan` to `<-chan`
 	}
@@ -34,13 +34,13 @@ func StrewAny(inp <-chan Any, size int) (outS [](<-chan Any)) {
 	return outS
 }
 
-// c strewAny(inp <-chan Any, outS ...chan<- Any) {
-// Note: go does not convert the passed slice `[]chan Any` to `[]chan<- Any` automatically.
+// c strewanyThing(inp <-chan anyThing, outS ...chan<- anyThing) {
+// Note: go does not convert the passed slice `[]chan anyThing` to `[]chan<- anyThing` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewAny(inp <-chan Any, outS ...chan Any) {
+func strewanyThing(inp <-chan anyThing, outS ...chan anyThing) {
 
 	for i := range inp {
-		for !trySendAny(i, outS...) {
+		for !trySendanyThing(i, outS...) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -50,7 +50,7 @@ func strewAny(inp <-chan Any, outS ...chan Any) {
 	}
 }
 
-func trySendAny(inp Any, outS ...chan Any) bool {
+func trySendanyThing(inp anyThing, outS ...chan anyThing) bool {
 
 	for o := range outS {
 
@@ -65,5 +65,5 @@ func trySendAny(inp Any, outS ...chan Any) bool {
 	return false
 }
 
-// End of StrewAny
+// End of anyThingStrew - scatter them
 // ===========================================================================
