@@ -8,16 +8,16 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of JoinAny feedback back-feeders for circular networks
+// Beg of anyThingJoin feedback back-feeders for circular networks
 
-// JoinAny sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAny(out chan<- Any, inp ...Any) (done <-chan struct{}) {
+// anyThingJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func anyThingJoin(out chan<- anyThing, inp ...anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go func(done chan<- struct{}, inp ...Any) {
+	go func(done chan<- struct{}, inp ...anyThing) {
 		defer close(done)
 		for i := range inp {
 			out <- inp[i]
@@ -27,10 +27,10 @@ func JoinAny(out chan<- Any, inp ...Any) (done <-chan struct{}) {
 	return sig
 }
 
-// JoinAnySlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAnySlice(out chan<- Any, inp ...[]Any) (done <-chan struct{}) {
+// anyThingJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func anyThingJoinSlice(out chan<- anyThing, inp ...[]anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go func(done chan<- struct{}, out chan<- Any, inp ...[]Any) {
+	go func(done chan<- struct{}, out chan<- anyThing, inp ...[]anyThing) {
 		defer close(done)
 		for i := range inp {
 			for j := range inp[i] {
@@ -42,10 +42,10 @@ func JoinAnySlice(out chan<- Any, inp ...[]Any) (done <-chan struct{}) {
 	return sig
 }
 
-// JoinAnyChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAnyChan(out chan<- Any, inp <-chan Any) (done <-chan struct{}) {
+// anyThingJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func anyThingJoinChan(out chan<- anyThing, inp <-chan anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go func(done chan<- struct{}, out chan<- Any, inp <-chan Any) {
+	go func(done chan<- struct{}, out chan<- anyThing, inp <-chan anyThing) {
 		defer close(done)
 		for i := range inp {
 			out <- i
@@ -55,5 +55,5 @@ func JoinAnyChan(out chan<- Any, inp <-chan Any) (done <-chan struct{}) {
 	return sig
 }
 
-// End of JoinAny feedback back-feeders for circular networks
+// End of anyThingJoin feedback back-feeders for circular networks
 // ===========================================================================

@@ -5,13 +5,13 @@
 package pipe
 
 // ===========================================================================
-// Beg of DoneAny terminators
+// Beg of anyThingDone terminators
 
-// DoneAny returns a channel to receive
+// anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func DoneAny(inp <-chan Any) (done <-chan struct{}) {
+func anyThingDone(inp <-chan anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go func(done chan<- struct{}, inp <-chan Any) {
+	go func(done chan<- struct{}, inp <-chan anyThing) {
 		defer close(done)
 		for i := range inp {
 			_ = i // drain inp
@@ -21,16 +21,16 @@ func DoneAny(inp <-chan Any) (done <-chan struct{}) {
 	return sig
 }
 
-// DoneAnySlice returns a channel to receive
-// a slice with every Any received on `inp`
+// anyThingDoneSlice returns a channel to receive
+// a slice with every anyThing received on `inp`
 // before close.
 //
-//  Note: Unlike DoneAny, DoneAnySlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func DoneAnySlice(inp <-chan Any) (done <-chan []Any) {
-	sig := make(chan []Any)
-	go func(done chan<- []Any, inp <-chan Any) {
+//  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func anyThingDoneSlice(inp <-chan anyThing) (done <-chan []anyThing) {
+	sig := make(chan []anyThing)
+	go func(done chan<- []anyThing, inp <-chan anyThing) {
 		defer close(done)
-		slice := []Any{}
+		slice := []anyThing{}
 		for i := range inp {
 			slice = append(slice, i)
 		}
@@ -39,15 +39,15 @@ func DoneAnySlice(inp <-chan Any) (done <-chan []Any) {
 	return sig
 }
 
-// DoneAnyFunc returns a channel to receive
+// anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func DoneAnyFunc(inp <-chan Any, act func(a Any)) (done <-chan struct{}) {
+func anyThingDoneFunc(inp <-chan anyThing, act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
-		act = func(a Any) { return }
+		act = func(a anyThing) { return }
 	}
-	go func(done chan<- struct{}, inp <-chan Any, act func(a Any)) {
+	go func(done chan<- struct{}, inp <-chan anyThing, act func(a anyThing)) {
 		defer close(done)
 		for i := range inp {
 			act(i) // apply action
@@ -57,5 +57,5 @@ func DoneAnyFunc(inp <-chan Any, act func(a Any)) (done <-chan struct{}) {
 	return sig
 }
 
-// End of DoneAny terminators
+// End of anyThingDone terminators
 // ===========================================================================

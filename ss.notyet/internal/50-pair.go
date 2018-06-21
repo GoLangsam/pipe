@@ -5,14 +5,14 @@
 package pipe
 
 // ===========================================================================
-// Beg of PairAny functions
+// Beg of anyThingPair functions
 
-// PairAny returns a pair of channels to receive every result of inp before close.
+// anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func PairAny(inp <-chan Any) (out1, out2 <-chan Any) {
-	cha1 := make(chan Any)
-	cha2 := make(chan Any)
-	go func(out1, out2 chan<- Any) {
+func anyThingPair(inp <-chan anyThing) (out1, out2 <-chan anyThing) {
+	cha1 := make(chan anyThing)
+	cha2 := make(chan anyThing)
+	go func(out1, out2 chan<- anyThing) {
 		defer close(out1)
 		defer close(out2)
 		for i := range inp {
@@ -23,5 +23,5 @@ func PairAny(inp <-chan Any) (out1, out2 <-chan Any) {
 	return cha1, cha2
 }
 
-// End of PairAny functions
+// End of anyThingPair functions
 // ===========================================================================

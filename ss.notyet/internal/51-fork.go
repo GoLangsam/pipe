@@ -5,14 +5,14 @@
 package pipe
 
 // ===========================================================================
-// Beg of ForkAny functions
+// Beg of anyThingFork functions
 
-// ForkAny returns two channels to receive every result of inp before close.
+// anyThingFork returns two channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func ForkAny(inp <-chan Any) (out1, out2 <-chan Any) {
-	cha1 := make(chan Any)
-	cha2 := make(chan Any)
-	go func(out1, out2 chan<- Any) {
+func anyThingFork(inp <-chan anyThing) (out1, out2 <-chan anyThing) {
+	cha1 := make(chan anyThing)
+	cha2 := make(chan anyThing)
+	go func(out1, out2 chan<- anyThing) {
 		defer close(out1)
 		defer close(out2)
 		for i := range inp {
@@ -23,5 +23,5 @@ func ForkAny(inp <-chan Any) (out1, out2 <-chan Any) {
 	return cha1, cha2
 }
 
-// End of ForkAny functions
+// End of anyThingFork functions
 // ===========================================================================

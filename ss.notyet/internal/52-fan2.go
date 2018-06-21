@@ -6,16 +6,16 @@ package pipe
 
 // ===========================================================================
 
-// FanIn2Any as seen in Go Concurrency Patterns.
+// anyThingFanIn2 as seen in Go Concurrency Patterns.
 //
 // Warning: For instruction and teaching only!
 // Do not use in any serious project, as
 // it hangs forever upon close of both inputs.
 // Thus: it leaks it's goroutine!
 // (And never closes it's output)
-func FanIn2Any(inp1, inp2 <-chan Any) (out <-chan Any) {
-	cha := make(chan Any)
-	go func(out chan<- Any, inp1, inp2 <-chan Any) {
+func anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
+	go func(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 		for {
 			select {
 			case e := <-inp1:

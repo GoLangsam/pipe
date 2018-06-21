@@ -5,30 +5,30 @@
 package pipe
 
 // ===========================================================================
-// Beg of MakeAny creators
+// Beg of anyThingMake creators
 
-// MakeAnyChan returns a new open channel
-// (simply a 'chan Any' that is).
-//  Note: No 'Any-producer' is launched here yet! (as is in all the other functions).
+// anyThingMakeChan returns a new open channel
+// (simply a 'chan anyThing' that is).
+//  Note: No 'anyThing-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-   var myAnyPipelineStartsHere := MakeAnyChan()
-   // ... lot's of code to design and build Your favourite "myAnyWorkflowPipeline"
+   var myanyThingPipelineStartsHere := anyThingMakeChan()
+   // ... lot's of code to design and build Your favourite "myanyThingWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
    for drop := range water {
-       myAnyPipelineStartsHere <- drop
+       myanyThingPipelineStartsHere <- drop
    }
-   close(myAnyPipelineStartsHere)
+   close(myanyThingPipelineStartsHere)
 */
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
-//  Note: as always (except for PipeAnyBuffer) the channel is unbuffered.
+//  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
-func MakeAnyChan() (out chan Any) {
-	return make(chan Any)
+func anyThingMakeChan() (out chan anyThing) {
+	return make(chan anyThing)
 }
 
-// End of MakeAny creators
+// End of anyThingMake creators
 // ===========================================================================

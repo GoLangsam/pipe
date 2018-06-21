@@ -5,19 +5,19 @@
 package pipe
 
 // ===========================================================================
-// Beg of PipeAny functions
+// Beg of anyThingPipe functions
 
-// PipeAnyFunc returns a channel to receive
+// anyThingPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-//  Note: it 'could' be PipeAnyMap for functional people,
+//  Note: it 'could' be anyThingPipeMap for functional people,
 //  but 'map' has a very different meaning in go lang.
-func PipeAnyFunc(inp <-chan Any, act func(a Any) Any) (out <-chan Any) {
-	cha := make(chan Any)
+func anyThingPipeFunc(inp <-chan anyThing, act func(a anyThing) anyThing) (out <-chan anyThing) {
+	cha := make(chan anyThing)
 	if act == nil { // Make `nil` value useful
-		act = func(a Any) Any { return a }
+		act = func(a anyThing) anyThing { return a }
 	}
-	go func(out chan<- Any, inp <-chan Any, act func(a Any) Any) {
+	go func(out chan<- anyThing, inp <-chan anyThing, act func(a anyThing) anyThing) {
 		defer close(out)
 		for i := range inp {
 			out <- act(i) // apply action
@@ -26,12 +26,12 @@ func PipeAnyFunc(inp <-chan Any, act func(a Any) Any) (out <-chan Any) {
 	return cha
 }
 
-// PipeAnyBuffer returns a buffered channel with capacity `cap` to receive
+// anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func PipeAnyBuffer(inp <-chan Any, cap int) (out <-chan Any) {
-	cha := make(chan Any, cap)
-	go func(out chan<- Any, inp <-chan Any) {
+func anyThingPipeBuffer(inp <-chan anyThing, cap int) (out <-chan anyThing) {
+	cha := make(chan anyThing, cap)
+	go func(out chan<- anyThing, inp <-chan anyThing) {
 		defer close(out)
 		for i := range inp {
 			out <- i
@@ -40,5 +40,5 @@ func PipeAnyBuffer(inp <-chan Any, cap int) (out <-chan Any) {
 	return cha
 }
 
-// End of PipeAny functions
+// End of anyThingPipe functions
 // ===========================================================================
