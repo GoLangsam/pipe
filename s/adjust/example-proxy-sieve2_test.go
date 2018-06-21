@@ -126,7 +126,7 @@ func Sieve() chan int {
 	composites := make(chan int, 50)
 
 	// The feedback loop.
-	primes := make(chan Any, 10)
+	primes := make(chan anyThing, 10)
 	primes <- 3
 
 	// Merge channels of multiples of 'primes' into 'composites'.
@@ -163,7 +163,7 @@ func Sieve() chan int {
 		// will send to it, making the buffer accumulate and block this
 		// goroutine from sending, causing a deadlock.  The solution is to
 		// use a proxy goroutine to do automatic buffering.
-		primes := SendAnyProxy(primes)
+		primes := anyThingSendProxy(primes)
 
 		candidates := odds()
 		p := <-candidates
