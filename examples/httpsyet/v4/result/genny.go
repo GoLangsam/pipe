@@ -5,7 +5,7 @@
 // Oh my god!		-in github.com/GoLangsam/pipe/s/pipe.go does not work :-(
 // have to keep using	-in ../../../../s/pipe.go
 
-//go:generate genny     -in ../../../../s/pipe.go		-out gen-pipe-result.go	-pkg result gen "Any=Result"
+//go:generate genny     -in ../../../../s/pipe.go		-out gen-pipe-result.go	-pkg result gen "anyThing=result"
 
 package result
 

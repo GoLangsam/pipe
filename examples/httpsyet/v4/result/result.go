@@ -4,4 +4,14 @@
 
 package result
 
+// Result represents (a secondary) observation
 type Result string
+
+type result = Result // to keep generated functions private
+
+// DoneResultFunc returns a channel to receive
+// one signal after `act` has been applied to every `inp`
+// before close.
+func DoneResultFunc(inp <-chan Result, act func(a Result)) (done <-chan struct{}) {
+	return resultDoneFunc(inp, act)
+}
