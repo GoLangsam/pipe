@@ -16,8 +16,8 @@ type site = Site
 type Traffic struct {
 	sites chan site       // to be processed
 	wg    *sync.WaitGroup // monitor SiteEnter & SiteLeave
-	Done  <-chan struct{} // to signal termination due to traffic having subsided
-	done  *sync.Once      // to initialize Done once upon first feed
+	done  chan struct{}   // to signal termination due to traffic having subsided
+	once  *sync.Once      // to close Done only once - lauched from first feed
 }
 
 // New returns a new and operational Traffic processor.
@@ -25,19 +25,28 @@ func New() (t *Traffic) {
 	return &Traffic{
 		make(chan site),
 		new(sync.WaitGroup),
-		nil,
+		make(chan struct{}),
 		new(sync.Once),
 	}
 }
 
+// Done returns a channel which will be signalled and closed
+// when traffic has subsided and nothing is left to be processed
+// and consequently all goroutines have terminated.
+func (t *Traffic) Done() (done <-chan struct{}) {
+	return t.done
+}
+
 // Feed registers new entries.
-// Upon first call Done is lazily initialised.
 func (t *Traffic) Feed(urls []*url.URL, parent *url.URL, depth int) {
 	queueURLs(t.sites, urls, parent, depth)
 
-	if t.Done == nil {
-		t.Done = siteDoneWait(t.sites, t.wg)
-	}
+	t.once.Do(func() {
+		go func(t *Traffic) {
+			t.done <- <-siteDoneWait(t.sites, t.wg)
+			close(t.done)
+		}(t)
+	})
 }
 
 // Processor builds the site traffic processing network;

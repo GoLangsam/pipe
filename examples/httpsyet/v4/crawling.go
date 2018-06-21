@@ -47,7 +47,7 @@ type crawling struct {
 // goWaitAndClose is to be used after initial traffic has been added.
 func (c *crawling) goWaitAndClose() {
 	go func(c *crawling) {
-		<-c.Done // from embedded sites.Traffic
+		<-c.Done() // from embedded sites.Traffic
 		close(c.results)
 	}(c)
 }
@@ -72,18 +72,18 @@ func (c *Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 		make(chan result), // results - the (secondary) output
 	}
 
-	crawling.crawling(urls, parallel(c.Parallel))
+	crawling.crawling(parallel(c.Parallel))
+	crawling.Feed(urls, nil, c.Depth) // feed initial urls
 
 	return res.DoneFunc(crawling.results, c.report)
 }
 
 // ===========================================================================
 
-// crawling builds and feeds the network,
+// crawling builds the network,
 // and returns after having launched the closer.
-func (c *crawling) crawling(urls []*url.URL, parallel int) {
+func (c *crawling) crawling(parallel int) {
 	c.Processor(c.crawl, parallel) // build the site traffic processing network
-	c.Feed(urls, nil, c.Depth)     // feed initial urls
 	c.goWaitAndClose()             // launch the closer
 }
 
