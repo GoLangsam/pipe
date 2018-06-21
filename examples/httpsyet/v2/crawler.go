@@ -31,14 +31,6 @@ type Crawler struct {
 	Verbose  bool                                 // Optional. If set, status updates are written to logger.
 }
 
-/* => site.go
-type site struct {
-	URL    *url.URL
-	Parent *url.URL
-	Depth  int
-}
-*/
-
 // Run the crawler.
 // Can return validation errors.
 // All crawling errors are reported via logger.

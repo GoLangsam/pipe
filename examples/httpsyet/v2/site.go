@@ -17,13 +17,16 @@ type site struct {
 	Depth  int
 }
 
-// Attr impelemnts the attribute relevant for ForksiteSeenAttr,
+// ---------------------------------------------------------------------------
+// site learning a little behaviour
+
+// Attr implements the attribute relevant for ForkSiteSeenAttr,
 // the "I've seen this site before" discriminator.
 func (s site) Attr() interface{} {
 	return s.URL.String()
 }
 
-// print may be used via e.g. PipesiteFunc(sites, site.print) for tracing
+// Print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
 func (s site) Print() site {
 	fmt.Println(s)
 	return s
