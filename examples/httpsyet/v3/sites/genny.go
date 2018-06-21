@@ -7,7 +7,6 @@
 
 //go:generate genny     -in ../../../../s/pipe.go		-out gen-pipe.go	-pkg sites gen "anyThing=Site"
 //go:generate genny	-in ../../../../s/adjust/adjust.go	-out gen-adjust.go	-pkg sites gen "anyThing=Site"
-//go:generate genny	-in ../../../../s/join/join.go		-out gen-join.go	-pkg sites gen "anyThing=Site"
 //go:generate genny	-in ../../../../s/flap/flap.go		-out gen-flap.go	-pkg sites gen "anyThing=Site"
 //go:generate genny	-in ../../../../s/strew/strew.go	-out gen-strew.go	-pkg sites gen "anyThing=Site"
 //go:generate genny	-in ../../../../s/seen/seen.go		-out gen-seen.go	-pkg sites gen "anyThing=Site"
