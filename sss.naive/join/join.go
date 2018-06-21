@@ -8,14 +8,14 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Any is the generic type flowing thru the pipe network.
-type Any generic.Type
+// anyThing is the generic type flowing thru the pipe network.
+type anyThing generic.Type
 
 // ===========================================================================
-// Beg of JoinAny feedback back-feeders for circular networks
+// Beg of anyThingJoin feedback back-feeders for circular networks
 
-// JoinAny sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAny(out chan Any, inp ...Any) chan struct{} {
+// anyThingJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func anyThingJoin(out chan anyThing, inp ...anyThing) chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -27,8 +27,8 @@ func JoinAny(out chan Any, inp ...Any) chan struct{} {
 	return done
 }
 
-// JoinAnySlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAnySlice(out chan Any, inp ...[]Any) chan struct{} {
+// anyThingJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func anyThingJoinSlice(out chan anyThing, inp ...[]anyThing) chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -42,8 +42,8 @@ func JoinAnySlice(out chan Any, inp ...[]Any) chan struct{} {
 	return done
 }
 
-// JoinAnyChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinAnyChan(out chan Any, inp chan Any) chan struct{} {
+// anyThingJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func anyThingJoinChan(out chan anyThing, inp chan anyThing) chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -55,5 +55,5 @@ func JoinAnyChan(out chan Any, inp chan Any) chan struct{} {
 	return done
 }
 
-// End of JoinAny feedback back-feeders for circular networks
+// End of anyThingJoin feedback back-feeders for circular networks
 // ===========================================================================

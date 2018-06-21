@@ -5,23 +5,23 @@
 package pipe
 
 // ===========================================================================
-// Beg of TubeAny closures
+// Beg of anyThingTube closures around anyThingPipe
 
-// TubeAnyFunc returns a closure around `PipeAnyFunc(_, act)`.
-func TubeAnyFunc(act func(a Any) Any) func(chan Any) chan Any {
+// anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp chan anyThing) (out chan anyThing)) {
 
-	return func(inp chan Any) chan Any {
-		return PipeAnyFunc(inp, act)
+	return func(inp chan anyThing) (out chan anyThing) {
+		return anyThingPipeFunc(inp, act)
 	}
 }
 
-// TubeAnyBuffer returns a closure around `PipeAnyBuffer(_, cap)`.
-func TubeAnyBuffer(cap int) func(chan Any) chan Any {
+// anyThingTubeBuffer returns a closure around PipeanyThingBuffer (_, cap).
+func anyThingTubeBuffer(cap int) (tube func(inp chan anyThing) (out chan anyThing)) {
 
-	return func(inp chan Any) chan Any {
-		return PipeAnyBuffer(inp, cap)
+	return func(inp chan anyThing) (out chan anyThing) {
+		return anyThingPipeBuffer(inp, cap)
 	}
 }
 
-// End of TubeAny closures
+// End of anyThingTube closures around anyThingPipe
 // ===========================================================================

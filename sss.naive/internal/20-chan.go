@@ -5,13 +5,13 @@
 package pipe
 
 // ===========================================================================
-// Beg of ChanAny producers
+// Beg of anyThingChan producers
 
-// ChanAny returns a channel to receive
+// anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func ChanAny(inp ...Any) chan Any {
-	out := make(chan Any)
+func anyThingChan(inp ...anyThing) chan anyThing {
+	out := make(chan anyThing)
 	go func() {
 		defer close(out)
 		for i := range inp {
@@ -21,11 +21,11 @@ func ChanAny(inp ...Any) chan Any {
 	return out
 }
 
-// ChanAnySlice returns a channel to receive
+// anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func ChanAnySlice(inp ...[]Any) chan Any {
-	out := make(chan Any)
+func anyThingChanSlice(inp ...[]anyThing) chan anyThing {
+	out := make(chan anyThing)
 	go func() {
 		defer close(out)
 		for i := range inp {
@@ -37,12 +37,12 @@ func ChanAnySlice(inp ...[]Any) chan Any {
 	return out
 }
 
-// ChanAnyFuncNok returns a channel to receive
+// anyThingChanFuncNok returns a channel to receive
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func ChanAnyFuncNok(gen func() (Any, bool)) chan Any {
-	out := make(chan Any)
+func anyThingChanFuncNok(gen func() (anyThing, bool)) chan anyThing {
+	out := make(chan anyThing)
 	go func() {
 		defer close(out)
 		for {
@@ -56,12 +56,12 @@ func ChanAnyFuncNok(gen func() (Any, bool)) chan Any {
 	return out
 }
 
-// ChanAnyFuncErr returns a channel to receive
+// anyThingChanFuncErr returns a channel to receive
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func ChanAnyFuncErr(gen func() (Any, error)) chan Any {
-	out := make(chan Any)
+func anyThingChanFuncErr(gen func() (anyThing, error)) chan anyThing {
+	out := make(chan anyThing)
 	go func() {
 		defer close(out)
 		for {
@@ -75,5 +75,5 @@ func ChanAnyFuncErr(gen func() (Any, error)) chan Any {
 	return out
 }
 
-// End of ChanAny producers
+// End of anyThingChan producers
 // ===========================================================================

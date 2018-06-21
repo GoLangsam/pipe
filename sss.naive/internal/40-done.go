@@ -5,11 +5,11 @@
 package pipe
 
 // ===========================================================================
-// Beg of DoneAny terminators
+// Beg of anyThingDone terminators
 
-// DoneAny returns a channel to receive
+// anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func DoneAny(inp chan Any) chan struct{} {
+func anyThingDone(inp chan anyThing) chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -21,16 +21,16 @@ func DoneAny(inp chan Any) chan struct{} {
 	return done
 }
 
-// DoneAnySlice returns a channel to receive
-// a slice with every Any received on `inp`
+// anyThingDoneSlice returns a channel to receive
+// a slice with every anyThing received on `inp`
 // before close.
 //
-//  Note: Unlike DoneAny, DoneAnySlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func DoneAnySlice(inp chan Any) chan []Any {
-	done := make(chan []Any)
+//  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func anyThingDoneSlice(inp chan anyThing) chan []anyThing {
+	done := make(chan []anyThing)
 	go func() {
 		defer close(done)
-		slice := []Any{}
+		slice := []anyThing{}
 		for i := range inp {
 			slice = append(slice, i)
 		}
@@ -39,13 +39,13 @@ func DoneAnySlice(inp chan Any) chan []Any {
 	return done
 }
 
-// DoneAnyFunc returns a channel to receive
+// anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func DoneAnyFunc(inp chan Any, act func(a Any)) chan struct{} {
+func anyThingDoneFunc(inp chan anyThing, act func(a anyThing)) chan struct{} {
 	done := make(chan struct{})
 	if act == nil {
-		act = func(a Any) { return }
+		act = func(a anyThing) { return }
 	}
 	go func() {
 		defer close(done)
@@ -57,5 +57,5 @@ func DoneAnyFunc(inp chan Any, act func(a Any)) chan struct{} {
 	return done
 }
 
-// End of DoneAny terminators
+// End of anyThingDone terminators
 // ===========================================================================
