@@ -9,10 +9,10 @@
 package pipe
 
 // ===========================================================================
-// Beg of JoinThing feedback back-feeders for circular networks
+// Beg of ThingJoin feedback back-feeders for circular networks
 
-// JoinThing sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinThing(out chan<- Thing, inp ...Thing) (done <-chan struct{}) {
+// ThingJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func ThingJoin(out chan<- Thing, inp ...Thing) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinThing(sig, out, inp...)
 	return sig
@@ -26,8 +26,8 @@ func joinThing(done chan<- struct{}, out chan<- Thing, inp ...Thing) {
 	done <- struct{}{}
 }
 
-// JoinThingSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinThingSlice(out chan<- Thing, inp ...[]Thing) (done <-chan struct{}) {
+// ThingJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func ThingJoinSlice(out chan<- Thing, inp ...[]Thing) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinThingSlice(sig, out, inp...)
 	return sig
@@ -43,8 +43,8 @@ func joinThingSlice(done chan<- struct{}, out chan<- Thing, inp ...[]Thing) {
 	done <- struct{}{}
 }
 
-// JoinThingChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func JoinThingChan(out chan<- Thing, inp <-chan Thing) (done <-chan struct{}) {
+// ThingJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func ThingJoinChan(out chan<- Thing, inp <-chan Thing) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go joinThingChan(sig, out, inp)
 	return sig
@@ -58,4 +58,4 @@ func joinThingChan(done chan<- struct{}, out chan<- Thing, inp <-chan Thing) {
 	done <- struct{}{}
 }
 
-// End of JoinThing feedback back-feeders for circular networks
+// End of ThingJoin feedback back-feeders for circular networks

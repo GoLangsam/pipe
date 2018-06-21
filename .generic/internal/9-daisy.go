@@ -9,7 +9,7 @@
 package pipe
 
 // ===========================================================================
-// Beg of DaisyChainThing
+// Beg of ThingDaisyChain
 
 // ProcThing is the signature of the inner process of any linear pipe-network
 //  Example: the identity core:
@@ -35,7 +35,7 @@ func daisyThing(inp <-chan Thing,
 	return cha
 }
 
-// DaisyChainThing returns a channel to receive all inp
+// ThingDaisyChain returns a channel to receive all inp
 // after having passed
 // thru the process(es) (`from` right `into` left)
 // before close.
@@ -43,7 +43,7 @@ func daisyThing(inp <-chan Thing,
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func DaisyChainThing(inp chan Thing,
+func ThingDaisyChain(inp chan Thing,
 	procs ...func(into chan<- Thing, from <-chan Thing), // ProcThing processes
 ) (
 	out chan Thing) { // to receive all results
@@ -61,7 +61,7 @@ func DaisyChainThing(inp chan Thing,
 	return cha
 }
 
-// DaisyChaiNThing returns a channel to receive all inp
+// ThingDaisyChaiN returns a channel to receive all inp
 // after having passed
 // `somany` times
 // thru the process(es) (`from` right `into` left)
@@ -71,8 +71,8 @@ func DaisyChainThing(inp chan Thing,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making null values useful.
 //
-// Note: DaisyChaiNThing(inp, 1, procs) <==> DaisyChainThing(inp, procs)
-func DaisyChaiNThing(inp chan Thing, somany int,
+// Note: ThingDaisyChaiN(inp, 1, procs) <==> ThingDaisyChain(inp, procs)
+func ThingDaisyChaiN(inp chan Thing, somany int,
 	procs ...func(into chan<- Thing, from <-chan Thing), // ProcThing processes
 ) (
 	out chan Thing) { // to receive all results
@@ -84,10 +84,10 @@ func DaisyChaiNThing(inp chan Thing, somany int,
 		cha = daisyThing(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {
-			cha = DaisyChainThing(cha, procs...)
+			cha = ThingDaisyChain(cha, procs...)
 		}
 	}
 	return cha
 }
 
-// End of DaisyChainThing
+// End of ThingDaisyChain

@@ -9,44 +9,49 @@
 package pipe
 
 // ===========================================================================
-// Beg of PipeThingEnter/Leave - Flapdoors observed by a Waiter
+// Beg of ThingPipeEnter/Leave - Flapdoors observed by a Waiter
 
 // ThingWaiter - as implemented by `*sync.WaitGroup` -
-// attends Flapdoors and keeps track of
-// how many enter and how many leave.
+// attends Flapdoors and keeps counting
+// who enters and who leaves.
 //
-// Use Your provided `*sync.WaitGroup.Wait()`
+// Use DoneThingWait to learn about
+// when the facilities are closed.
+//
+// Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
+// Just: DoneThingWait is more convenient
+// as it also closes the primary channel.
 //
 // Just make sure to have _all_ entrances and exits attended,
-// and don't `wg.Wait()` before You've flooded the facilities.
+// and `Wait()` only *after* You've started flooding the facilities.
 type ThingWaiter interface {
 	Add(delta int)
 	Done()
-	// Wait() // here no need
+	Wait()
 }
 
 // Note: Name is generic in order to avoid multiple-declaration clashes.
 
-// PipeThingEnter returns a channel to receive
+// ThingPipeEnter returns a channel to receive
 // all `inp`
 // and registers throughput
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func PipeThingEnter(inp <-chan Thing, wg ThingWaiter) (out <-chan Thing) {
+func ThingPipeEnter(inp <-chan Thing, wg ThingWaiter) (out <-chan Thing) {
 	cha := make(chan Thing)
 	go pipeThingEnter(cha, wg, inp)
 	return cha
 }
 
-// PipeThingLeave returns a channel to receive
+// ThingPipeLeave returns a channel to receive
 // all `inp`
 // and registers throughput
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func PipeThingLeave(inp <-chan Thing, wg ThingWaiter) (out <-chan Thing) {
+func ThingPipeLeave(inp <-chan Thing, wg ThingWaiter) (out <-chan Thing) {
 	cha := make(chan Thing)
 	go pipeThingLeave(cha, wg, inp)
 	return cha
@@ -68,26 +73,53 @@ func pipeThingLeave(out chan<- Thing, wg ThingWaiter, inp <-chan Thing) {
 	}
 }
 
-// TubeThingEnter returns a closure around PipeThingEnter (_, wg)
+// ThingTubeEnter returns a closure around ThingPipeEnter (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as arrival.
-func TubeThingEnter(wg ThingWaiter) (tube func(inp <-chan Thing) (out <-chan Thing)) {
+func ThingTubeEnter(wg ThingWaiter) (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return PipeThingEnter(inp, wg)
+		return ThingPipeEnter(inp, wg)
 	}
 }
 
-// TubeThingLeave returns a closure around PipeThingLeave (_, wg)
+// ThingTubeLeave returns a closure around ThingPipeLeave (_, wg)
 // registering throughput
 // on the given `sync.WaitGroup`
 // as departure.
-func TubeThingLeave(wg ThingWaiter) (tube func(inp <-chan Thing) (out <-chan Thing)) {
+func ThingTubeLeave(wg ThingWaiter) (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return PipeThingLeave(inp, wg)
+		return ThingPipeLeave(inp, wg)
 	}
 }
 
-// End of PipeThingEnter/Leave - Flapdoors observed by a Waiter
+// ThingDoneWait returns a channel to receive
+// one signal
+// after wg.Wait() has returned and inp has been closed
+// before close.
+//
+// Note: Use only *after* You've started flooding the facilities.
+func ThingDoneWait(inp chan<- Thing, wg ThingWaiter) (done <-chan struct{}) {
+	cha := make(chan struct{})
+	go doneThingWait(cha, inp, wg)
+	return cha
+}
+
+func doneThingWait(done chan<- struct{}, inp chan<- Thing, wg ThingWaiter) {
+	defer close(done)
+	wg.Wait()
+	close(inp)
+	done <- struct{}{} // not really needed - but looks better
+}
+
+// ThingFiniWait returns a closure around `DoneThingWait(_, wg)`.
+func ThingFiniWait(wg ThingWaiter) func(inp chan<- Thing) (done <-chan struct{}) {
+
+	return func(inp chan<- Thing) (done <-chan struct{}) {
+		return ThingDoneWait(inp, wg)
+	}
+}
+
+// End of ThingPipeEnter/Leave - Flapdoors observed by a Waiter

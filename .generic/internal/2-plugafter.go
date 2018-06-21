@@ -11,15 +11,15 @@ package pipe
 import "time"
 
 // ===========================================================================
-// Beg of PlugThingAfter - graceful terminator
+// Beg of ThingPlugAfter - graceful terminator
 
-// PlugThingAfter returns a channel to receive every `inp` before close and a channel to signal this closing.
+// ThingPlugAfter returns a channel to receive every `inp` before close and a channel to signal this closing.
 // Upon receipt of a time signal
 // (e.g. from `time.After(...)`),
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func PlugThingAfter(inp <-chan Thing, after <-chan time.Time) (out <-chan Thing, done <-chan struct{}) {
+func ThingPlugAfter(inp <-chan Thing, after <-chan time.Time) (out <-chan Thing, done <-chan struct{}) {
 	cha := make(chan Thing)
 	doit := make(chan struct{})
 	go plugThingAfter(cha, doit, inp, after)
@@ -55,4 +55,4 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 	done <- struct{}{}
 }
 
-// End of PlugThingAfter - graceful terminator
+// End of ThingPlugAfter - graceful terminator

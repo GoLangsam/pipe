@@ -9,14 +9,14 @@
 package pipe
 
 // ===========================================================================
-// Beg of PlugThing - graceful terminator
+// Beg of ThingPlug - graceful terminator
 
-// PlugThing returns a channel to receive every `inp` before close and a channel to signal this closing.
+// ThingPlug returns a channel to receive every `inp` before close and a channel to signal this closing.
 // Upon receipt of a stop signal,
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func PlugThing(inp <-chan Thing, stop <-chan struct{}) (out <-chan Thing, done <-chan struct{}) {
+func ThingPlug(inp <-chan Thing, stop <-chan struct{}) (out <-chan Thing, done <-chan struct{}) {
 	cha := make(chan Thing)
 	doit := make(chan struct{})
 	go plugThing(cha, doit, inp, stop)
@@ -52,4 +52,4 @@ func plugThing(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, stop <-
 	done <- struct{}{}
 }
 
-// End of PlugThing - graceful terminator
+// End of ThingPlug - graceful terminator

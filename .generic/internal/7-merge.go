@@ -9,13 +9,13 @@
 package pipe
 
 // ===========================================================================
-// Beg of MergeThing
+// Beg of ThingMerge
 
-// MergeThing returns a channel to receive all inputs sorted and free of duplicates.
+// ThingMerge returns a channel to receive all inputs sorted and free of duplicates.
 // Each input channel needs to be sorted ascending and free of duplicates.
 // The passed binary boolean function `less` defines the applicable order.
 //  Note: If no inputs are given, a closed channel is returned.
-func MergeThing(less func(i, j Thing) bool, inps ...<-chan Thing) (out <-chan Thing) {
+func ThingMerge(less func(i, j Thing) bool, inps ...<-chan Thing) (out <-chan Thing) {
 
 	if len(inps) < 1 { // none: return a closed channel
 		cha := make(chan Thing)
@@ -24,14 +24,14 @@ func MergeThing(less func(i, j Thing) bool, inps ...<-chan Thing) (out <-chan Th
 	} else if len(inps) < 2 { // just one: return it
 		return inps[0]
 	} else { // tail recurse
-		return mergeThing2(less, inps[0], MergeThing(less, inps[1:]...))
+		return mergeThing(less, inps[0], ThingMerge(less, inps[1:]...))
 	}
 }
 
-// mergeThing2 takes two (eager) channels of comparable types,
+// mergeThing takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func mergeThing2(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thing) {
+func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
 	go func(out chan<- Thing, i1, i2 <-chan Thing) {
 		defer close(out)
@@ -83,8 +83,9 @@ func mergeThing2(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Th
 	return cha
 }
 
-// Note: merge2 is not my own. Just: I forgot where found it - please accept my apologies.
+// Note: mergeThing is not my own.
+// Just: I forgot where found the original merge2 - please accept my apologies.
 // I'd love to learn about it's origin/author, so I can give credit.
 // Thus: Your hint, dear reader, is highly appreciated!
 
-// End of MergeThing
+// End of ThingMerge

@@ -11,36 +11,36 @@ package pipe
 import "sync"
 
 // ===========================================================================
-// Beg of PipeThingSeen/ForkThingSeen - an "I've seen this Thing before" filter / fork
+// Beg of ThingPipeSeen/ThingForkSeen - an "I've seen this Thing before" filter / forker
 
-// PipeThingSeen returns a channel to receive
+// ThingPipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeThingFilterNotSeenYet might be a better name, but is fairly long.
-func PipeThingSeen(inp <-chan Thing) (out <-chan Thing) {
+// Note: ThingPipeFilterNotSeenYet might be a better name, but is fairly long.
+func ThingPipeSeen(inp <-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
 	go pipeThingSeenAttr(cha, inp, nil)
 	return cha
 }
 
-// PipeThingSeenAttr returns a channel to receive
+// ThingPipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: PipeThingFilterAttrNotSeenYet might be a better name, but is fairly long.
-func PipeThingSeenAttr(inp <-chan Thing, attr func(a Thing) interface{}) (out <-chan Thing) {
+// Note: ThingPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func ThingPipeSeenAttr(inp <-chan Thing, attr func(a Thing) interface{}) (out <-chan Thing) {
 	cha := make(chan Thing)
 	go pipeThingSeenAttr(cha, inp, attr)
 	return cha
 }
 
-// ForkThingSeen returns two channels, `new` and `old`,
+// ThingForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -49,14 +49,14 @@ func PipeThingSeenAttr(inp <-chan Thing, attr func(a Thing) interface{}) (out <-
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkThingSeen(inp <-chan Thing) (new, old <-chan Thing) {
+func ThingForkSeen(inp <-chan Thing) (new, old <-chan Thing) {
 	cha1 := make(chan Thing)
 	cha2 := make(chan Thing)
 	go forkThingSeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
-// ForkThingSeenAttr returns two channels, `new` and `old`,
+// ThingForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -66,7 +66,7 @@ func ForkThingSeen(inp <-chan Thing) (new, old <-chan Thing) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func ForkThingSeenAttr(inp <-chan Thing, attr func(a Thing) interface{}) (new, old <-chan Thing) {
+func ThingForkSeenAttr(inp <-chan Thing, attr func(a Thing) interface{}) (new, old <-chan Thing) {
 	cha1 := make(chan Thing)
 	cha2 := make(chan Thing)
 	go forkThingSeenAttr(cha1, cha2, inp, attr)
@@ -108,24 +108,24 @@ func forkThingSeenAttr(new, old chan<- Thing, inp <-chan Thing, attr func(a Thin
 	}
 }
 
-// TubeThingSeen returns a closure around PipeThingSeen()
+// ThingTubeSeen returns a closure around ThingPipeSeen()
 // (silently dropping every Thing seen before).
-func TubeThingSeen() (tube func(inp <-chan Thing) (out <-chan Thing)) {
+func ThingTubeSeen() (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return PipeThingSeen(inp)
+		return ThingPipeSeen(inp)
 	}
 }
 
-// TubeThingSeenAttr returns a closure around PipeThingSeenAttr()
+// ThingTubeSeenAttr returns a closure around ThingPipeSeenAttr()
 // (silently dropping every Thing
 // whose attribute `attr` was
 // seen before).
-func TubeThingSeenAttr(attr func(a Thing) interface{}) (tube func(inp <-chan Thing) (out <-chan Thing)) {
+func ThingTubeSeenAttr(attr func(a Thing) interface{}) (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return PipeThingSeenAttr(inp, attr)
+		return ThingPipeSeenAttr(inp, attr)
 	}
 }
 
-// End of PipeThingSeen/ForkThingSeen - an "I've seen this Thing before" filter / fork
+// End of ThingPipeSeen/ThingForkSeen - an "I've seen this Thing before" filter / forker

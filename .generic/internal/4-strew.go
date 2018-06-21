@@ -11,17 +11,17 @@ package pipe
 import "time"
 
 // ===========================================================================
-// Beg of ScatterThing
+// Beg of ThingStrew - scatter them
 
-// ScatterThing returns a slice (of size = size) of channels
-// one of which shall receive any inp before close.
-func ScatterThing(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
+// ThingStrew returns a slice (of size = size) of channels
+// one of which shall receive each inp before close.
+func ThingStrew(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 	chaS := make([]chan Thing, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan Thing)
 	}
 
-	go scatterThing(inp, chaS...)
+	go strewThing(inp, chaS...)
 
 	outS = make([]<-chan Thing, size)
 	for i := 0; i < size; i++ {
@@ -31,14 +31,14 @@ func ScatterThing(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 	return outS
 }
 
-// c scatterThing(inp <-chan Thing, outS ...chan<- Thing) {
+// c strewThing(inp <-chan Thing, outS ...chan<- Thing) {
 // Note: go does not convert the passed slice `[]chan Thing` to `[]chan<- Thing` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func scatterThing(inp <-chan Thing, outS ...chan Thing) {
+func strewThing(inp <-chan Thing, outS ...chan Thing) {
 
 	for i := range inp {
 		for !trySendThing(i, outS...) {
-			time.Sleep(time.Millisecond) // wait a little before retry
+			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
@@ -62,4 +62,4 @@ func trySendThing(inp Thing, outS ...chan Thing) bool {
 	return false
 }
 
-// End of FanThingOut
+// End of ThingStrew - scatter them

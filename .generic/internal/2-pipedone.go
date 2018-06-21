@@ -9,10 +9,10 @@
 package pipe
 
 // ===========================================================================
-// Beg of PipeThingDone
+// Beg of ThingPipeDone
 
-// PipeThingDone returns a channel to receive every `inp` before close and a channel to signal this closing.
-func PipeThingDone(inp <-chan Thing) (out <-chan Thing, done <-chan struct{}) {
+// ThingPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
+func ThingPipeDone(inp <-chan Thing) (out <-chan Thing, done <-chan struct{}) {
 	cha := make(chan Thing)
 	doit := make(chan struct{})
 	go pipeThingDone(cha, doit, inp)
@@ -28,4 +28,4 @@ func pipeThingDone(out chan<- Thing, done chan<- struct{}, inp <-chan Thing) {
 	done <- struct{}{}
 }
 
-// End of PipeThingDone
+// End of ThingPipeDone

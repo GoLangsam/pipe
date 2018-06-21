@@ -9,54 +9,54 @@
 package pipe
 
 // ===========================================================================
-// Beg of Fan2Thing easy fan-in's
+// Beg of ThingFan2 easy fan-in's
 
-// Fan2Thing returns a channel to receive
+// ThingFan2 returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all inputs
 // before close.
-func Fan2Thing(ori <-chan Thing, inp ...Thing) (out <-chan Thing) {
-	return FanIn2Thing(ori, ChanThing(inp...))
+func ThingFan2(ori <-chan Thing, inp ...Thing) (out <-chan Thing) {
+	return ThingFanIn2(ori, ThingChan(inp...))
 }
 
-// Fan2ThingSlice returns a channel to receive
+// ThingFan2Slice returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all inputs
 // before close.
-func Fan2ThingSlice(ori <-chan Thing, inp ...[]Thing) (out <-chan Thing) {
-	return FanIn2Thing(ori, ChanThingSlice(inp...))
+func ThingFan2Slice(ori <-chan Thing, inp ...[]Thing) (out <-chan Thing) {
+	return ThingFanIn2(ori, ThingChanSlice(inp...))
 }
 
-// Fan2ThingChan returns a channel to receive
+// ThingFan2Chan returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // from the the input channel `inp`
 // before close.
-// Note: Fan2ThingChan is nothing but FanIn2Thing
-func Fan2ThingChan(ori <-chan Thing, inp <-chan Thing) (out <-chan Thing) {
-	return FanIn2Thing(ori, inp)
+// Note: ThingFan2Chan is nothing but ThingFanIn2
+func ThingFan2Chan(ori <-chan Thing, inp <-chan Thing) (out <-chan Thing) {
+	return ThingFanIn2(ori, inp)
 }
 
-// Fan2ThingFuncNok returns a channel to receive
+// ThingFan2FuncNok returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func Fan2ThingFuncNok(ori <-chan Thing, gen func() (Thing, bool)) (out <-chan Thing) {
-	return FanIn2Thing(ori, ChanThingFuncNok(gen))
+func ThingFan2FuncNok(ori <-chan Thing, gen func() (Thing, bool)) (out <-chan Thing) {
+	return ThingFanIn2(ori, ThingChanFuncNok(gen))
 }
 
-// Fan2ThingFuncErr returns a channel to receive
+// ThingFan2FuncErr returns a channel to receive
 // everything from the given original channel `ori`
 // as well as
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func Fan2ThingFuncErr(ori <-chan Thing, gen func() (Thing, error)) (out <-chan Thing) {
-	return FanIn2Thing(ori, ChanThingFuncErr(gen))
+func ThingFan2FuncErr(ori <-chan Thing, gen func() (Thing, error)) (out <-chan Thing) {
+	return ThingFanIn2(ori, ThingChanFuncErr(gen))
 }
 
-// End of Fan2Thing easy fan-in's
+// End of ThingFan2 easy fan-in's

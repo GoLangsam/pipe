@@ -11,15 +11,15 @@ package pipe
 import "sync"
 
 // ===========================================================================
-// Beg of FanThingsIn
+// Beg of ThingFanIn
 
-// FanThingsIn returns a channel to receive all inputs arriving
+// ThingFanIn returns a channel to receive all inputs arriving
 // on variadic inps
 // before close.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func FanThingsIn(inps ...<-chan Thing) (out <-chan Thing) {
+func ThingFanIn(inps ...<-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
 
 	wg := new(sync.WaitGroup)
@@ -42,4 +42,4 @@ func FanThingsIn(inps ...<-chan Thing) (out <-chan Thing) {
 	return cha
 }
 
-// End of FanThingsIn
+// End of ThingFanIn

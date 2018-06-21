@@ -9,15 +9,15 @@
 package pipe
 
 // ===========================================================================
-// Beg of SameThing comparator
+// Beg of ThingSame comparator
 
 // inspired by go/doc/play/tree.go
 
-// SameThing reads values from two channels in lockstep
+// ThingSame reads values from two channels in lockstep
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func SameThing(same func(a, b Thing) bool, inp1, inp2 <-chan Thing) (out <-chan bool) {
+func ThingSame(same func(a, b Thing) bool, inp1, inp2 <-chan Thing) (out <-chan bool) {
 	cha := make(chan bool)
 	go sameThing(cha, same, inp1, inp2)
 	return cha
@@ -40,4 +40,4 @@ func sameThing(out chan<- bool, same func(a, b Thing) bool, inp1, inp2 <-chan Th
 	}
 }
 
-// End of SameThing comparator
+// End of ThingSame comparator

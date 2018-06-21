@@ -9,11 +9,11 @@
 package pipe
 
 // ===========================================================================
-// Beg of FanThingOut
+// Beg of ThingFanOut
 
-// FanThingOut returns a slice (of size = size) of channels
+// ThingFanOut returns a slice (of size = size) of channels
 // each of which shall receive any inp before close.
-func FanThingOut(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
+func ThingFanOut(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 	chaS := make([]chan Thing, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan Thing)
@@ -44,4 +44,4 @@ func fanThingOut(inp <-chan Thing, outs ...chan Thing) {
 
 }
 
-// End of FanThingOut
+// End of ThingFanOut
