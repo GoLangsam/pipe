@@ -11,19 +11,19 @@ package sites
 import "time"
 
 // ===========================================================================
-// Beg of StrewSite
+// Beg of siteStrew - scatter them
 
-// StrewSite returns a slice (of size = size) of channels
-// one of which shall receive any inp before close.
-func StrewSite(inp <-chan Site, size int) (outS [](<-chan Site)) {
-	chaS := make([]chan Site, size)
+// siteStrew returns a slice (of size = size) of channels
+// one of which shall receive each inp before close.
+func siteStrew(inp <-chan site, size int) (outS [](<-chan site)) {
+	chaS := make([]chan site, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Site)
+		chaS[i] = make(chan site)
 	}
 
-	go strewSite(inp, chaS...)
+	go strewsite(inp, chaS...)
 
-	outS = make([]<-chan Site, size)
+	outS = make([]<-chan site, size)
 	for i := 0; i < size; i++ {
 		outS[i] = chaS[i] // convert `chan` to `<-chan`
 	}
@@ -31,13 +31,13 @@ func StrewSite(inp <-chan Site, size int) (outS [](<-chan Site)) {
 	return outS
 }
 
-// c strewSite(inp <-chan Site, outS ...chan<- Site) {
-// Note: go does not convert the passed slice `[]chan Site` to `[]chan<- Site` automatically.
+// c strewsite(inp <-chan site, outS ...chan<- site) {
+// Note: go does not convert the passed slice `[]chan site` to `[]chan<- site` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewSite(inp <-chan Site, outS ...chan Site) {
+func strewsite(inp <-chan site, outS ...chan site) {
 
 	for i := range inp {
-		for !trySendSite(i, outS...) {
+		for !trySendsite(i, outS...) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -47,7 +47,7 @@ func strewSite(inp <-chan Site, outS ...chan Site) {
 	}
 }
 
-func trySendSite(inp Site, outS ...chan Site) bool {
+func trySendsite(inp site, outS ...chan site) bool {
 
 	for o := range outS {
 
@@ -62,4 +62,4 @@ func trySendSite(inp Site, outS ...chan Site) bool {
 	return false
 }
 
-// End of StrewSite
+// End of siteStrew - scatter them

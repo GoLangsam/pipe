@@ -18,16 +18,16 @@ type Site struct {
 }
 
 // ---------------------------------------------------------------------------
-// site learning a little behaviour
+// Site learning a little behaviour
 
-// Attr implements the attribute relevant for ForkSiteSeenAttr,
+// attr implements the attribute relevant for ForkSiteSeenAttr,
 // the "I've seen this site before" discriminator.
-func (s Site) Attr() interface{} {
+func (s Site) attr() interface{} {
 	return s.URL.String()
 }
 
 // print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
-func (s Site) Print() Site {
+func (s Site) print() Site {
 	fmt.Println(s)
 	return s
 }

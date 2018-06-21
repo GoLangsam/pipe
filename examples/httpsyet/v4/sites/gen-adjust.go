@@ -17,42 +17,42 @@ package sites
 
 import "container/ring"
 
-// Note: pipeSiteAdjust imports "container/ring" for the expanding buffer.
+// Note: pipesiteAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
-// Beg of PipeSiteAdjust
+// Beg of sitePipeAdjust
 
-// PipeSiteAdjust returns a channel to receive
+// sitePipeAdjust returns a channel to receive
 // all `inp`
-// buffered by a SendSiteProxy process
+// buffered by a siteSendProxy process
 // before close.
-func PipeSiteAdjust(inp <-chan Site, sizes ...int) (out <-chan Site) {
-	cap, que := sendSiteProxySizes(sizes...)
-	cha := make(chan Site, cap)
-	go pipeSiteAdjust(cha, inp, que)
+func sitePipeAdjust(inp <-chan site, sizes ...int) (out <-chan site) {
+	cap, que := sendsiteProxySizes(sizes...)
+	cha := make(chan site, cap)
+	go pipesiteAdjust(cha, inp, que)
 	return cha
 }
 
-// TubeSiteAdjust returns a closure around PipeSiteAdjust (_, sizes ...int).
-func TubeSiteAdjust(sizes ...int) (tube func(inp <-chan Site) (out <-chan Site)) {
+// siteTubeAdjust returns a closure around sitePipeAdjust (_, sizes ...int).
+func siteTubeAdjust(sizes ...int) (tube func(inp <-chan site) (out <-chan site)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return PipeSiteAdjust(inp, sizes...)
+	return func(inp <-chan site) (out <-chan site) {
+		return sitePipeAdjust(inp, sizes...)
 	}
 }
 
-// End of PipeSiteAdjust
+// End of sitePipeAdjust
 // ===========================================================================
 
 // ===========================================================================
-// Beg of sendSiteProxy
+// Beg of sendsiteProxy
 
-func sendSiteProxySizes(sizes ...int) (cap, que int) {
+func sendsiteProxySizes(sizes ...int) (cap, que int) {
 
-	// CAP is the minimum capacity of the buffered proxy channel in `SendSiteProxy`
+	// CAP is the minimum capacity of the buffered proxy channel in `siteSendProxy`
 	const CAP = 10
 
-	// QUE is the minimum initially allocated size of the circular queue in `SendSiteProxy`
+	// QUE is the minimum initially allocated size of the circular queue in `siteSendProxy`
 	const QUE = 16
 
 	cap = CAP
@@ -67,45 +67,45 @@ func sendSiteProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("SendSiteProxy: too many sizes")
+		panic("siteSendProxy: too many sizes")
 	}
 
 	return
 }
 
-// sendSiteProxy returns a channel to serve as a sending proxy to 'out'.
+// siteSendProxy returns a channel to serve as a sending proxy to 'out'.
 // Uses a goroutine to receive values from 'out' and store them
 // in an expanding buffer, so that sending to 'out' never blocks.
 //  Note: the expanding buffer is implemented via "container/ring"
 //
-// Note: SendSiteProxy is kept for the Sieve example
+// Note: siteSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
-// even so it does not fit the pipe tube pattern as PipeSiteAdjust does.
-func SendSiteProxy(out chan<- Site, sizes ...int) chan<- Site {
-	cap, que := sendSiteProxySizes(sizes...)
-	cha := make(chan Site, cap)
-	go pipeSiteAdjust(out, cha, que)
+// even so it does not fit the pipe tube pattern as sitePipeAdjust does.
+func siteSendProxy(out chan<- site, sizes ...int) chan<- site {
+	cap, que := sendsiteProxySizes(sizes...)
+	cha := make(chan site, cap)
+	go pipesiteAdjust(out, cha, que)
 	return cha
 }
 
-// pipeSiteAdjust uses an adjusting buffer to receive from 'inp'
+// pipesiteAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func pipeSiteAdjust(out chan<- Site, inp <-chan Site, QUE int) {
+func pipesiteAdjust(out chan<- site, inp <-chan site, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
 	last := first
-	var c chan<- Site
-	var e Site
+	var c chan<- site
+	var e site
 	ok := true
 	for ok {
 		c = out
 		if first == last {
 			c = nil // buffer empty: disable output
 		} else {
-			e = first.Value.(Site)
+			e = first.Value.(site)
 		}
 		select {
 		case e, ok = <-inp:
@@ -123,9 +123,9 @@ func pipeSiteAdjust(out chan<- Site, inp <-chan Site, QUE int) {
 	}
 
 	for first != last {
-		out <- first.Value.(Site)
+		out <- first.Value.(site)
 		first = first.Unlink(1) // first.Next()
 	}
 }
 
-// End of sendSiteProxy
+// End of sendsiteProxy

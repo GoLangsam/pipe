@@ -9,40 +9,48 @@ import (
 	"sync"
 )
 
-// Traffic as it goes around inside a circular site pipe network,
+type site = Site
+
+// Traffic goes around inside a circular Site pipe network,
 // e. g. a crawling Crawler.
-// Composed of Travel, a channel for those who travel in the traffic,
-// and an embedded *sync.WaitGroup to keep track of congestion.
 type Traffic struct {
-	Travel chan Site       // to be processed
-	wg     *sync.WaitGroup // monitor SiteEnter & SiteLeave
+	sites chan site       // to be processed
+	wg    *sync.WaitGroup // monitor SiteEnter & SiteLeave
+	Done  <-chan struct{} // to signal termination due to traffic having subsided
+	done  *sync.Once      // to initialize Done once upon first feed
 }
 
-// New returns a (pointer to a) new Traffic
-func New() *Traffic {
+// New returns a new and operational Traffic processor.
+func New() (t *Traffic) {
 	return &Traffic{
-		make(chan Site),
+		make(chan site),
 		new(sync.WaitGroup),
+		nil,
+		new(sync.Once),
 	}
 }
 
-// Feed registers new entries and launches their dispatcher
-// (which we intentionally left untouched).
+// Feed registers new entries.
+// Upon first call Done is lazily initialised.
 func (t *Traffic) Feed(urls []*url.URL, parent *url.URL, depth int) {
-	queueURLs(t.Travel, urls, parent, depth)
+	queueURLs(t.sites, urls, parent, depth)
+
+	if t.Done == nil {
+		t.Done = siteDoneWait(t.sites, t.wg)
+	}
 }
 
 // Processor builds the site traffic processing network;
 // it is cirular if crawl uses Feed to provide feedback.
 func (t *Traffic) Processor(crawl func(s Site), parallel int) {
-	proc := func(s Site) Site {
-		crawl(s)
-		return s
+	proc := func(s Site) { // wrap crawl:
+		crawl(s)    // apply original crawl
+		t.wg.Done() // have this site leave
 	}
 
-	sites, seen := ForkSiteSeenAttr(PipeSiteEnter(t.Travel, t.wg), Site.Attr)
-	for _, inp := range StrewSite(PipeSiteAdjust(sites), parallel) {
-		DoneSite(PipeSiteLeave(PipeSiteFunc(inp, proc), t.wg))
+	sites, seen := siteForkSeenAttr(sitePipeEnter(t.sites, t.wg), Site.attr)
+	for _, sites := range siteStrew(sitePipeAdjust(sites), parallel) {
+		siteDoneFunc(sites, proc) // strewed `sites` leave in wrapped `crawl`
 	}
-	DoneSite(PipeSiteLeave(seen, t.wg)) // `seen` leave without further processing
+	siteDone(sitePipeLeave(seen, t.wg)) // `seen` leave without further processing
 }
