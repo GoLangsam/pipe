@@ -17,6 +17,9 @@ type Site struct {
 	Depth  int
 }
 
+// ---------------------------------------------------------------------------
+// site learning a little behaviour
+
 // Attr impelemnts the attribute relevant for ForkSiteSeenAttr,
 // the "I've seen this site before" discriminator.
 func (s Site) Attr() interface{} {
