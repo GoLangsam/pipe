@@ -1,0 +1,206 @@
+// Package httpsyet provides the configuration and execution
+// for crawling a list of sites for links that can be updated to HTTPS.
+package httpsyet
+
+import (
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+	// "sync"
+	"time"
+
+	"golang.org/x/net/html"
+)
+
+const defaultParallel = 10
+
+// Crawler is used as configuration for Run.
+// Is validated in Run().
+type Crawler struct {
+	Sites    []string                             // At least one URL.
+	Out      io.Writer                            // Required. Writes one detected site per line.
+	Log      *log.Logger                          // Required. Errors are reported here.
+	Depth    int                                  // Optional. Limit depth. Set to >= 1.
+	Parallel int                                  // Optional. Set how many sites to crawl in parallel.
+	Delay    time.Duration                        // Optional. Set delay between crawls.
+	Get      func(string) (*http.Response, error) // Optional. Defaults to http.Get.
+	Verbose  bool                                 // Optional. If set, status updates are written to logger.
+}
+
+// Run the crawler.
+// Can return validation errors.
+// All crawling errors are reported via logger.
+// Output is written to writer.
+// Crawls sites recursively and reports all external links that can be changed to HTTPS.
+// Also reports broken links via error logger.
+func (c Crawler) Run() error {
+	if err := c.validate(); err != nil {
+		return err
+	}
+	if c.Get == nil {
+		c.Get = http.Get
+	}
+	urls, err := toURLs(c.Sites, url.Parse)
+	if err != nil {
+		return err
+	}
+
+	<-c.crawling(urls)
+
+	return nil
+}
+
+func (c Crawler) validate() error {
+	if len(c.Sites) == 0 {
+		return errors.New("no sites given")
+	}
+	if c.Out == nil {
+		return errors.New("no output writer given")
+	}
+	if c.Log == nil {
+		return errors.New("no error logger given")
+	}
+	if c.Depth < 0 {
+		return errors.New("depth cannot be negative")
+	}
+	if c.Parallel < 0 {
+		return errors.New("parallel cannot be negative")
+	}
+	return nil
+}
+
+// Returns a list of only valid URLs.
+// Invalid protocols such as mailto or javascript are ignored.
+// The returned error shows all invalid URLs in one message.
+func toURLs(links []string, parse func(string) (*url.URL, error)) (urls []*url.URL, err error) {
+	var invalids []string
+	for _, s := range links {
+		u, e := parse(s)
+		if e != nil {
+			invalids = append(invalids, fmt.Sprintf("%s (%v)", s, e))
+			continue
+		}
+		// Default to https
+		if u.Scheme == "" {
+			u.Scheme = "https"
+		}
+		// Ignore invalid protocols
+		if u.Scheme == "http" || u.Scheme == "https" {
+			urls = append(urls, u)
+		}
+	}
+	if len(invalids) > 0 {
+		err = fmt.Errorf("invalid URLs: %v", strings.Join(invalids, ", "))
+	}
+	return
+}
+
+func parallel(p int) int {
+	if p == 0 {
+		return defaultParallel
+	}
+	return p
+}
+
+func (c *crawling) crawlSite(s site) (urls []*url.URL) {
+
+	if c.Verbose {
+		c.Log.Printf("verbose: GET %s\n", s.URL)
+	}
+
+	links, shouldUpdate, err := crawlSite(s, c.Get)
+
+	if err != nil {
+		parent := ""
+		if s.Parent != nil {
+			parent = fmt.Sprintf(" on page %v", s.Parent)
+		}
+		c.Log.Printf("%v%s\n", err, parent)
+	}
+
+	if shouldUpdate {
+		s.URL.Scheme = "http"
+		c.results <- result(fmt.Sprintf("%v %v", s.Parent, s.URL.String()))
+	}
+
+	urls, err = toURLs(links, s.URL.Parse)
+	if err != nil {
+		c.Log.Printf("page %v: %v\n", s.URL, err)
+	}
+	return
+}
+
+func crawlSite(s site, get func(string) (*http.Response, error)) ([]string, bool, error) {
+	u := s.URL
+	isExternal := s.Parent != nil && s.URL.Host != s.Parent.Host
+
+	// If an external link is http we try https.
+	// If it fails it is ignored and we carry on normally.
+	// On success we return it as a result.
+	if isExternal && u.Scheme == "http" {
+		u.Scheme = "https"
+		r2, err := get(u.String())
+		if err == nil {
+			defer r2.Body.Close()
+			if r2.StatusCode < 400 {
+				return nil, true, nil
+			}
+		}
+		u.Scheme = "http"
+	}
+
+	r, err := get(u.String())
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to get %v: %v", u, err)
+	}
+	defer r.Body.Close()
+
+	if r.StatusCode >= 400 {
+		return nil, false, fmt.Errorf("%d %v", r.StatusCode, u)
+	}
+
+	// Stop when redirecting to external page
+	if r.Request.URL.Host != u.Host {
+		isExternal = true
+	}
+
+	// Stop when site is external.
+	// Also stop if depth one is reached, ignored when depth is set to 0.
+	if isExternal || s.Depth == 1 {
+		return nil, false, err
+	}
+
+	links, err := getLinks(r.Body)
+	return links, false, err
+}
+
+func getLinks(r io.Reader) ([]string, error) {
+	var links []string
+
+	doc, err := html.Parse(r)
+	if err != nil {
+		return links, fmt.Errorf("failed to parse HTML: %v\n", err)
+	}
+
+	var f func(n *html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "a" {
+			for _, a := range n.Attr {
+				if a.Key == "href" {
+					links = append(links, a.Val)
+					break
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+
+	return links, nil
+}
