@@ -4,4 +4,5 @@
 
 package result
 
+// Result represents (a secondary) observation
 type Result string
