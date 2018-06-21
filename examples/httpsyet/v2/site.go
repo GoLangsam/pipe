@@ -31,3 +31,14 @@ func (s site) Print() site {
 	fmt.Println(s)
 	return s
 }
+
+// queueURLs sends urls on the given queue
+func queueURLs(queue chan<- Site, urls []*url.URL, parent *url.URL, depth int) {
+	for _, u := range urls {
+		queue <- Site{
+			URL:    u,
+			Parent: parent,
+			Depth:  depth,
+		}
+	}
+}

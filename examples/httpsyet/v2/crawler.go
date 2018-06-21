@@ -205,6 +205,7 @@ func getLinks(r io.Reader) ([]string, error) {
 	return links, nil
 }
 
+/* => site.go
 // queueURLs is launched in func (c *crawling) add
 func queueURLs(queue chan<- site, urls []*url.URL, parent *url.URL, depth int) {
 	for _, u := range urls {
@@ -215,3 +216,4 @@ func queueURLs(queue chan<- site, urls []*url.URL, parent *url.URL, depth int) {
 		}
 	}
 }
+*/
