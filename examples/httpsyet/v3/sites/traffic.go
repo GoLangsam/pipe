@@ -31,5 +31,5 @@ func (t *Traffic) Processor(crawl func(s Site), parallel int) {
 	for _, inp := range SiteStrew(SitePipeAdjust(sites), parallel) {
 		SiteDoneFunc(inp, crawl) // `sites` leave inside crawl
 	}
-	SiteDone(SitePipeLeave(seen, t)) // `seen` leave without further processing
+	SiteDoneLeave(seen, t) // `seen` leave without further processing
 }

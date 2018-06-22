@@ -99,7 +99,7 @@ func (c *crawling) processor(size int) {
 	for _, inp := range siteStrew(sites, size) {
 		siteDoneFunc(inp, c.crawl) // sites leave inside crawler's crawl
 	}
-	siteDone(sitePipeLeave(seen, c)) // seen leave without further processing
+	siteDoneLeave(seen, c) // seen leave without further processing
 }
 
 // ===========================================================================

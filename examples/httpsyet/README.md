@@ -46,11 +46,11 @@ Using functions generated from `pipe/s` (see `genny.go` below),
 the actual concurrent network to process the sites channel becomes:
 
 ```go
-	sites, seen := ForkSiteSeenAttr(c.sites, site.attr)
-	for _, inp := range ScatterSite(sites, size) {
-		DoneSiteFunc(inp, c.crawl) // sites leave inside crawler's crawl
+	sites, seen := siteForkSeenAttr(c.sites, site.Attr)
+	for _, inp := range siteStrew(sites, size) {
+		siteDoneFunc(inp, c.crawl) // sites leave inside crawler's crawl
 	}
-	DoneSite(PipeSiteLeave(seen, c)) // seen leave without further processing
+	siteDoneLeave(seen, c) // seen leave without further processing
 ```
 
 _Simple, is it not? ;-)_

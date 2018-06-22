@@ -61,5 +61,5 @@ func (t *Traffic) Processor(crawl func(s Site), parallel int) {
 	for _, sites := range siteStrew(sitePipeAdjust(sites), parallel) {
 		siteDoneFunc(sites, proc) // strewed `sites` leave in wrapped `crawl`
 	}
-	siteDone(sitePipeLeave(seen, t.wg)) // `seen` leave without further processing
+	siteDoneLeave(seen, t.wg) // `seen` leave without further processing
 }
