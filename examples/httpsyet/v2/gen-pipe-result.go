@@ -145,22 +145,6 @@ func piperesultFunc(out chan<- result, inp <-chan result, act func(a result) res
 	}
 }
 
-// resultPipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func resultPipeBuffer(inp <-chan result, cap int) (out <-chan result) {
-	cha := make(chan result, cap)
-	go piperesultBuffer(cha, inp)
-	return cha
-}
-
-func piperesultBuffer(out chan<- result, inp <-chan result) {
-	defer close(out)
-	for i := range inp {
-		out <- i
-	}
-}
-
 // End of PipeResult functions
 // ===========================================================================
 
@@ -172,14 +156,6 @@ func resultTubeFunc(act func(a result) result) (tube func(inp <-chan result) (ou
 
 	return func(inp <-chan result) (out <-chan result) {
 		return resultPipeFunc(inp, act)
-	}
-}
-
-// resultTubeBuffer returns a closure around PipeResultBuffer (_, cap).
-func resultTubeBuffer(cap int) (tube func(inp <-chan result) (out <-chan result)) {
-
-	return func(inp <-chan result) (out <-chan result) {
-		return resultPipeBuffer(inp, cap)
 	}
 }
 

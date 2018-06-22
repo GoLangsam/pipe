@@ -145,22 +145,6 @@ func pipestringFunc(out chan<- string, inp <-chan string, act func(a string) str
 	}
 }
 
-// stringPipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func stringPipeBuffer(inp <-chan string, cap int) (out <-chan string) {
-	cha := make(chan string, cap)
-	go pipestringBuffer(cha, inp)
-	return cha
-}
-
-func pipestringBuffer(out chan<- string, inp <-chan string) {
-	defer close(out)
-	for i := range inp {
-		out <- i
-	}
-}
-
 // End of PipeString functions
 // ===========================================================================
 
@@ -172,14 +156,6 @@ func stringTubeFunc(act func(a string) string) (tube func(inp <-chan string) (ou
 
 	return func(inp <-chan string) (out <-chan string) {
 		return stringPipeFunc(inp, act)
-	}
-}
-
-// stringTubeBuffer returns a closure around PipeStringBuffer (_, cap).
-func stringTubeBuffer(cap int) (tube func(inp <-chan string) (out <-chan string)) {
-
-	return func(inp <-chan string) (out <-chan string) {
-		return stringPipeBuffer(inp, cap)
 	}
 }
 

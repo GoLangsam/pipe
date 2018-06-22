@@ -145,22 +145,6 @@ func pipesiteFunc(out chan<- site, inp <-chan site, act func(a site) site) {
 	}
 }
 
-// sitePipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func sitePipeBuffer(inp <-chan site, cap int) (out <-chan site) {
-	cha := make(chan site, cap)
-	go pipesiteBuffer(cha, inp)
-	return cha
-}
-
-func pipesiteBuffer(out chan<- site, inp <-chan site) {
-	defer close(out)
-	for i := range inp {
-		out <- i
-	}
-}
-
 // End of PipeSite functions
 // ===========================================================================
 
@@ -172,14 +156,6 @@ func siteTubeFunc(act func(a site) site) (tube func(inp <-chan site) (out <-chan
 
 	return func(inp <-chan site) (out <-chan site) {
 		return sitePipeFunc(inp, act)
-	}
-}
-
-// siteTubeBuffer returns a closure around PipeSiteBuffer (_, cap).
-func siteTubeBuffer(cap int) (tube func(inp <-chan site) (out <-chan site)) {
-
-	return func(inp <-chan site) (out <-chan site) {
-		return sitePipeBuffer(inp, cap)
 	}
 }
 
