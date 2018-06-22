@@ -5,6 +5,7 @@
 //go:generate genny	-in ../../s/pipe.go			-out 1-pipe.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/.fan2/fan2.go		-out 6-fan2.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/adjust/adjust.go		-out 3-adjust.go	-pkg pipe gen "anyThing=Thing"
+//go:generate genny	-in ../../s/buffered/buffered.go	-out 2-buffered.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/daisy/daisy.go		-out 9-daisy.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/fan-in/fan-in.go		-out 6-fan-in.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/fan-out/fan-out.go		-out 4-fan-out.go	-pkg pipe gen "anyThing=Thing"

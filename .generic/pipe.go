@@ -422,6 +422,35 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 // End of ThingFanIn2 simple binary Fan-In
 
 // ===========================================================================
+// Beg of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
+
+// ThingPipeBuffer returns a buffered channel with capacity `cap` to receive
+// all `inp`
+// before close.
+func ThingPipeBuffered(inp <-chan Thing, cap int) (out <-chan Thing) {
+	cha := make(chan Thing, cap)
+	go pipeThingBuffer(cha, inp)
+	return cha
+}
+
+func pipeThingBuffered(out chan<- Thing, inp <-chan Thing) {
+	defer close(out)
+	for i := range inp {
+		out <- i
+	}
+}
+
+// ThingTubeBuffered returns a closure around PipeThingBuffer (_, cap).
+func ThingTubeBuffered(cap int) (tube func(inp <-chan Thing) (out <-chan Thing)) {
+
+	return func(inp <-chan Thing) (out <-chan Thing) {
+		return ThingPipeBuffer(inp, cap)
+	}
+}
+
+// End of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
+
+// ===========================================================================
 // Beg of ThingPipeEnter/Leave - Flapdoors observed by a Waiter
 
 // ThingWaiter - as implemented by `*sync.WaitGroup` -
