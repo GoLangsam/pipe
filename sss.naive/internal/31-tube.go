@@ -15,13 +15,5 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp chan anyThin
 	}
 }
 
-// anyThingTubeBuffer returns a closure around PipeanyThingBuffer (_, cap).
-func anyThingTubeBuffer(cap int) (tube func(inp chan anyThing) (out chan anyThing)) {
-
-	return func(inp chan anyThing) (out chan anyThing) {
-		return anyThingPipeBuffer(inp, cap)
-	}
-}
-
 // End of anyThingTube closures around anyThingPipe
 // ===========================================================================
