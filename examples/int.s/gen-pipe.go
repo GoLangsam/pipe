@@ -145,22 +145,6 @@ func pipeintFunc(out chan<- int, inp <-chan int, act func(a int) int) {
 	}
 }
 
-// intPipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func intPipeBuffer(inp <-chan int, cap int) (out <-chan int) {
-	cha := make(chan int, cap)
-	go pipeintBuffer(cha, inp)
-	return cha
-}
-
-func pipeintBuffer(out chan<- int, inp <-chan int) {
-	defer close(out)
-	for i := range inp {
-		out <- i
-	}
-}
-
 // End of PipeInt functions
 // ===========================================================================
 
@@ -172,14 +156,6 @@ func intTubeFunc(act func(a int) int) (tube func(inp <-chan int) (out <-chan int
 
 	return func(inp <-chan int) (out <-chan int) {
 		return intPipeFunc(inp, act)
-	}
-}
-
-// intTubeBuffer returns a closure around PipeIntBuffer (_, cap).
-func intTubeBuffer(cap int) (tube func(inp <-chan int) (out <-chan int)) {
-
-	return func(inp <-chan int) (out <-chan int) {
-		return intPipeBuffer(inp, cap)
 	}
 }
 
