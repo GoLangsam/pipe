@@ -46,32 +46,33 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 ## [ss](ss.notyet/) - still simply small
 
 
-## [s](s/) - smart & useful - batteries included
+## [s](s/) - smart & useful - [batteries](#batteries) included!
 
 
 ### Batteries
 
-- [pipedone](s/pipedone/)
-- [plug](s/plug/)
-- [plugafter](s/plugafter/)
-- [flap](s/flap/)
+- [pipedone](s/pipedone/)	- be signalled when flow subsides here
+- [plug](s/plug/)	- pull the plug
+- [plugafter](s/plugafter/) - pull the plug after some time
+- [flap](s/flap/)	- keep track how many enter and leave
+- [buffered](s/buffered/)	- insert a buffered channel
 
-- [buffer](s/buffer/)
+- [adjust](s/adjust/)	- insert an adjustable buffer 
 
-- [scatter](s/scatter/)
-- [fan-out](s/fan-out/)
+- [strew](s/strew/)	- throw it at some available receiver
+- [fan-out](s/fan-out/)	- throw it at all receivers
 
-- [seen](s/seen/)
+- [seen](s/seen/)	- an "I've seen this before" filter / forker
 
-- [fan2](s/fan2/)
-- [fan-in](s/fan-in/)
+- [fan2](s/fan2/)	- feed some inputs into your channel
+- [fan-in](s/fan-in/)	- gather all inputs into one output
 
-- [merge](s/merge/)
-- [same](s/same/)
+- [merge](s/merge/)	- gather sorted streams into one
+- [same](s/same/)	- compare two streams
 
-- [join](s/join/)
+- [join](s/join/)	- join stuff into the flow
 
-- [daisy](s/daisy/)
+- [daisy](s/daisy/)	- daisy chain tubes
 
 
 ## [examples](examples/)
@@ -80,7 +81,7 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 
 ## [internal](internal/)
 
-- [bundle.go](internal/cmd/bundledotgo/)
+- [bundle.go](internal/cmd/bundledotgo/) - a quick&dirty hack
 
 ---
 Think deep - code happy - be simple - see clear :-)
