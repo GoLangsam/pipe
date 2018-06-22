@@ -25,3 +25,5 @@ go test .\...
 
 @Echo.
 @Echo finished :-)
+
+@pause
