@@ -156,22 +156,6 @@ func pipeAnyFunc(out chan<- Any, inp <-chan Any, act func(a Any) Any) {
 	}
 }
 
-// AnyPipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func AnyPipeBuffer(inp <-chan Any, cap int) (out <-chan Any) {
-	cha := make(chan Any, cap)
-	go pipeAnyBuffer(cha, inp)
-	return cha
-}
-
-func pipeAnyBuffer(out chan<- Any, inp <-chan Any) {
-	defer close(out)
-	for i := range inp {
-		out <- i
-	}
-}
-
 // End of PipeAny functions
 // ===========================================================================
 
@@ -183,14 +167,6 @@ func AnyTubeFunc(act func(a Any) Any) (tube func(inp <-chan Any) (out <-chan Any
 
 	return func(inp <-chan Any) (out <-chan Any) {
 		return AnyPipeFunc(inp, act)
-	}
-}
-
-// AnyTubeBuffer returns a closure around PipeAnyBuffer (_, cap).
-func AnyTubeBuffer(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
-
-	return func(inp <-chan Any) (out <-chan Any) {
-		return AnyPipeBuffer(inp, cap)
 	}
 }
 
@@ -424,6 +400,35 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 }
 
 // End of AnyFanIn2 simple binary Fan-In
+
+// ===========================================================================
+// Beg of AnyPipeBuffered - a buffered channel with capacity `cap` to receive
+
+// AnyPipeBuffer returns a buffered channel with capacity `cap` to receive
+// all `inp`
+// before close.
+func AnyPipeBuffered(inp <-chan Any, cap int) (out <-chan Any) {
+	cha := make(chan Any, cap)
+	go pipeAnyBuffer(cha, inp)
+	return cha
+}
+
+func pipeAnyBuffered(out chan<- Any, inp <-chan Any) {
+	defer close(out)
+	for i := range inp {
+		out <- i
+	}
+}
+
+// AnyTubeBuffered returns a closure around PipeAnyBuffer (_, cap).
+func AnyTubeBuffered(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
+
+	return func(inp <-chan Any) (out <-chan Any) {
+		return AnyPipeBuffer(inp, cap)
+	}
+}
+
+// End of AnyPipeBuffered - a buffered channel with capacity `cap` to receive
 
 // ===========================================================================
 // Beg of AnyPipeEnter/Leave - Flapdoors observed by a Waiter
@@ -1319,3 +1324,4 @@ func AnyDaisyChaiN(inp chan Any, somany int,
 }
 
 // End of AnyDaisyChain
+// ===========================================================================
