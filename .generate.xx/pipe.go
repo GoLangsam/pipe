@@ -4,7 +4,7 @@
 
 //go:generate genny -in $GOFILE	-out ../xxs/internal/$GOFILE	gen "Anymode=*AnySupply"
 //go:generate genny -in $GOFILE	-out ../xxl/internal/$GOFILE	gen "Anymode=*AnyDemand"
-//go:generate genny -in $GOFILE	-out ../xxsl/internal/$GOFILE	gen "Anymode=anyThingChannel"
+//go:generate genny -in $GOFILE	-out ../xxsl/internal/$GOFILE	gen "Anymode=AnyChannel"
 
 package pipe
 
