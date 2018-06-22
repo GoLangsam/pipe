@@ -51,8 +51,8 @@ func insert(t *Tree, v int) *Tree {
 	}
 	if v < t.Value {
 		t.Left = insert(t.Left, v)
-		return t
+	} else {
+		t.Right = insert(t.Right, v)
 	}
-	t.Right = insert(t.Right, v)
 	return t
 }

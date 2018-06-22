@@ -184,7 +184,7 @@ func Sieve() chan int {
 	return out
 }
 
-func ExampleSendAnyProxy_sieve2() {
+func ExampleanyThingSendProxy_sieve2() {
 	primes := Sieve()
 	a := []int{2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97}
 	for i := 0; i < len(a); i++ {
