@@ -5,6 +5,7 @@
 //go:generate genny -in ../../s/pipe.go			-out pipe-int.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/.fan2/fan2.go		-out fan2-int.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/adjust/adjust.go	-out adjust-int.go	-pkg pipe gen "anyThing=int"
+//go:generate genny -in ../../s/buffered/buffered.go	-out buffered-int.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/daisy/daisy.go		-out daisy-int.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/fan-in/fan-in.go	-out fan-in-int.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/fan-out/fan-out.go	-out fan-out-int.go	-pkg pipe gen "anyThing=int"
