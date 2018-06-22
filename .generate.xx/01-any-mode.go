@@ -9,7 +9,7 @@ package pipe
 
 import "github.com/cheekybits/genny/generic"
 
-type Any interface{}
+type anyThing interface{}
 
 type mode generic.Type
 
@@ -19,7 +19,7 @@ type mode generic.Type
 // Anymode is a
 // mode channel
 type Anymode struct {
-	dat chan Any
+	dat chan anyThing
 	req chan struct{}
 }
 
@@ -29,9 +29,9 @@ type Anymode struct {
 // mode channel
 func MakeAnymodeChan() *Anymode {
 	d := Anymode{
-		dat: make(chan Any),
+		dat: make(chan anyThing),
 		req: make(chan struct{}),
-		}
+	}
 	return &d
 }
 
@@ -41,45 +41,45 @@ func MakeAnymodeChan() *Anymode {
 // mode channel
 func MakeAnymodeBuff(cap int) *Anymode {
 	d := Anymode{
-		dat: make(chan Any, cap),
+		dat: make(chan anyThing, cap),
 		req: make(chan struct{}),
-		}
+	}
 	return &d
 }
 
 // Provide is the send method
 // - aka "myAnyChan <- myAny"
-func (c *Anymode) Provide(dat Any) {
+func (c *Anymode) Provide(dat anyThing) {
 	<-c.req
 	c.dat <- dat
 }
 
 // Receive is the receive operator as method
 // - aka "myAny := <-myAnyChan"
-func (c *Anymode) Receive() (dat Any) {
+func (c *Anymode) Receive() (dat anyThing) {
 	c.req <- struct{}{}
 	return <-c.dat
 }
 
 // Request is the comma-ok multi-valued form of Receive and
-// reports whether a received value was sent before the Any channel was closed
-func (c *Anymode) Request() (dat Any, open bool) {
+// reports whether a received value was sent before the anyThing channel was closed
+func (c *Anymode) Request() (dat anyThing, open bool) {
 	c.req <- struct{}{}
 	dat, open = <-c.dat
 	return dat, open
 }
 
-// Close closes the underlying Any channel
+// Close closes the underlying anyThing channel
 func (c *Anymode) Close() {
 	close(c.dat)
 }
 
-// Cap reports the capacity of the underlying Any channel
+// Cap reports the capacity of the underlying anyThing channel
 func (c *Anymode) Cap() int {
 	return cap(c.dat)
 }
 
-// Len reports the length of the underlying Any channel
+// Len reports the length of the underlying anyThing channel
 func (c *Anymode) Len() int {
 	return len(c.dat)
 }

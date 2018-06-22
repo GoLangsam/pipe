@@ -4,7 +4,7 @@
 
 //go:generate genny -in $GOFILE	-out ../xxs/internal/$GOFILE	gen "Anymode=*AnySupply"
 //go:generate genny -in $GOFILE	-out ../xxl/internal/$GOFILE	gen "Anymode=*AnyDemand"
-//go:generate genny -in $GOFILE	-out ../xxsl/internal/$GOFILE	gen "Anymode=AnyChannel"
+//go:generate genny -in $GOFILE	-out ../xxsl/internal/$GOFILE	gen "Anymode=anyThingChannel"
 
 package pipe
 
@@ -147,7 +147,7 @@ func pipeanyThingBuffer(out Anymode, inp Anymode) {
 func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp Anymode) (out Anymode)) {
 
 	return func(inp Anymode) (out Anymode) {
-		return PipeanyThingFunc(inp, act)
+		return anyThingPipeFunc(inp, act)
 	}
 }
 
@@ -155,7 +155,7 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp Anymode) (ou
 func anyThingTubeBuffer(cap int) (tube func(inp Anymode) (out Anymode)) {
 
 	return func(inp Anymode) (out Anymode) {
-		return PipeanyThingBuffer(inp, cap)
+		return anyThingPipeBuffer(inp, cap)
 	}
 }
 
@@ -231,7 +231,7 @@ func doitanyThingFunc(done chan<- struct{}, inp Anymode, act func(a anyThing)) {
 func anyThingFini() func(inp Anymode) (done <-chan struct{}) {
 
 	return func(inp Anymode) (done <-chan struct{}) {
-		return DoneanyThing(inp)
+		return anyThingDone(inp)
 	}
 }
 
@@ -239,7 +239,7 @@ func anyThingFini() func(inp Anymode) (done <-chan struct{}) {
 func anyThingFiniSlice() func(inp Anymode) (done <-chan []anyThing) {
 
 	return func(inp Anymode) (done <-chan []anyThing) {
-		return DoneanyThingSlice(inp)
+		return anyThingDoneSlice(inp)
 	}
 }
 
@@ -247,7 +247,7 @@ func anyThingFiniSlice() func(inp Anymode) (done <-chan []anyThing) {
 func anyThingFiniFunc(act func(a anyThing)) func(inp Anymode) (done <-chan struct{}) {
 
 	return func(inp Anymode) (done <-chan struct{}) {
-		return DoneanyThingFunc(inp, act)
+		return anyThingDoneFunc(inp, act)
 	}
 }
 
