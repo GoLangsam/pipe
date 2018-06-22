@@ -437,13 +437,13 @@ func AnyTubeBuffered(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
 // attends Flapdoors and keeps counting
 // who enters and who leaves.
 //
-// Use DoneAnyWait to learn about
+// Use AnyDoneWait to learn about
 // when the facilities are closed.
 //
 // Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
-// Just: DoneAnyWait is more convenient
-// as it also closes the primary channel.
+// Just: AnyDoneWait is more convenient
+// as it also closes the primary channel for You.
 //
 // Just make sure to have _all_ entrances and exits attended,
 // and `Wait()` only *after* You've started flooding the facilities.
@@ -453,7 +453,7 @@ type AnyWaiter interface {
 	Wait()
 }
 
-// Note: Name is generic in order to avoid multiple-declaration clashes.
+// Note: The name is intentionally generic in order to avoid eventual multiple-declaration clashes.
 
 // AnyPipeEnter returns a channel to receive
 // all `inp`
@@ -479,6 +479,19 @@ func AnyPipeLeave(inp <-chan Any, wg AnyWaiter) (out <-chan Any) {
 	return cha
 }
 
+// AnyDoneLeave returns a channel to receive
+// one signal after
+// all throughput on `inp`
+// has been registered
+// as departure
+// on the given `sync.WaitGroup`
+// before close.
+func AnyDoneLeave(inp <-chan Any, wg AnyWaiter) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneAnyLeave(sig, wg, inp)
+	return sig
+}
+
 func pipeAnyEnter(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
 	defer close(out)
 	for i := range inp {
@@ -495,10 +508,19 @@ func pipeAnyLeave(out chan<- Any, wg AnyWaiter, inp <-chan Any) {
 	}
 }
 
+func doneAnyLeave(done chan<- struct{}, wg AnyWaiter, inp <-chan Any) {
+	defer close(done)
+	for i := range inp {
+		_ = i // discard
+		wg.Done()
+	}
+	done <- struct{}{}
+}
+
 // AnyTubeEnter returns a closure around AnyPipeEnter (_, wg)
 // registering throughput
-// on the given `sync.WaitGroup`
-// as arrival.
+// as arrival
+// on the given `sync.WaitGroup`.
 func AnyTubeEnter(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
@@ -508,12 +530,23 @@ func AnyTubeEnter(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 // AnyTubeLeave returns a closure around AnyPipeLeave (_, wg)
 // registering throughput
-// on the given `sync.WaitGroup`
-// as departure.
+// as departure
+// on the given `sync.WaitGroup`.
 func AnyTubeLeave(wg AnyWaiter) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
 		return AnyPipeLeave(inp, wg)
+	}
+}
+
+// AnyFiniLeave returns a closure around `AnyDoneLeave(_, wg)`
+// registering throughput
+// as departure
+// on the given `sync.WaitGroup`.
+func AnyFiniLeave(wg AnyWaiter) func(inp <-chan Any) (done <-chan struct{}) {
+
+	return func(inp <-chan Any) (done <-chan struct{}) {
+		return AnyDoneLeave(inp, wg)
 	}
 }
 
