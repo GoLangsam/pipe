@@ -10,7 +10,7 @@ package pipe
 // AnySupply is a
 // supply channel
 type AnySupply struct {
-	dat chan Any
+	dat chan anyThing
 	//  chan struct{}
 }
 
@@ -20,7 +20,7 @@ type AnySupply struct {
 // supply channel
 func MakeAnySupplyChan() *AnySupply {
 	d := AnySupply{
-		dat: make(chan Any),
+		dat: make(chan anyThing),
 		// : make(chan struct{}),
 	}
 	return &d
@@ -32,7 +32,7 @@ func MakeAnySupplyChan() *AnySupply {
 // supply channel
 func MakeAnySupplyBuff(cap int) *AnySupply {
 	d := AnySupply{
-		dat: make(chan Any, cap),
+		dat: make(chan anyThing, cap),
 		// : make(chan struct{}),
 	}
 	return &d
@@ -40,37 +40,37 @@ func MakeAnySupplyBuff(cap int) *AnySupply {
 
 // Provide is the send method
 // - aka "myAnyChan <- myAny"
-func (c *AnySupply) Provide(dat Any) {
+func (c *AnySupply) Provide(dat anyThing) {
 	// .req
 	c.dat <- dat
 }
 
 // Receive is the receive operator as method
 // - aka "myAny := <-myAnyChan"
-func (c *AnySupply) Receive() (dat Any) {
+func (c *AnySupply) Receive() (dat anyThing) {
 	// eq <- struct{}{}
 	return <-c.dat
 }
 
 // Request is the comma-ok multi-valued form of Receive and
-// reports whether a received value was sent before the Any channel was closed
-func (c *AnySupply) Request() (dat Any, open bool) {
+// reports whether a received value was sent before the anyThing channel was closed
+func (c *AnySupply) Request() (dat anyThing, open bool) {
 	// eq <- struct{}{}
 	dat, open = <-c.dat
 	return dat, open
 }
 
-// Close closes the underlying Any channel
+// Close closes the underlying anyThing channel
 func (c *AnySupply) Close() {
 	close(c.dat)
 }
 
-// Cap reports the capacity of the underlying Any channel
+// Cap reports the capacity of the underlying anyThing channel
 func (c *AnySupply) Cap() int {
 	return cap(c.dat)
 }
 
-// Len reports the length of the underlying Any channel
+// Len reports the length of the underlying anyThing channel
 func (c *AnySupply) Len() int {
 	return len(c.dat)
 }

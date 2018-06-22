@@ -26,13 +26,13 @@ package pipe
 //
 //  Note: as always (except for PipeAnyBuffer) the channel is unbuffered.
 //
-func MakeAnyChannelChan() (out AnyChannel) {
-	return &AnySupply{make(chan Any)}
+func MakeAnyChannelChan() (out anyThingChannel) {
+	return &AnySupply{make(chan anyThing)}
 }
 
 // MakeAnyChannelBuff returns a new open buffered channel with capacity `cap`.
-func MakeAnyChannelBuff(cap int) (out AnyChannel) {
-	return &AnySupply{make(chan Any, cap)}
+func MakeAnyChannelBuff(cap int) (out anyThingChannel) {
+	return &AnySupply{make(chan anyThing, cap)}
 }
 
 // End of MakeAny creators
