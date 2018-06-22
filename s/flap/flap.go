@@ -92,6 +92,7 @@ func pipeanyThingLeave(out chan<- anyThing, wg anyThingWaiter, inp <-chan anyThi
 func doneanyThingLeave(done chan<- struct{}, wg anyThingWaiter, inp <-chan anyThing) {
 	defer close(done)
 	for i := range inp {
+		_ = i // discard
 		wg.Done()
 	}
 	done <- struct{}{}
@@ -123,9 +124,9 @@ func anyThingTubeLeave(wg anyThingWaiter) (tube func(inp <-chan anyThing) (out <
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func anyThingFiniLeave(wg anyThingWaiter) func(inp chan<- anyThing) (done <-chan struct{}) {
+func anyThingFiniLeave(wg anyThingWaiter) func(inp <-chan anyThing) (done <-chan struct{}) {
 
-	return func(inp chan<- anyThing) (done <-chan struct{}) {
+	return func(inp <-chan anyThing) (done <-chan struct{}) {
 		return anyThingDoneLeave(inp, wg)
 	}
 }
