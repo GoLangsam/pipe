@@ -131,7 +131,6 @@ func anyThingFiniLeave(wg anyThingWaiter) func(inp <-chan anyThing) (done <-chan
 	}
 }
 
-
 // anyThingDoneWait returns a channel to receive
 // one signal
 // after wg.Wait() has returned and inp has been closed
