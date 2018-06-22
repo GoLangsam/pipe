@@ -28,21 +28,5 @@ func pipeanyThingFunc(out chan<- anyThing, inp <-chan anyThing, act func(a anyTh
 	}
 }
 
-// anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func anyThingPipeBuffer(inp <-chan anyThing, cap int) (out <-chan anyThing) {
-	cha := make(chan anyThing, cap)
-	go pipeanyThingBuffer(cha, inp)
-	return cha
-}
-
-func pipeanyThingBuffer(out chan<- anyThing, inp <-chan anyThing) {
-	defer close(out)
-	for i := range inp {
-		out <- i
-	}
-}
-
 // End of PipeanyThing functions
 // ===========================================================================
