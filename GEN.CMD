@@ -1,29 +1,10 @@
 @Echo.
-@cd .generate.xx\internal\
+@cd .generate.xx
 @pwd
-@Echo.
-go generate .
-@Echo.
-@Echo compare .generate.xx/pipe.* - 3 Differences
-@Echo.
-
-@pause
-
-@Echo.
+@call gen.cmd
 @cd ..
 @pwd
 @Echo.
-go generate .
-@Echo.
-@Echo compare xxs\internal\01-any-mode.go* - 8 Differences
-@Echo compare xxl\internal\01-any-mode.go* - 2 Differences
-@Echo.
-
-@cd ..
-@pwd
-@Echo.
-
-@pause
 
 @Echo.
 @xcopy	/Y	xxs\internal\01-any-mode.go	xxsl\internal\01-any-supply.go
@@ -35,11 +16,11 @@ go generate .\...
 @cd .generic
 @pwd
 @call gen.cmd
-
 @cd ..
 @pwd
 @Echo.
 
+go fmt  .\...
 go test .\...
 
 @Echo.
