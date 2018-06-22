@@ -140,7 +140,7 @@ func pipeanyThingBuffer(out *AnySupply, inp *AnySupply) {
 func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp *AnySupply) (out *AnySupply)) {
 
 	return func(inp *AnySupply) (out *AnySupply) {
-		return PipeanyThingFunc(inp, act)
+		return anyThingPipeFunc(inp, act)
 	}
 }
 
@@ -148,7 +148,7 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp *AnySupply) 
 func anyThingTubeBuffer(cap int) (tube func(inp *AnySupply) (out *AnySupply)) {
 
 	return func(inp *AnySupply) (out *AnySupply) {
-		return PipeanyThingBuffer(inp, cap)
+		return anyThingPipeBuffer(inp, cap)
 	}
 }
 
@@ -224,7 +224,7 @@ func doitanyThingFunc(done chan<- struct{}, inp *AnySupply, act func(a anyThing)
 func anyThingFini() func(inp *AnySupply) (done <-chan struct{}) {
 
 	return func(inp *AnySupply) (done <-chan struct{}) {
-		return DoneanyThing(inp)
+		return anyThingDone(inp)
 	}
 }
 
@@ -232,7 +232,7 @@ func anyThingFini() func(inp *AnySupply) (done <-chan struct{}) {
 func anyThingFiniSlice() func(inp *AnySupply) (done <-chan []anyThing) {
 
 	return func(inp *AnySupply) (done <-chan []anyThing) {
-		return DoneanyThingSlice(inp)
+		return anyThingDoneSlice(inp)
 	}
 }
 
@@ -240,7 +240,7 @@ func anyThingFiniSlice() func(inp *AnySupply) (done <-chan []anyThing) {
 func anyThingFiniFunc(act func(a anyThing)) func(inp *AnySupply) (done <-chan struct{}) {
 
 	return func(inp *AnySupply) (done <-chan struct{}) {
-		return DoneanyThingFunc(inp, act)
+		return anyThingDoneFunc(inp, act)
 	}
 }
 
