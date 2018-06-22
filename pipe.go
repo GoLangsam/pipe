@@ -656,7 +656,7 @@ func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-
 
 // End of AnyPlugAfter - graceful terminator
 
-// Note: AnyPipeAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeAnyAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
 // Beg of AnyPipeAdjust
@@ -706,7 +706,7 @@ func sendAnyProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("AnySendProxy: too mAny sizes")
+		panic("AnySendProxy: too many sizes")
 	}
 
 	return

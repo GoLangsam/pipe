@@ -652,7 +652,7 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 
 // End of ThingPlugAfter - graceful terminator
 
-// Note: ThingPipeAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeThingAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
 // Beg of ThingPipeAdjust
@@ -702,7 +702,7 @@ func sendThingProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("ThingSendProxy: too mThing sizes")
+		panic("ThingSendProxy: too many sizes")
 	}
 
 	return
