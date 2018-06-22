@@ -89,6 +89,7 @@ func pipeSiteLeave(out chan<- Site, wg SiteWaiter, inp <-chan Site) {
 func doneSiteLeave(done chan<- struct{}, wg SiteWaiter, inp <-chan Site) {
 	defer close(done)
 	for i := range inp {
+		_ = i // discard
 		wg.Done()
 	}
 	done <- struct{}{}
@@ -120,9 +121,9 @@ func SiteTubeLeave(wg SiteWaiter) (tube func(inp <-chan Site) (out <-chan Site))
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func SiteFiniLeave(wg SiteWaiter) func(inp chan<- Site) (done <-chan struct{}) {
+func SiteFiniLeave(wg SiteWaiter) func(inp <-chan Site) (done <-chan struct{}) {
 
-	return func(inp chan<- Site) (done <-chan struct{}) {
+	return func(inp <-chan Site) (done <-chan struct{}) {
 		return SiteDoneLeave(inp, wg)
 	}
 }
