@@ -11,7 +11,7 @@ package pipe
 func anyThingFini() func(inp Anymode) (done <-chan struct{}) {
 
 	return func(inp Anymode) (done <-chan struct{}) {
-		return DoneanyThing(inp)
+		return anyThingDone(inp)
 	}
 }
 
@@ -19,7 +19,7 @@ func anyThingFini() func(inp Anymode) (done <-chan struct{}) {
 func anyThingFiniSlice() func(inp Anymode) (done <-chan []anyThing) {
 
 	return func(inp Anymode) (done <-chan []anyThing) {
-		return DoneanyThingSlice(inp)
+		return anyThingDoneSlice(inp)
 	}
 }
 
@@ -27,7 +27,7 @@ func anyThingFiniSlice() func(inp Anymode) (done <-chan []anyThing) {
 func anyThingFiniFunc(act func(a anyThing)) func(inp Anymode) (done <-chan struct{}) {
 
 	return func(inp Anymode) (done <-chan struct{}) {
-		return DoneanyThingFunc(inp, act)
+		return anyThingDoneFunc(inp, act)
 	}
 }
 

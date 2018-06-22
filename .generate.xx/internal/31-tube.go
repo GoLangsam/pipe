@@ -11,7 +11,7 @@ package pipe
 func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp Anymode) (out Anymode)) {
 
 	return func(inp Anymode) (out Anymode) {
-		return PipeanyThingFunc(inp, act)
+		return anyThingPipeFunc(inp, act)
 	}
 }
 
@@ -19,7 +19,7 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp Anymode) (ou
 func anyThingTubeBuffer(cap int) (tube func(inp Anymode) (out Anymode)) {
 
 	return func(inp Anymode) (out Anymode) {
-		return PipeanyThingBuffer(inp, cap)
+		return anyThingPipeBuffer(inp, cap)
 	}
 }
 
