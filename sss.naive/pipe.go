@@ -138,20 +138,6 @@ func anyThingPipeFunc(inp chan anyThing, act func(a anyThing) anyThing) chan any
 	return out
 }
 
-// anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
-// all `inp`
-// before close.
-func anyThingPipeBuffer(inp chan anyThing, cap int) chan anyThing {
-	out := make(chan anyThing, cap)
-	go func() {
-		defer close(out)
-		for i := range inp {
-			out <- i
-		}
-	}()
-	return out
-}
-
 // End of anyThingPipe functions
 // ===========================================================================
 
@@ -163,14 +149,6 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp chan anyThin
 
 	return func(inp chan anyThing) (out chan anyThing) {
 		return anyThingPipeFunc(inp, act)
-	}
-}
-
-// anyThingTubeBuffer returns a closure around PipeanyThingBuffer (_, cap).
-func anyThingTubeBuffer(cap int) (tube func(inp chan anyThing) (out chan anyThing)) {
-
-	return func(inp chan anyThing) (out chan anyThing) {
-		return anyThingPipeBuffer(inp, cap)
 	}
 }
 
