@@ -5,34 +5,34 @@
 package pipe
 
 // ===========================================================================
-// Beg of ChanAny producers
+// Beg of anyThingChan producers
 
-// ChanAny returns a channel to receive
+// anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func ChanAny(inp ...Any) (out Anymode) {
+func anyThingChan(inp ...anyThing) (out Anymode) {
 	cha := MakeAnymodeChan()
-	go chanAny(cha, inp...)
+	go chananyThing(cha, inp...)
 	return cha
 }
 
-func chanAny(out Anymode, inp ...Any) {
+func chananyThing(out Anymode, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
 		out.Provide(inp[i])
 	}
 }
 
-// ChanAnySlice returns a channel to receive
+// anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func ChanAnySlice(inp ...[]Any) (out Anymode) {
+func anyThingChanSlice(inp ...[]anyThing) (out Anymode) {
 	cha := MakeAnymodeChan()
-	go chanAnySlice(cha, inp...)
+	go chananyThingSlice(cha, inp...)
 	return cha
 }
 
-func chanAnySlice(out Anymode, inp ...[]Any) {
+func chananyThingSlice(out Anymode, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
@@ -41,17 +41,17 @@ func chanAnySlice(out Anymode, inp ...[]Any) {
 	}
 }
 
-// ChanAnyFuncNok returns a channel to receive
+// anyThingChanFuncNok returns a channel to receive
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func ChanAnyFuncNok(gen func() (Any, bool)) (out Anymode) {
+func anyThingChanFuncNok(gen func() (anyThing, bool)) (out Anymode) {
 	cha := MakeAnymodeChan()
-	go chanAnyFuncNok(cha, gen)
+	go chananyThingFuncNok(cha, gen)
 	return cha
 }
 
-func chanAnyFuncNok(out Anymode, gen func() (Any, bool)) {
+func chananyThingFuncNok(out Anymode, gen func() (anyThing, bool)) {
 	defer out.Close()
 	for {
 		res, ok := gen() // generate
@@ -62,17 +62,17 @@ func chanAnyFuncNok(out Anymode, gen func() (Any, bool)) {
 	}
 }
 
-// ChanAnyFuncErr returns a channel to receive
+// anyThingChanFuncErr returns a channel to receive
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func ChanAnyFuncErr(gen func() (Any, error)) (out Anymode) {
+func anyThingChanFuncErr(gen func() (anyThing, error)) (out Anymode) {
 	cha := MakeAnymodeChan()
-	go chanAnyFuncErr(cha, gen)
+	go chananyThingFuncErr(cha, gen)
 	return cha
 }
 
-func chanAnyFuncErr(out Anymode, gen func() (Any, error)) {
+func chananyThingFuncErr(out Anymode, gen func() (anyThing, error)) {
 	defer out.Close()
 	for {
 		res, err := gen() // generate
@@ -83,5 +83,5 @@ func chanAnyFuncErr(out Anymode, gen func() (Any, error)) {
 	}
 }
 
-// End of ChanAny producers
+// End of anyThingChan producers
 // ===========================================================================

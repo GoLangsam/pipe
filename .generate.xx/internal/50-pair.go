@@ -5,18 +5,18 @@
 package pipe
 
 // ===========================================================================
-// Beg of PairAny functions
+// Beg of anyThingPair functions
 
-// PairAny returns a pair of channels to receive every result of inp before close.
+// anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func PairAny(inp Anymode) (out1, out2 Anymode) {
+func anyThingPair(inp Anymode) (out1, out2 Anymode) {
 	cha1 := MakeAnymodeChan()
 	cha2 := MakeAnymodeChan()
-	go pairAny(cha1, cha2, inp)
+	go pairanyThing(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-func pairAny(out1, out2 Anymode, inp Anymode) {
+func pairanyThing(out1, out2 Anymode, inp Anymode) {
 	defer out1.Close()
 	defer out2.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
@@ -25,5 +25,5 @@ func pairAny(out1, out2 Anymode, inp Anymode) {
 	}
 }
 
-// End of PairAny functions
+// End of anyThingPair functions
 // ===========================================================================

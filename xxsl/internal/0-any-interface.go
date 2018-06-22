@@ -5,12 +5,12 @@
 package pipe
 
 // ===========================================================================
-// Beg of AnyChannel interface
+// Beg of anyThingChannel interface
 
-// AnyChannel represents a
+// anyThingChannel represents a
 // bidirectional
-// channel of Any elements
-type AnyChannel interface {
+// channel of anyThing elements
+type anyThingChannel interface {
 	AnyChanCore // close, len & cap
 	receiverAny // Receive / Request
 	providerAny // Provide
@@ -20,7 +20,7 @@ type AnyChannel interface {
 
 // AnyReceiver represents a
 // receive-only
-// channel of Any elements
+// channel of anyThing elements
 // - aka `<-chan`
 type AnyReceiver interface {
 	AnyChanCore // close, len & cap
@@ -28,13 +28,13 @@ type AnyReceiver interface {
 }
 
 type receiverAny interface {
-	Receive() (data Any)              // the receive operator as method - aka `MyAny := <-myreceiverAny`
-	Request() (data Any, isOpen bool) // the multi-valued comma-ok receive - aka `MyAny, ok := <-myreceiverAny`
+	Receive() (data anyThing)              // the receive operator as method - aka `MyAny := <-myreceiverAny`
+	Request() (data anyThing, isOpen bool) // the multi-valued comma-ok receive - aka `MyAny, ok := <-myreceiverAny`
 }
 
 // AnyProvider represents a
 // send-enabled
-// channel of Any elements
+// channel of anyThing elements
 // - aka `chan<-`
 type AnyProvider interface {
 	AnyChanCore // close, len & cap
@@ -42,7 +42,7 @@ type AnyProvider interface {
 }
 
 type providerAny interface {
-	Provide(data Any) // the send method - aka `MyAnyproviderAny <- MyAny`
+	Provide(data anyThing) // the send method - aka `MyAnyproviderAny <- MyAny`
 }
 
 // AnyChanCore represents basic methods common to every
