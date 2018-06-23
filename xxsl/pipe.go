@@ -75,11 +75,11 @@ type AnyDemand struct {
 	req chan struct{}
 }
 
-// MakeAnyDemandChan returns
+// AnyDemandMakeChan returns
 // a (pointer to a) fresh
 // unbuffered
 // demand channel
-func MakeAnyDemandChan() *AnyDemand {
+func AnyDemandMakeChan() *AnyDemand {
 	d := AnyDemand{
 		dat: make(chan anyThing),
 		req: make(chan struct{}),
@@ -87,11 +87,11 @@ func MakeAnyDemandChan() *AnyDemand {
 	return &d
 }
 
-// MakeAnyDemandBuff returns
+// AnyDemandMakeBuff returns
 // a (pointer to a) fresh
 // buffered (with capacity=`cap`)
 // demand channel
-func MakeAnyDemandBuff(cap int) *AnyDemand {
+func AnyDemandMakeBuff(cap int) *AnyDemand {
 	d := AnyDemand{
 		dat: make(chan anyThing, cap),
 		req: make(chan struct{}),
@@ -149,11 +149,11 @@ type AnySupply struct {
 	//  chan struct{}
 }
 
-// MakeAnySupplyChan returns
+// AnySupplyMakeChan returns
 // a (pointer to a) fresh
 // unbuffered
 // supply channel
-func MakeAnySupplyChan() *AnySupply {
+func AnySupplyMakeChan() *AnySupply {
 	d := AnySupply{
 		dat: make(chan anyThing),
 		// : make(chan struct{}),
@@ -161,11 +161,11 @@ func MakeAnySupplyChan() *AnySupply {
 	return &d
 }
 
-// MakeAnySupplyBuff returns
+// AnySupplyMakeBuff returns
 // a (pointer to a) fresh
 // buffered (with capacity=`cap`)
 // supply channel
-func MakeAnySupplyBuff(cap int) *AnySupply {
+func AnySupplyMakeBuff(cap int) *AnySupply {
 	d := AnySupply{
 		dat: make(chan anyThing, cap),
 		// : make(chan struct{}),
@@ -214,37 +214,37 @@ func (c *AnySupply) Len() int {
 // ===========================================================================
 
 // ===========================================================================
-// Beg of MakeAny creators
+// Beg of anyThingChannelMake creators
 
-// MakeAnyChannelChan returns a new open channel
-// (simply a 'chan Any' that is).
-//  Note: No 'Any-producer' is launched here yet! (as is in all the other functions).
+// anyThingChannelMakeChan returns a new open channel
+// (simply a 'chan anyThing' that is).
+//  Note: No 'anyThing-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-   var myAnyPipelineStartsHere := MakeAnyChan()
-   // ... lot's of code to design and build Your favourite "myAnyWorkflowPipeline"
+   var myanyThingPipelineStartsHere := anyThingChannelMakeChan()
+   // ... lot's of code to design and build Your favourite "myanyThingWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
    for drop := range water {
-       myAnyPipelineStartsHere <- drop
+       myanyThingPipelineStartsHere <- drop
    }
-   close(myAnyPipelineStartsHere)
+   close(myanyThingPipelineStartsHere)
 */
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
-//  Note: as always (except for PipeAnyBuffer) the channel is unbuffered.
+//  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
-func MakeAnyChannelChan() (out anyThingChannel) {
+func anyThingChannelMakeChan() (out anyThingChannel) {
 	return &AnySupply{make(chan anyThing)}
 }
 
-// MakeAnyChannelBuff returns a new open buffered channel with capacity `cap`.
-func MakeAnyChannelBuff(cap int) (out anyThingChannel) {
+// anyThingChannelMakeBuff returns a new open buffered channel with capacity `cap`.
+func anyThingChannelMakeBuff(cap int) (out anyThingChannel) {
 	return &AnySupply{make(chan anyThing, cap)}
 }
 
-// End of MakeAny creators
+// End of anyThingChannelMake creators
 // ===========================================================================
 
 // ===========================================================================
@@ -254,7 +254,7 @@ func MakeAnyChannelBuff(cap int) (out anyThingChannel) {
 // all inputs
 // before close.
 func anyThingChan(inp ...anyThing) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThing(cha, inp...)
 	return cha
 }
@@ -270,7 +270,7 @@ func chananyThing(out anyThingChannel, inp ...anyThing) {
 // all inputs
 // before close.
 func anyThingChanSlice(inp ...[]anyThing) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThingSlice(cha, inp...)
 	return cha
 }
@@ -289,7 +289,7 @@ func chananyThingSlice(out anyThingChannel, inp ...[]anyThing) {
 // until `!ok`
 // before close.
 func anyThingChanFuncNok(gen func() (anyThing, bool)) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThingFuncNok(cha, gen)
 	return cha
 }
@@ -310,7 +310,7 @@ func chananyThingFuncNok(out anyThingChannel, gen func() (anyThing, bool)) {
 // until `err != nil`
 // before close.
 func anyThingChanFuncErr(gen func() (anyThing, error)) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThingFuncErr(cha, gen)
 	return cha
 }
@@ -338,7 +338,7 @@ func chananyThingFuncErr(out anyThingChannel, gen func() (anyThing, error)) {
 // Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp anyThingChannel, act func(a anyThing) anyThing) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	if act == nil {
 		act = func(a anyThing) anyThing { return a }
 	}
@@ -357,7 +357,7 @@ func pipeanyThingFunc(out anyThingChannel, inp anyThingChannel, act func(a anyTh
 // all `inp`
 // before close.
 func anyThingPipeBuffer(inp anyThingChannel, cap int) (out anyThingChannel) {
-	cha := MakeAnyChannelBuff(cap)
+	cha := anyThingChannelMakeBuff(cap)
 	go pipeanyThingBuffer(cha, inp)
 	return cha
 }
@@ -492,8 +492,8 @@ func anyThingFiniFunc(act func(a anyThing)) func(inp anyThingChannel) (done <-ch
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
 func anyThingPair(inp anyThingChannel) (out1, out2 anyThingChannel) {
-	cha1 := MakeAnyChannelChan()
-	cha2 := MakeAnyChannelChan()
+	cha1 := anyThingChannelMakeChan()
+	cha2 := anyThingChannelMakeChan()
 	go pairanyThing(cha1, cha2, inp)
 	return cha1, cha2
 }

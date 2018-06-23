@@ -15,7 +15,7 @@ package pipe
 // all inputs
 // before close.
 func anyThingChan(inp ...anyThing) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThing(cha, inp...)
 	return cha
 }
@@ -31,7 +31,7 @@ func chananyThing(out anyThingChannel, inp ...anyThing) {
 // all inputs
 // before close.
 func anyThingChanSlice(inp ...[]anyThing) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThingSlice(cha, inp...)
 	return cha
 }
@@ -50,7 +50,7 @@ func chananyThingSlice(out anyThingChannel, inp ...[]anyThing) {
 // until `!ok`
 // before close.
 func anyThingChanFuncNok(gen func() (anyThing, bool)) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThingFuncNok(cha, gen)
 	return cha
 }
@@ -71,7 +71,7 @@ func chananyThingFuncNok(out anyThingChannel, gen func() (anyThing, bool)) {
 // until `err != nil`
 // before close.
 func anyThingChanFuncErr(gen func() (anyThing, error)) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	go chananyThingFuncErr(cha, gen)
 	return cha
 }
@@ -99,7 +99,7 @@ func chananyThingFuncErr(out anyThingChannel, gen func() (anyThing, error)) {
 // Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp anyThingChannel, act func(a anyThing) anyThing) (out anyThingChannel) {
-	cha := MakeAnyChannelChan()
+	cha := anyThingChannelMakeChan()
 	if act == nil {
 		act = func(a anyThing) anyThing { return a }
 	}
@@ -118,7 +118,7 @@ func pipeanyThingFunc(out anyThingChannel, inp anyThingChannel, act func(a anyTh
 // all `inp`
 // before close.
 func anyThingPipeBuffer(inp anyThingChannel, cap int) (out anyThingChannel) {
-	cha := MakeAnyChannelBuff(cap)
+	cha := anyThingChannelMakeBuff(cap)
 	go pipeanyThingBuffer(cha, inp)
 	return cha
 }
@@ -253,8 +253,8 @@ func anyThingFiniFunc(act func(a anyThing)) func(inp anyThingChannel) (done <-ch
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
 func anyThingPair(inp anyThingChannel) (out1, out2 anyThingChannel) {
-	cha1 := MakeAnyChannelChan()
-	cha2 := MakeAnyChannelChan()
+	cha1 := anyThingChannelMakeChan()
+	cha2 := anyThingChannelMakeChan()
 	go pairanyThing(cha1, cha2, inp)
 	return cha1, cha2
 }

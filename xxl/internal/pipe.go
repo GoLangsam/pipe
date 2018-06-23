@@ -14,13 +14,13 @@ package pipe
 // anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func anyThingChan(inp ...anyThing) (out *AnyDemand) {
-	cha := MakeAnyDemandChan()
+func anyThingChan(inp ...anyThing) (out *anyDemand) {
+	cha := anyDemandMakeChan()
 	go chananyThing(cha, inp...)
 	return cha
 }
 
-func chananyThing(out *AnyDemand, inp ...anyThing) {
+func chananyThing(out *anyDemand, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
 		out.Provide(inp[i])
@@ -30,13 +30,13 @@ func chananyThing(out *AnyDemand, inp ...anyThing) {
 // anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func anyThingChanSlice(inp ...[]anyThing) (out *AnyDemand) {
-	cha := MakeAnyDemandChan()
+func anyThingChanSlice(inp ...[]anyThing) (out *anyDemand) {
+	cha := anyDemandMakeChan()
 	go chananyThingSlice(cha, inp...)
 	return cha
 }
 
-func chananyThingSlice(out *AnyDemand, inp ...[]anyThing) {
+func chananyThingSlice(out *anyDemand, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
@@ -49,13 +49,13 @@ func chananyThingSlice(out *AnyDemand, inp ...[]anyThing) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func anyThingChanFuncNok(gen func() (anyThing, bool)) (out *AnyDemand) {
-	cha := MakeAnyDemandChan()
+func anyThingChanFuncNok(gen func() (anyThing, bool)) (out *anyDemand) {
+	cha := anyDemandMakeChan()
 	go chananyThingFuncNok(cha, gen)
 	return cha
 }
 
-func chananyThingFuncNok(out *AnyDemand, gen func() (anyThing, bool)) {
+func chananyThingFuncNok(out *anyDemand, gen func() (anyThing, bool)) {
 	defer out.Close()
 	for {
 		res, ok := gen() // generate
@@ -70,13 +70,13 @@ func chananyThingFuncNok(out *AnyDemand, gen func() (anyThing, bool)) {
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func anyThingChanFuncErr(gen func() (anyThing, error)) (out *AnyDemand) {
-	cha := MakeAnyDemandChan()
+func anyThingChanFuncErr(gen func() (anyThing, error)) (out *anyDemand) {
+	cha := anyDemandMakeChan()
 	go chananyThingFuncErr(cha, gen)
 	return cha
 }
 
-func chananyThingFuncErr(out *AnyDemand, gen func() (anyThing, error)) {
+func chananyThingFuncErr(out *anyDemand, gen func() (anyThing, error)) {
 	defer out.Close()
 	for {
 		res, err := gen() // generate
@@ -98,8 +98,8 @@ func chananyThingFuncErr(out *AnyDemand, gen func() (anyThing, error)) {
 // before close.
 // Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func anyThingPipeFunc(inp *AnyDemand, act func(a anyThing) anyThing) (out *AnyDemand) {
-	cha := MakeAnyDemandChan()
+func anyThingPipeFunc(inp *anyDemand, act func(a anyThing) anyThing) (out *anyDemand) {
+	cha := anyDemandMakeChan()
 	if act == nil {
 		act = func(a anyThing) anyThing { return a }
 	}
@@ -107,7 +107,7 @@ func anyThingPipeFunc(inp *AnyDemand, act func(a anyThing) anyThing) (out *AnyDe
 	return cha
 }
 
-func pipeanyThingFunc(out *AnyDemand, inp *AnyDemand, act func(a anyThing) anyThing) {
+func pipeanyThingFunc(out *anyDemand, inp *anyDemand, act func(a anyThing) anyThing) {
 	defer out.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		out.Provide(act(i))
@@ -117,13 +117,13 @@ func pipeanyThingFunc(out *AnyDemand, inp *AnyDemand, act func(a anyThing) anyTh
 // anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func anyThingPipeBuffer(inp *AnyDemand, cap int) (out *AnyDemand) {
-	cha := MakeAnyDemandBuff(cap)
+func anyThingPipeBuffer(inp *anyDemand, cap int) (out *anyDemand) {
+	cha := anyDemandMakeBuff(cap)
 	go pipeanyThingBuffer(cha, inp)
 	return cha
 }
 
-func pipeanyThingBuffer(out *AnyDemand, inp *AnyDemand) {
+func pipeanyThingBuffer(out *anyDemand, inp *anyDemand) {
 	defer out.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		out.Provide(i)
@@ -137,17 +137,17 @@ func pipeanyThingBuffer(out *AnyDemand, inp *AnyDemand) {
 // Beg of anyThingTube closures
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp *AnyDemand) (out *AnyDemand)) {
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp *anyDemand) (out *anyDemand)) {
 
-	return func(inp *AnyDemand) (out *AnyDemand) {
+	return func(inp *anyDemand) (out *anyDemand) {
 		return anyThingPipeFunc(inp, act)
 	}
 }
 
 // anyThingTubeBuffer returns a closure around PipeanyThingBuffer (_, cap).
-func anyThingTubeBuffer(cap int) (tube func(inp *AnyDemand) (out *AnyDemand)) {
+func anyThingTubeBuffer(cap int) (tube func(inp *anyDemand) (out *anyDemand)) {
 
-	return func(inp *AnyDemand) (out *AnyDemand) {
+	return func(inp *anyDemand) (out *anyDemand) {
 		return anyThingPipeBuffer(inp, cap)
 	}
 }
@@ -160,13 +160,13 @@ func anyThingTubeBuffer(cap int) (tube func(inp *AnyDemand) (out *AnyDemand)) {
 
 // anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func anyThingDone(inp *AnyDemand) (done <-chan struct{}) {
+func anyThingDone(inp *anyDemand) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doitanyThing(sig, inp)
 	return sig
 }
 
-func doitanyThing(done chan<- struct{}, inp *AnyDemand) {
+func doitanyThing(done chan<- struct{}, inp *anyDemand) {
 	defer close(done)
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		_ = i // Drain inp
@@ -179,13 +179,13 @@ func doitanyThing(done chan<- struct{}, inp *AnyDemand) {
 // before close.
 //
 //  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func anyThingDoneSlice(inp *AnyDemand) (done <-chan []anyThing) {
+func anyThingDoneSlice(inp *anyDemand) (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
 	go doitanyThingSlice(sig, inp)
 	return sig
 }
 
-func doitanyThingSlice(done chan<- []anyThing, inp *AnyDemand) {
+func doitanyThingSlice(done chan<- []anyThing, inp *anyDemand) {
 	defer close(done)
 	slice := []anyThing{}
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
@@ -197,7 +197,7 @@ func doitanyThingSlice(done chan<- []anyThing, inp *AnyDemand) {
 // anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func anyThingDoneFunc(inp *AnyDemand, act func(a anyThing)) (done <-chan struct{}) {
+func anyThingDoneFunc(inp *anyDemand, act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a anyThing) { return }
@@ -206,7 +206,7 @@ func anyThingDoneFunc(inp *AnyDemand, act func(a anyThing)) (done <-chan struct{
 	return sig
 }
 
-func doitanyThingFunc(done chan<- struct{}, inp *AnyDemand, act func(a anyThing)) {
+func doitanyThingFunc(done chan<- struct{}, inp *anyDemand, act func(a anyThing)) {
 	defer close(done)
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		act(i) // apply action
@@ -221,25 +221,25 @@ func doitanyThingFunc(done chan<- struct{}, inp *AnyDemand, act func(a anyThing)
 // Beg of anyThingFini closures
 
 // anyThingFini returns a closure around `DoneanyThing(_)`.
-func anyThingFini() func(inp *AnyDemand) (done <-chan struct{}) {
+func anyThingFini() func(inp *anyDemand) (done <-chan struct{}) {
 
-	return func(inp *AnyDemand) (done <-chan struct{}) {
+	return func(inp *anyDemand) (done <-chan struct{}) {
 		return anyThingDone(inp)
 	}
 }
 
 // anyThingFiniSlice returns a closure around `DoneanyThingSlice(_)`.
-func anyThingFiniSlice() func(inp *AnyDemand) (done <-chan []anyThing) {
+func anyThingFiniSlice() func(inp *anyDemand) (done <-chan []anyThing) {
 
-	return func(inp *AnyDemand) (done <-chan []anyThing) {
+	return func(inp *anyDemand) (done <-chan []anyThing) {
 		return anyThingDoneSlice(inp)
 	}
 }
 
 // anyThingFiniFunc returns a closure around `DoneanyThingFunc(_, act)`.
-func anyThingFiniFunc(act func(a anyThing)) func(inp *AnyDemand) (done <-chan struct{}) {
+func anyThingFiniFunc(act func(a anyThing)) func(inp *anyDemand) (done <-chan struct{}) {
 
-	return func(inp *AnyDemand) (done <-chan struct{}) {
+	return func(inp *anyDemand) (done <-chan struct{}) {
 		return anyThingDoneFunc(inp, act)
 	}
 }
@@ -252,14 +252,14 @@ func anyThingFiniFunc(act func(a anyThing)) func(inp *AnyDemand) (done <-chan st
 
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func anyThingPair(inp *AnyDemand) (out1, out2 *AnyDemand) {
-	cha1 := MakeAnyDemandChan()
-	cha2 := MakeAnyDemandChan()
+func anyThingPair(inp *anyDemand) (out1, out2 *anyDemand) {
+	cha1 := anyDemandMakeChan()
+	cha2 := anyDemandMakeChan()
 	go pairanyThing(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-func pairanyThing(out1, out2 *AnyDemand, inp *AnyDemand) {
+func pairanyThing(out1, out2 *anyDemand, inp *anyDemand) {
 	defer out1.Close()
 	defer out2.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {

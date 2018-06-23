@@ -8,17 +8,17 @@ package pipe
 // Beg of anyThingTube closures
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp Anymode) (out Anymode)) {
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anymode) (out anymode)) {
 
-	return func(inp Anymode) (out Anymode) {
+	return func(inp anymode) (out anymode) {
 		return anyThingPipeFunc(inp, act)
 	}
 }
 
 // anyThingTubeBuffer returns a closure around PipeanyThingBuffer (_, cap).
-func anyThingTubeBuffer(cap int) (tube func(inp Anymode) (out Anymode)) {
+func anyThingTubeBuffer(cap int) (tube func(inp anymode) (out anymode)) {
 
-	return func(inp Anymode) (out Anymode) {
+	return func(inp anymode) (out anymode) {
 		return anyThingPipeBuffer(inp, cap)
 	}
 }

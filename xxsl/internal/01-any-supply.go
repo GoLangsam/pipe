@@ -14,11 +14,11 @@ type AnySupply struct {
 	//  chan struct{}
 }
 
-// MakeAnySupplyChan returns
+// AnySupplyMakeChan returns
 // a (pointer to a) fresh
 // unbuffered
 // supply channel
-func MakeAnySupplyChan() *AnySupply {
+func AnySupplyMakeChan() *AnySupply {
 	d := AnySupply{
 		dat: make(chan anyThing),
 		// : make(chan struct{}),
@@ -26,11 +26,11 @@ func MakeAnySupplyChan() *AnySupply {
 	return &d
 }
 
-// MakeAnySupplyBuff returns
+// AnySupplyMakeBuff returns
 // a (pointer to a) fresh
 // buffered (with capacity=`cap`)
 // supply channel
-func MakeAnySupplyBuff(cap int) *AnySupply {
+func AnySupplyMakeBuff(cap int) *AnySupply {
 	d := AnySupply{
 		dat: make(chan anyThing, cap),
 		// : make(chan struct{}),

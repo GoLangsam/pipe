@@ -10,13 +10,13 @@ package pipe
 // anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func anyThingChan(inp ...anyThing) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChan(inp ...anyThing) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThing(cha, inp...)
 	return cha
 }
 
-func chananyThing(out Anymode, inp ...anyThing) {
+func chananyThing(out anymode, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
 		out.Provide(inp[i])
@@ -26,13 +26,13 @@ func chananyThing(out Anymode, inp ...anyThing) {
 // anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func anyThingChanSlice(inp ...[]anyThing) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChanSlice(inp ...[]anyThing) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThingSlice(cha, inp...)
 	return cha
 }
 
-func chananyThingSlice(out Anymode, inp ...[]anyThing) {
+func chananyThingSlice(out anymode, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
@@ -45,13 +45,13 @@ func chananyThingSlice(out Anymode, inp ...[]anyThing) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func anyThingChanFuncNok(gen func() (anyThing, bool)) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChanFuncNok(gen func() (anyThing, bool)) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThingFuncNok(cha, gen)
 	return cha
 }
 
-func chananyThingFuncNok(out Anymode, gen func() (anyThing, bool)) {
+func chananyThingFuncNok(out anymode, gen func() (anyThing, bool)) {
 	defer out.Close()
 	for {
 		res, ok := gen() // generate
@@ -66,13 +66,13 @@ func chananyThingFuncNok(out Anymode, gen func() (anyThing, bool)) {
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func anyThingChanFuncErr(gen func() (anyThing, error)) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChanFuncErr(gen func() (anyThing, error)) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThingFuncErr(cha, gen)
 	return cha
 }
 
-func chananyThingFuncErr(out Anymode, gen func() (anyThing, error)) {
+func chananyThingFuncErr(out anymode, gen func() (anyThing, error)) {
 	defer out.Close()
 	for {
 		res, err := gen() // generate

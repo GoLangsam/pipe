@@ -12,8 +12,8 @@ package pipe
 // before close.
 // Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func anyThingPipeFunc(inp Anymode, act func(a anyThing) anyThing) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingPipeFunc(inp anymode, act func(a anyThing) anyThing) (out anymode) {
+	cha := anymodeMakeChan()
 	if act == nil {
 		act = func(a anyThing) anyThing { return a }
 	}
@@ -21,7 +21,7 @@ func anyThingPipeFunc(inp Anymode, act func(a anyThing) anyThing) (out Anymode) 
 	return cha
 }
 
-func pipeanyThingFunc(out Anymode, inp Anymode, act func(a anyThing) anyThing) {
+func pipeanyThingFunc(out anymode, inp anymode, act func(a anyThing) anyThing) {
 	defer out.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		out.Provide(act(i))
@@ -31,13 +31,13 @@ func pipeanyThingFunc(out Anymode, inp Anymode, act func(a anyThing) anyThing) {
 // anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func anyThingPipeBuffer(inp Anymode, cap int) (out Anymode) {
-	cha := MakeAnymodeBuff(cap)
+func anyThingPipeBuffer(inp anymode, cap int) (out anymode) {
+	cha := anymodeMakeBuff(cap)
 	go pipeanyThingBuffer(cha, inp)
 	return cha
 }
 
-func pipeanyThingBuffer(out Anymode, inp Anymode) {
+func pipeanyThingBuffer(out anymode, inp anymode) {
 	defer out.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		out.Provide(i)

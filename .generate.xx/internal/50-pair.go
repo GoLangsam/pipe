@@ -9,14 +9,14 @@ package pipe
 
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func anyThingPair(inp Anymode) (out1, out2 Anymode) {
-	cha1 := MakeAnymodeChan()
-	cha2 := MakeAnymodeChan()
+func anyThingPair(inp anymode) (out1, out2 anymode) {
+	cha1 := anymodeMakeChan()
+	cha2 := anymodeMakeChan()
 	go pairanyThing(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-func pairanyThing(out1, out2 Anymode, inp Anymode) {
+func pairanyThing(out1, out2 anymode, inp anymode) {
 	defer out1.Close()
 	defer out2.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {

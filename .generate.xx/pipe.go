@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:generate genny -in $GOFILE	-out ../xxs/internal/$GOFILE	gen "Anymode=*AnySupply"
-//go:generate genny -in $GOFILE	-out ../xxl/internal/$GOFILE	gen "Anymode=*AnyDemand"
-//go:generate genny -in $GOFILE	-out ../xxsl/internal/$GOFILE	gen "Anymode=anyThingChannel"
+//go:generate genny -in $GOFILE	-out ../xxs/internal/$GOFILE	gen "anymode=*anySupply"
+//go:generate genny -in $GOFILE	-out ../xxl/internal/$GOFILE	gen "anymode=*anyDemand"
+//go:generate genny -in $GOFILE	-out ../xxsl/internal/$GOFILE	gen "anymode=anyThingChannel"
 
 package pipe
 
@@ -12,8 +12,8 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Anymode is the generic channel type connecting the pipe network components.
-type Anymode generic.Type
+// anymode is the generic channel type connecting the pipe network components.
+type anymode generic.Type
 
 // ===========================================================================
 // Beg of anyThingChan producers
@@ -21,13 +21,13 @@ type Anymode generic.Type
 // anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func anyThingChan(inp ...anyThing) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChan(inp ...anyThing) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThing(cha, inp...)
 	return cha
 }
 
-func chananyThing(out Anymode, inp ...anyThing) {
+func chananyThing(out anymode, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
 		out.Provide(inp[i])
@@ -37,13 +37,13 @@ func chananyThing(out Anymode, inp ...anyThing) {
 // anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func anyThingChanSlice(inp ...[]anyThing) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChanSlice(inp ...[]anyThing) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThingSlice(cha, inp...)
 	return cha
 }
 
-func chananyThingSlice(out Anymode, inp ...[]anyThing) {
+func chananyThingSlice(out anymode, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
@@ -56,13 +56,13 @@ func chananyThingSlice(out Anymode, inp ...[]anyThing) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func anyThingChanFuncNok(gen func() (anyThing, bool)) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChanFuncNok(gen func() (anyThing, bool)) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThingFuncNok(cha, gen)
 	return cha
 }
 
-func chananyThingFuncNok(out Anymode, gen func() (anyThing, bool)) {
+func chananyThingFuncNok(out anymode, gen func() (anyThing, bool)) {
 	defer out.Close()
 	for {
 		res, ok := gen() // generate
@@ -77,13 +77,13 @@ func chananyThingFuncNok(out Anymode, gen func() (anyThing, bool)) {
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func anyThingChanFuncErr(gen func() (anyThing, error)) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingChanFuncErr(gen func() (anyThing, error)) (out anymode) {
+	cha := anymodeMakeChan()
 	go chananyThingFuncErr(cha, gen)
 	return cha
 }
 
-func chananyThingFuncErr(out Anymode, gen func() (anyThing, error)) {
+func chananyThingFuncErr(out anymode, gen func() (anyThing, error)) {
 	defer out.Close()
 	for {
 		res, err := gen() // generate
@@ -105,8 +105,8 @@ func chananyThingFuncErr(out Anymode, gen func() (anyThing, error)) {
 // before close.
 // Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func anyThingPipeFunc(inp Anymode, act func(a anyThing) anyThing) (out Anymode) {
-	cha := MakeAnymodeChan()
+func anyThingPipeFunc(inp anymode, act func(a anyThing) anyThing) (out anymode) {
+	cha := anymodeMakeChan()
 	if act == nil {
 		act = func(a anyThing) anyThing { return a }
 	}
@@ -114,7 +114,7 @@ func anyThingPipeFunc(inp Anymode, act func(a anyThing) anyThing) (out Anymode) 
 	return cha
 }
 
-func pipeanyThingFunc(out Anymode, inp Anymode, act func(a anyThing) anyThing) {
+func pipeanyThingFunc(out anymode, inp anymode, act func(a anyThing) anyThing) {
 	defer out.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		out.Provide(act(i))
@@ -124,13 +124,13 @@ func pipeanyThingFunc(out Anymode, inp Anymode, act func(a anyThing) anyThing) {
 // anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func anyThingPipeBuffer(inp Anymode, cap int) (out Anymode) {
-	cha := MakeAnymodeBuff(cap)
+func anyThingPipeBuffer(inp anymode, cap int) (out anymode) {
+	cha := anymodeMakeBuff(cap)
 	go pipeanyThingBuffer(cha, inp)
 	return cha
 }
 
-func pipeanyThingBuffer(out Anymode, inp Anymode) {
+func pipeanyThingBuffer(out anymode, inp anymode) {
 	defer out.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		out.Provide(i)
@@ -144,17 +144,17 @@ func pipeanyThingBuffer(out Anymode, inp Anymode) {
 // Beg of anyThingTube closures
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp Anymode) (out Anymode)) {
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anymode) (out anymode)) {
 
-	return func(inp Anymode) (out Anymode) {
+	return func(inp anymode) (out anymode) {
 		return anyThingPipeFunc(inp, act)
 	}
 }
 
 // anyThingTubeBuffer returns a closure around PipeanyThingBuffer (_, cap).
-func anyThingTubeBuffer(cap int) (tube func(inp Anymode) (out Anymode)) {
+func anyThingTubeBuffer(cap int) (tube func(inp anymode) (out anymode)) {
 
-	return func(inp Anymode) (out Anymode) {
+	return func(inp anymode) (out anymode) {
 		return anyThingPipeBuffer(inp, cap)
 	}
 }
@@ -167,13 +167,13 @@ func anyThingTubeBuffer(cap int) (tube func(inp Anymode) (out Anymode)) {
 
 // anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func anyThingDone(inp Anymode) (done <-chan struct{}) {
+func anyThingDone(inp anymode) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doitanyThing(sig, inp)
 	return sig
 }
 
-func doitanyThing(done chan<- struct{}, inp Anymode) {
+func doitanyThing(done chan<- struct{}, inp anymode) {
 	defer close(done)
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		_ = i // Drain inp
@@ -186,13 +186,13 @@ func doitanyThing(done chan<- struct{}, inp Anymode) {
 // before close.
 //
 //  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func anyThingDoneSlice(inp Anymode) (done <-chan []anyThing) {
+func anyThingDoneSlice(inp anymode) (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
 	go doitanyThingSlice(sig, inp)
 	return sig
 }
 
-func doitanyThingSlice(done chan<- []anyThing, inp Anymode) {
+func doitanyThingSlice(done chan<- []anyThing, inp anymode) {
 	defer close(done)
 	slice := []anyThing{}
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
@@ -204,7 +204,7 @@ func doitanyThingSlice(done chan<- []anyThing, inp Anymode) {
 // anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func anyThingDoneFunc(inp Anymode, act func(a anyThing)) (done <-chan struct{}) {
+func anyThingDoneFunc(inp anymode, act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a anyThing) { return }
@@ -213,7 +213,7 @@ func anyThingDoneFunc(inp Anymode, act func(a anyThing)) (done <-chan struct{}) 
 	return sig
 }
 
-func doitanyThingFunc(done chan<- struct{}, inp Anymode, act func(a anyThing)) {
+func doitanyThingFunc(done chan<- struct{}, inp anymode, act func(a anyThing)) {
 	defer close(done)
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		act(i) // apply action
@@ -228,25 +228,25 @@ func doitanyThingFunc(done chan<- struct{}, inp Anymode, act func(a anyThing)) {
 // Beg of anyThingFini closures
 
 // anyThingFini returns a closure around `DoneanyThing(_)`.
-func anyThingFini() func(inp Anymode) (done <-chan struct{}) {
+func anyThingFini() func(inp anymode) (done <-chan struct{}) {
 
-	return func(inp Anymode) (done <-chan struct{}) {
+	return func(inp anymode) (done <-chan struct{}) {
 		return anyThingDone(inp)
 	}
 }
 
 // anyThingFiniSlice returns a closure around `DoneanyThingSlice(_)`.
-func anyThingFiniSlice() func(inp Anymode) (done <-chan []anyThing) {
+func anyThingFiniSlice() func(inp anymode) (done <-chan []anyThing) {
 
-	return func(inp Anymode) (done <-chan []anyThing) {
+	return func(inp anymode) (done <-chan []anyThing) {
 		return anyThingDoneSlice(inp)
 	}
 }
 
 // anyThingFiniFunc returns a closure around `DoneanyThingFunc(_, act)`.
-func anyThingFiniFunc(act func(a anyThing)) func(inp Anymode) (done <-chan struct{}) {
+func anyThingFiniFunc(act func(a anyThing)) func(inp anymode) (done <-chan struct{}) {
 
-	return func(inp Anymode) (done <-chan struct{}) {
+	return func(inp anymode) (done <-chan struct{}) {
 		return anyThingDoneFunc(inp, act)
 	}
 }
@@ -259,14 +259,14 @@ func anyThingFiniFunc(act func(a anyThing)) func(inp Anymode) (done <-chan struc
 
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func anyThingPair(inp Anymode) (out1, out2 Anymode) {
-	cha1 := MakeAnymodeChan()
-	cha2 := MakeAnymodeChan()
+func anyThingPair(inp anymode) (out1, out2 anymode) {
+	cha1 := anymodeMakeChan()
+	cha2 := anymodeMakeChan()
 	go pairanyThing(cha1, cha2, inp)
 	return cha1, cha2
 }
 
-func pairanyThing(out1, out2 Anymode, inp Anymode) {
+func pairanyThing(out1, out2 anymode, inp anymode) {
 	defer out1.Close()
 	defer out2.Close()
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {

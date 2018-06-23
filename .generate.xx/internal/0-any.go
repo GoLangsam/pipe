@@ -4,8 +4,8 @@
 
 //go:generate bundle -pkg pipe -o ..\pipe.go.gen .
 
-////go:generate genny -in $GOFILE	-out ../s/internal/$GOFILE.supply	gen "Anymode=*AnySupply"
-////go:generate genny -in $GOFILE	-out ../l/internal/$GOFILE.demand	gen "Anymode=*AnyDemand"
+////go:generate genny -in $GOFILE	-out ../s/internal/$GOFILE.supply	gen "anymode=*anySupply"
+////go:generate genny -in $GOFILE	-out ../l/internal/$GOFILE.demand	gen "anymode=*anyDemand"
 
 package pipe
 
@@ -16,5 +16,5 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// Anymode is the generic channel type connecting the pipe network components.
-type Anymode generic.Type
+// anymode is the generic channel type connecting the pipe network components.
+type anymode generic.Type

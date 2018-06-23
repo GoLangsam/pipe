@@ -14,11 +14,11 @@ type AnyDemand struct {
 	req chan struct{}
 }
 
-// MakeAnyDemandChan returns
+// AnyDemandMakeChan returns
 // a (pointer to a) fresh
 // unbuffered
 // demand channel
-func MakeAnyDemandChan() *AnyDemand {
+func AnyDemandMakeChan() *AnyDemand {
 	d := AnyDemand{
 		dat: make(chan anyThing),
 		req: make(chan struct{}),
@@ -26,11 +26,11 @@ func MakeAnyDemandChan() *AnyDemand {
 	return &d
 }
 
-// MakeAnyDemandBuff returns
+// AnyDemandMakeBuff returns
 // a (pointer to a) fresh
 // buffered (with capacity=`cap`)
 // demand channel
-func MakeAnyDemandBuff(cap int) *AnyDemand {
+func AnyDemandMakeBuff(cap int) *AnyDemand {
 	d := AnyDemand{
 		dat: make(chan anyThing, cap),
 		req: make(chan struct{}),
