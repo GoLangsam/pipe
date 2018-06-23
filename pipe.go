@@ -404,12 +404,12 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 // ===========================================================================
 // Beg of AnyPipeBuffered - a buffered channel with capacity `cap` to receive
 
-// AnyPipeBuffer returns a buffered channel with capacity `cap` to receive
+// AnyPipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
 func AnyPipeBuffered(inp <-chan Any, cap int) (out <-chan Any) {
 	cha := make(chan Any, cap)
-	go pipeAnyBuffer(cha, inp)
+	go pipeAnyBuffered(cha, inp)
 	return cha
 }
 
@@ -424,7 +424,7 @@ func pipeAnyBuffered(out chan<- Any, inp <-chan Any) {
 func AnyTubeBuffered(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
 
 	return func(inp <-chan Any) (out <-chan Any) {
-		return AnyPipeBuffer(inp, cap)
+		return AnyPipeBuffered(inp, cap)
 	}
 }
 
@@ -1277,22 +1277,22 @@ func joinAnyChan(done chan<- struct{}, out chan<- Any, inp <-chan Any) {
 // ===========================================================================
 // Beg of AnyDaisyChain
 
-// ProcAny is the signature of the inner process of any linear pipe-network
+// AnyProc is the signature of the inner process of any linear pipe-network
 //  Example: the identity core:
 // samesame := func(into chan<- Any, from <-chan Any) { into <- <-from }
-// Note: type ProcAny is provided for documentation purpose only.
+// Note: type AnyProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
 // in order to avoid some genny-related issue.
 //  Note: In https://talks.golang.org/2012/waza.slide#40
-// Rob Pike uses a ProcAny named `worker`.
-type ProcAny func(into chan<- Any, from <-chan Any)
+// Rob Pike uses a AnyProc named `worker`.
+type AnyProc func(into chan<- Any, from <-chan Any)
 
 // Example: the identity core - see `samesame` below
-var _ ProcAny = func(into chan<- Any, from <-chan Any) { into <- <-from }
+var _ AnyProc = func(into chan<- Any, from <-chan Any) { into <- <-from }
 
 // daisyAny returns a channel to receive all inp after having passed thru process `proc`.
 func daisyAny(inp <-chan Any,
-	proc func(into chan<- Any, from <-chan Any), // a ProcAny process
+	proc func(into chan<- Any, from <-chan Any), // a AnyProc process
 ) (
 	out chan Any) { // a daisy to be chained
 
@@ -1310,7 +1310,7 @@ func daisyAny(inp <-chan Any,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func AnyDaisyChain(inp chan Any,
-	procs ...func(into chan<- Any, from <-chan Any), // ProcAny processes
+	procs ...func(into chan<- Any, from <-chan Any), // AnyProc processes
 ) (
 	out chan Any) { // to receive all results
 

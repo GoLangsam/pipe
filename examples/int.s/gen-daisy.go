@@ -11,22 +11,22 @@ package pipe
 // ===========================================================================
 // Beg of intDaisyChain
 
-// ProcInt is the signature of the inner process of any linear pipe-network
+// intProc is the signature of the inner process of any linear pipe-network
 //  Example: the identity core:
 // samesame := func(into chan<- int, from <-chan int) { into <- <-from }
-// Note: type ProcInt is provided for documentation purpose only.
+// Note: type intProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
 // in order to avoid some genny-related issue.
 //  Note: In https://talks.golang.org/2012/waza.slide#40
-// Rob Pike uses a ProcInt named `worker`.
-type ProcInt func(into chan<- int, from <-chan int)
+// Rob Pike uses a intProc named `worker`.
+type intProc func(into chan<- int, from <-chan int)
 
 // Example: the identity core - see `samesame` below
-var _ ProcInt = func(into chan<- int, from <-chan int) { into <- <-from }
+var _ intProc = func(into chan<- int, from <-chan int) { into <- <-from }
 
 // daisyint returns a channel to receive all inp after having passed thru process `proc`.
 func daisyint(inp <-chan int,
-	proc func(into chan<- int, from <-chan int), // a ProcInt process
+	proc func(into chan<- int, from <-chan int), // a intProc process
 ) (
 	out chan int) { // a daisy to be chained
 
@@ -44,7 +44,7 @@ func daisyint(inp <-chan int,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func intDaisyChain(inp chan int,
-	procs ...func(into chan<- int, from <-chan int), // ProcInt processes
+	procs ...func(into chan<- int, from <-chan int), // intProc processes
 ) (
 	out chan int) { // to receive all results
 

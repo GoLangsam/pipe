@@ -400,12 +400,12 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 // ===========================================================================
 // Beg of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
 
-// ThingPipeBuffer returns a buffered channel with capacity `cap` to receive
+// ThingPipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
 func ThingPipeBuffered(inp <-chan Thing, cap int) (out <-chan Thing) {
 	cha := make(chan Thing, cap)
-	go pipeThingBuffer(cha, inp)
+	go pipeThingBuffered(cha, inp)
 	return cha
 }
 
@@ -420,7 +420,7 @@ func pipeThingBuffered(out chan<- Thing, inp <-chan Thing) {
 func ThingTubeBuffered(cap int) (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return ThingPipeBuffer(inp, cap)
+		return ThingPipeBuffered(inp, cap)
 	}
 }
 
@@ -1273,22 +1273,22 @@ func joinThingChan(done chan<- struct{}, out chan<- Thing, inp <-chan Thing) {
 // ===========================================================================
 // Beg of ThingDaisyChain
 
-// ProcThing is the signature of the inner process of any linear pipe-network
+// ThingProc is the signature of the inner process of any linear pipe-network
 //  Example: the identity core:
 // samesame := func(into chan<- Thing, from <-chan Thing) { into <- <-from }
-// Note: type ProcThing is provided for documentation purpose only.
+// Note: type ThingProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
 // in order to avoid some genny-related issue.
 //  Note: In https://talks.golang.org/2012/waza.slide#40
-// Rob Pike uses a ProcThing named `worker`.
-type ProcThing func(into chan<- Thing, from <-chan Thing)
+// Rob Pike uses a ThingProc named `worker`.
+type ThingProc func(into chan<- Thing, from <-chan Thing)
 
 // Example: the identity core - see `samesame` below
-var _ ProcThing = func(into chan<- Thing, from <-chan Thing) { into <- <-from }
+var _ ThingProc = func(into chan<- Thing, from <-chan Thing) { into <- <-from }
 
 // daisyThing returns a channel to receive all inp after having passed thru process `proc`.
 func daisyThing(inp <-chan Thing,
-	proc func(into chan<- Thing, from <-chan Thing), // a ProcThing process
+	proc func(into chan<- Thing, from <-chan Thing), // a ThingProc process
 ) (
 	out chan Thing) { // a daisy to be chained
 
@@ -1306,7 +1306,7 @@ func daisyThing(inp <-chan Thing,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func ThingDaisyChain(inp chan Thing,
-	procs ...func(into chan<- Thing, from <-chan Thing), // ProcThing processes
+	procs ...func(into chan<- Thing, from <-chan Thing), // ThingProc processes
 ) (
 	out chan Thing) { // to receive all results
 
