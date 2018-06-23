@@ -23,7 +23,8 @@ for /F %%d in (gen.epilog.lst) do go generate ./%%d...
 @pwd
 @Echo.
 
-@call test.cmd
+go fmt  .\...
+go test .\...
 
 @Echo.
 @Echo finished :-)
