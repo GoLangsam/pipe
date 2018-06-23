@@ -22,6 +22,7 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 
 - the essence
 	- [s](s/) is for You to use - [Batteries](#batteries) included!
+	- [m](m/) prefer to use methods? - Same [batteries](#batteries) included!
 
 - toys and tests
 	- [expamples](expamples/)
