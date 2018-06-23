@@ -12,7 +12,7 @@ package pipe
 // Beg of ThingDaisyChain
 
 // ThingProc is the signature of the inner process of any linear pipe-network
-//  Example: the identity core:
+//  Example: the identity proc:
 // samesame := func(into chan<- Thing, from <-chan Thing) { into <- <-from }
 // Note: type ThingProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
@@ -21,8 +21,14 @@ package pipe
 // Rob Pike uses a ThingProc named `worker`.
 type ThingProc func(into chan<- Thing, from <-chan Thing)
 
-// Example: the identity core - see `samesame` below
-var _ ThingProc = func(into chan<- Thing, from <-chan Thing) { into <- <-from }
+// Example: the identity proc - see `samesame` below
+var _ ThingProc = func(out chan<- Thing, inp <-chan Thing) {
+	// `out <- <-inp` or `into <- <-from`
+	defer close(out)
+	for i := range inp {
+		out <- i
+	}
+}
 
 // daisyThing returns a channel to receive all inp after having passed thru process `proc`.
 func daisyThing(inp <-chan Thing,
@@ -44,14 +50,20 @@ func daisyThing(inp <-chan Thing,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func ThingDaisyChain(inp chan Thing,
-	procs ...func(into chan<- Thing, from <-chan Thing), // ThingProc processes
+	procs ...func(out chan<- Thing, inp <-chan Thing), // ThingProc processes
 ) (
 	out chan Thing) { // to receive all results
 
 	cha := inp
 
 	if len(procs) < 1 {
-		samesame := func(into chan<- Thing, from <-chan Thing) { into <- <-from }
+		samesame := func(out chan<- Thing, inp <-chan Thing) {
+			// `out <- <-inp` or `into <- <-from`
+			defer close(out)
+			for i := range inp {
+				out <- i
+			}
+		}
 		cha = daisyThing(cha, samesame)
 	} else {
 		for _, proc := range procs {
@@ -73,14 +85,20 @@ func ThingDaisyChain(inp chan Thing,
 //
 // Note: ThingDaisyChaiN(inp, 1, procs) <==> ThingDaisyChain(inp, procs)
 func ThingDaisyChaiN(inp chan Thing, somany int,
-	procs ...func(into chan<- Thing, from <-chan Thing), // ProcThing processes
+	procs ...func(out chan<- Thing, inp <-chan Thing), // ProcThing processes
 ) (
 	out chan Thing) { // to receive all results
 
 	cha := inp
 
 	if somany < 1 {
-		samesame := func(into chan<- Thing, from <-chan Thing) { into <- <-from }
+		samesame := func(out chan<- Thing, inp <-chan Thing) {
+			// `out <- <-inp` or `into <- <-from`
+			defer close(out)
+			for i := range inp {
+				out <- i
+			}
+		}
 		cha = daisyThing(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {

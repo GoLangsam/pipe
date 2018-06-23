@@ -12,7 +12,7 @@ package pipe
 // Beg of intDaisyChain
 
 // intProc is the signature of the inner process of any linear pipe-network
-//  Example: the identity core:
+//  Example: the identity proc:
 // samesame := func(into chan<- int, from <-chan int) { into <- <-from }
 // Note: type intProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
@@ -21,8 +21,14 @@ package pipe
 // Rob Pike uses a intProc named `worker`.
 type intProc func(into chan<- int, from <-chan int)
 
-// Example: the identity core - see `samesame` below
-var _ intProc = func(into chan<- int, from <-chan int) { into <- <-from }
+// Example: the identity proc - see `samesame` below
+var _ intProc = func(out chan<- int, inp <-chan int) {
+	// `out <- <-inp` or `into <- <-from`
+	defer close(out)
+	for i := range inp {
+		out <- i
+	}
+}
 
 // daisyint returns a channel to receive all inp after having passed thru process `proc`.
 func daisyint(inp <-chan int,
@@ -44,14 +50,20 @@ func daisyint(inp <-chan int,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func intDaisyChain(inp chan int,
-	procs ...func(into chan<- int, from <-chan int), // intProc processes
+	procs ...func(out chan<- int, inp <-chan int), // intProc processes
 ) (
 	out chan int) { // to receive all results
 
 	cha := inp
 
 	if len(procs) < 1 {
-		samesame := func(into chan<- int, from <-chan int) { into <- <-from }
+		samesame := func(out chan<- int, inp <-chan int) {
+			// `out <- <-inp` or `into <- <-from`
+			defer close(out)
+			for i := range inp {
+				out <- i
+			}
+		}
 		cha = daisyint(cha, samesame)
 	} else {
 		for _, proc := range procs {
@@ -73,14 +85,20 @@ func intDaisyChain(inp chan int,
 //
 // Note: intDaisyChaiN(inp, 1, procs) <==> intDaisyChain(inp, procs)
 func intDaisyChaiN(inp chan int, somany int,
-	procs ...func(into chan<- int, from <-chan int), // ProcInt processes
+	procs ...func(out chan<- int, inp <-chan int), // ProcInt processes
 ) (
 	out chan int) { // to receive all results
 
 	cha := inp
 
 	if somany < 1 {
-		samesame := func(into chan<- int, from <-chan int) { into <- <-from }
+		samesame := func(out chan<- int, inp <-chan int) {
+			// `out <- <-inp` or `into <- <-from`
+			defer close(out)
+			for i := range inp {
+				out <- i
+			}
+		}
 		cha = daisyint(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {

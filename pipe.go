@@ -156,7 +156,7 @@ func pipeAnyFunc(out chan<- Any, inp <-chan Any, act func(a Any) Any) {
 	}
 }
 
-// End of PipeAny functions
+// End of AnyPipe functions
 // ===========================================================================
 
 // ===========================================================================
@@ -1278,7 +1278,7 @@ func joinAnyChan(done chan<- struct{}, out chan<- Any, inp <-chan Any) {
 // Beg of AnyDaisyChain
 
 // AnyProc is the signature of the inner process of any linear pipe-network
-//  Example: the identity core:
+//  Example: the identity proc:
 // samesame := func(into chan<- Any, from <-chan Any) { into <- <-from }
 // Note: type AnyProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
@@ -1287,8 +1287,14 @@ func joinAnyChan(done chan<- struct{}, out chan<- Any, inp <-chan Any) {
 // Rob Pike uses a AnyProc named `worker`.
 type AnyProc func(into chan<- Any, from <-chan Any)
 
-// Example: the identity core - see `samesame` below
-var _ AnyProc = func(into chan<- Any, from <-chan Any) { into <- <-from }
+// Example: the identity proc - see `samesame` below
+var _ AnyProc = func(out chan<- Any, inp <-chan Any) {
+	// `out <- <-inp` or `into <- <-from`
+	defer close(out)
+	for i := range inp {
+		out <- i
+	}
+}
 
 // daisyAny returns a channel to receive all inp after having passed thru process `proc`.
 func daisyAny(inp <-chan Any,
@@ -1310,14 +1316,20 @@ func daisyAny(inp <-chan Any,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func AnyDaisyChain(inp chan Any,
-	procs ...func(into chan<- Any, from <-chan Any), // AnyProc processes
+	procs ...func(out chan<- Any, inp <-chan Any), // AnyProc processes
 ) (
 	out chan Any) { // to receive all results
 
 	cha := inp
 
 	if len(procs) < 1 {
-		samesame := func(into chan<- Any, from <-chan Any) { into <- <-from }
+		samesame := func(out chan<- Any, inp <-chan Any) {
+			// `out <- <-inp` or `into <- <-from`
+			defer close(out)
+			for i := range inp {
+				out <- i
+			}
+		}
 		cha = daisyAny(cha, samesame)
 	} else {
 		for _, proc := range procs {
@@ -1339,14 +1351,20 @@ func AnyDaisyChain(inp chan Any,
 //
 // Note: AnyDaisyChaiN(inp, 1, procs) <==> AnyDaisyChain(inp, procs)
 func AnyDaisyChaiN(inp chan Any, somany int,
-	procs ...func(into chan<- Any, from <-chan Any), // ProcAny processes
+	procs ...func(out chan<- Any, inp <-chan Any), // ProcAny processes
 ) (
 	out chan Any) { // to receive all results
 
 	cha := inp
 
 	if somany < 1 {
-		samesame := func(into chan<- Any, from <-chan Any) { into <- <-from }
+		samesame := func(out chan<- Any, inp <-chan Any) {
+			// `out <- <-inp` or `into <- <-from`
+			defer close(out)
+			for i := range inp {
+				out <- i
+			}
+		}
 		cha = daisyAny(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {
