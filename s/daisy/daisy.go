@@ -14,22 +14,22 @@ type anyThing generic.Type
 // ===========================================================================
 // Beg of anyThingDaisyChain
 
-// ProcanyThing is the signature of the inner process of any linear pipe-network
+// anyThingProc is the signature of the inner process of any linear pipe-network
 //  Example: the identity core:
 // samesame := func(into chan<- anyThing, from <-chan anyThing) { into <- <-from }
-//  Note: type ProcanyThing is provided for documentation purpose only.
+//  Note: type anyThingProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
 // in order to avoid some genny-related issue.
 //  Note: In https://talks.golang.org/2012/waza.slide#40
-//  Rob Pike uses a ProcanyThing named `worker`.
-type ProcanyThing func(into chan<- anyThing, from <-chan anyThing)
+//  Rob Pike uses a anyThingProc named `worker`.
+type anyThingProc func(into chan<- anyThing, from <-chan anyThing)
 
 // Example: the identity core - see `samesame` below
-var _ ProcanyThing = func(into chan<- anyThing, from <-chan anyThing) { into <- <-from }
+var _ anyThingProc = func(into chan<- anyThing, from <-chan anyThing) { into <- <-from }
 
 // daisyanyThing returns a channel to receive all inp after having passed thru process `proc`.
 func daisyanyThing(inp <-chan anyThing,
-	proc func(into chan<- anyThing, from <-chan anyThing), // a ProcanyThing process
+	proc func(into chan<- anyThing, from <-chan anyThing), // a anyThingProc process
 ) (
 	out chan anyThing) { // a daisy to be chained
 
@@ -47,7 +47,7 @@ func daisyanyThing(inp <-chan anyThing,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
 func anyThingDaisyChain(inp chan anyThing,
-	procs ...func(into chan<- anyThing, from <-chan anyThing), // ProcanyThing processes
+	procs ...func(into chan<- anyThing, from <-chan anyThing), // anyThingProc processes
 ) (
 	out chan anyThing) { // to receive all results
 
