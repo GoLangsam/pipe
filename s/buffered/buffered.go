@@ -14,12 +14,12 @@ type anyThing generic.Type
 // ===========================================================================
 // Beg of anyThingPipeBuffered - a buffered channel with capacity `cap` to receive
 
-// anyThingPipeBuffer returns a buffered channel with capacity `cap` to receive
+// anyThingPipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
 func anyThingPipeBuffered(inp <-chan anyThing, cap int) (out <-chan anyThing) {
 	cha := make(chan anyThing, cap)
-	go pipeanyThingBuffer(cha, inp)
+	go pipeanyThingBuffered(cha, inp)
 	return cha
 }
 
@@ -34,7 +34,7 @@ func pipeanyThingBuffered(out chan<- anyThing, inp <-chan anyThing) {
 func anyThingTubeBuffered(cap int) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
 
 	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return anyThingPipeBuffer(inp, cap)
+		return anyThingPipeBuffered(inp, cap)
 	}
 }
 

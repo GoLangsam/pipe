@@ -11,12 +11,12 @@ package pipe
 // ===========================================================================
 // Beg of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
 
-// ThingPipeBuffer returns a buffered channel with capacity `cap` to receive
+// ThingPipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
 func ThingPipeBuffered(inp <-chan Thing, cap int) (out <-chan Thing) {
 	cha := make(chan Thing, cap)
-	go pipeThingBuffer(cha, inp)
+	go pipeThingBuffered(cha, inp)
 	return cha
 }
 
@@ -31,7 +31,7 @@ func pipeThingBuffered(out chan<- Thing, inp <-chan Thing) {
 func ThingTubeBuffered(cap int) (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return ThingPipeBuffer(inp, cap)
+		return ThingPipeBuffered(inp, cap)
 	}
 }
 

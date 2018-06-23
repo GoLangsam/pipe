@@ -11,12 +11,12 @@ package pipe
 // ===========================================================================
 // Beg of intPipeBuffered - a buffered channel with capacity `cap` to receive
 
-// intPipeBuffer returns a buffered channel with capacity `cap` to receive
+// intPipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
 func intPipeBuffered(inp <-chan int, cap int) (out <-chan int) {
 	cha := make(chan int, cap)
-	go pipeintBuffer(cha, inp)
+	go pipeintBuffered(cha, inp)
 	return cha
 }
 
@@ -31,7 +31,7 @@ func pipeintBuffered(out chan<- int, inp <-chan int) {
 func intTubeBuffered(cap int) (tube func(inp <-chan int) (out <-chan int)) {
 
 	return func(inp <-chan int) (out <-chan int) {
-		return intPipeBuffer(inp, cap)
+		return intPipeBuffered(inp, cap)
 	}
 }
 

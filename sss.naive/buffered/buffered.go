@@ -29,10 +29,10 @@ func anyThingPipeBuffered(inp chan anyThing, cap int) chan anyThing {
 }
 
 // anyThingTubeBuffered returns a closure around PipeanyThingBuffer (_, cap).
-func anyThingTubeBuffered(cap int) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+func anyThingTubeBuffered(cap int) (tube func(inp chan anyThing) (out chan anyThing)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return anyThingPipeBuffer(inp, cap)
+	return func(inp chan anyThing) (out chan anyThing) {
+		return anyThingPipeBuffered(inp, cap)
 	}
 }
 
