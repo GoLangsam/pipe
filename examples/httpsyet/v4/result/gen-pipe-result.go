@@ -145,7 +145,7 @@ func piperesultFunc(out chan<- result, inp <-chan result, act func(a result) res
 	}
 }
 
-// End of PipeResult functions
+// End of resultPipe functions
 // ===========================================================================
 
 // ===========================================================================

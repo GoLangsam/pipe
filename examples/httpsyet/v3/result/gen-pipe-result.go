@@ -145,7 +145,7 @@ func pipeResultFunc(out chan<- Result, inp <-chan Result, act func(a Result) Res
 	}
 }
 
-// End of PipeResult functions
+// End of ResultPipe functions
 // ===========================================================================
 
 // ===========================================================================

@@ -145,7 +145,7 @@ func pipeintFunc(out chan<- int, inp <-chan int, act func(a int) int) {
 	}
 }
 
-// End of PipeInt functions
+// End of intPipe functions
 // ===========================================================================
 
 // ===========================================================================

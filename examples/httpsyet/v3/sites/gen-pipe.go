@@ -145,7 +145,7 @@ func pipeSiteFunc(out chan<- Site, inp <-chan Site, act func(a Site) Site) {
 	}
 }
 
-// End of PipeSite functions
+// End of SitePipe functions
 // ===========================================================================
 
 // ===========================================================================

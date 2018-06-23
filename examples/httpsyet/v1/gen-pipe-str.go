@@ -145,7 +145,7 @@ func pipestringFunc(out chan<- string, inp <-chan string, act func(a string) str
 	}
 }
 
-// End of PipeString functions
+// End of stringPipe functions
 // ===========================================================================
 
 // ===========================================================================

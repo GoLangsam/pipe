@@ -148,7 +148,7 @@ func pipeanyThingFunc(out chan<- anyThing, inp <-chan anyThing, act func(a anyTh
 	}
 }
 
-// End of PipeanyThing functions
+// End of anyThingPipe functions
 // ===========================================================================
 
 // ===========================================================================
