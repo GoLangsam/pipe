@@ -16,8 +16,9 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 ## Overview
 
 - an evolution:
-	- [sss](sss.naive/) a naive approach - as seen in popular slides, talks and blogs.
-	- [ss](ss.notyet/) a better way to code it
+	- [ssss](ssss.none/) a first 'theoretical' approach - does not get You anywhere
+	- [sss](sss.naive/) a naive approach - as seen in popular slides, talks and blogs
+	- [ss](ss.notyet/) a better way to do it
 
 - the essence
 	- [s](s/) is for You to use - [Batteries](#batteries) included!
@@ -40,10 +41,13 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 
 ---
 
-## [sss](sss.naive/) - simply super stupid small
+## [ssss](ssss.none/) - simply super stupid small
 
 
-## [ss](ss.notyet/) - still simply small
+## [sss](sss.naive/) - simple stupid small
+
+
+## [ss](ss.notyet/) - still small
 
 
 ## [s](s/) - smart & useful - [batteries](#batteries) included!
