@@ -236,12 +236,12 @@ func (c *anySupply) Len() int {
 //  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
 func anyThingChannelMakeChan() (out anyThingChannel) {
-	return &AnySupply{make(chan anyThing)}
+	return &anySupply{make(chan anyThing)}
 }
 
 // anyThingChannelMakeBuff returns a new open buffered channel with capacity `cap`.
 func anyThingChannelMakeBuff(cap int) (out anyThingChannel) {
-	return &AnySupply{make(chan anyThing, cap)}
+	return &anySupply{make(chan anyThing, cap)}
 }
 
 // End of anyThingChannelMake creators
