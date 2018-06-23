@@ -1,4 +1,7 @@
 @Echo.
+
+go generate .\...
+
 @cd .generate.xx
 @pwd
 @call gen.cmd
