@@ -32,21 +32,25 @@ func (my anyOwner) anyThingFanIn(inps ...<-chan anyThing) (out <-chan anyThing) 
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
-	go func(wg *sync.WaitGroup, out chan anyThing) { // Spawn "close(out)" once all inps are done
-		wg.Wait()
-		close(out)
-	}(wg, cha)
+	go my.fanInanyThingWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
 	for i := range inps {
-		go func(out chan<- anyThing, inp <-chan anyThing) { // Spawn "output(c)"s
-			defer wg.Done()
-			for i := range inp {
-				out <- i
-			}
-		}(cha, inps[i])
+		go my.fanInanyThing(cha, inps[i], wg) // Spawn "output(c)"s
 	}
 
 	return cha
+}
+
+func (my anyOwner) fanInanyThing(out chan<- anyThing, inp <-chan anyThing, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for i := range inp {
+		out <- i
+	}
+}
+
+func (my anyOwner) fanInanyThingWaitAndClose(out chan<- anyThing, wg *sync.WaitGroup) {
+	wg.Wait()
+	close(out)
 }
 
 // End of anyThingFanIn
