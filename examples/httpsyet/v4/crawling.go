@@ -62,13 +62,14 @@ func (c *Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 		make(chan result), // results - the (secondary) output
 	}
 
+	parallel := parallel(c.Parallel) // no idea what keeps Crawler from setting `Parallel` upon validation
+
+	crawlingDone := crawling.Processor(crawling.crawl, parallel) // build the site traffic processing network
+
 	go func() { // launch the results closer
-		<-crawling.Done() // block 'till sites.Traffic is Done
+		<-crawlingDone // block 'till crawling.Processor is done
 		close(crawling.results)
 	}()
-
-	parallel := parallel(c.Parallel)
-	crawling.Processor(crawling.crawl, parallel) // build the site traffic processing network
 
 	crawling.Feed(urls, nil, c.Depth) // feed initial urls
 

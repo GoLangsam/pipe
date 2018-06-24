@@ -33,6 +33,9 @@ func New() (t *Traffic) {
 // Done returns a channel which will be signalled and closed
 // when traffic has subsided and nothing is left to be processed
 // and consequently all goroutines have terminated.
+//  Note: Done() here is a convenience method.
+//  It is well known from the "context" package.
+//  Just: no need to use it as `Processor` returns same.
 func (t *Traffic) Done() (done <-chan struct{}) {
 	return t.done
 }
@@ -51,7 +54,11 @@ func (t *Traffic) Feed(urls []*url.URL, parent *url.URL, depth int) {
 
 // Processor builds the site traffic processing network;
 // it is cirular if crawl uses Feed to provide feedback.
-func (t *Traffic) Processor(crawl func(s Site), parallel int) {
+//
+// returned is a channel which will be signalled and closed
+// when traffic has subsided and nothing is left to be processed
+// and consequently all goroutines have terminated - as is from `Done()`.
+func (t *Traffic) Processor(crawl func(s Site), parallel int) (done <-chan struct{}) {
 	proc := func(s Site) { // wrap crawl:
 		crawl(s)    // apply original crawl
 		t.wg.Done() // have this site leave
@@ -62,4 +69,6 @@ func (t *Traffic) Processor(crawl func(s Site), parallel int) {
 		t.SiteDoneFunc(sites, proc) // strewed `sites` leave in wrapped `crawl`
 	}
 	t.SiteDoneLeave(seen, t.wg) // `seen` leave without further processing
+
+	return t.Done()
 }
