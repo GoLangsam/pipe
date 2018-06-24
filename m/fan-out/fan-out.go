@@ -30,7 +30,7 @@ func (my anyOwner) anyThingFanOut(inp <-chan anyThing, size int) (outS [](<-chan
 
 	outS = make([]<-chan anyThing, size)
 	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+		outS[i] = (<-chan anyThing)(chaS[i]) // convert `chan` to `<-chan`
 	}
 
 	return outS
