@@ -31,10 +31,12 @@ var _ intProc = func(out chan<- int, inp <-chan int) {
 }
 
 // daisyint returns a channel to receive all inp after having passed thru process `proc`.
-func daisyint(inp <-chan int,
-	proc func(into chan<- int, from <-chan int), // a intProc process
+func daisyint(
+	inp <-chan int, // a daisy to be chained
+	proc func(into chan<- int, from <-chan int), // a process function
 ) (
-	out chan int) { // a daisy to be chained
+	out chan int, // to receive all results
+) { //  Body:
 
 	cha := make(chan int)
 	go proc(cha, inp)
@@ -49,10 +51,12 @@ func daisyint(inp <-chan int,
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func intDaisyChain(inp chan int,
-	procs ...func(out chan<- int, inp <-chan int), // intProc processes
+func intDaisyChain(
+	inp chan int, // a daisy to be chained
+	procs ...func(out chan<- int, inp <-chan int), // a process function
 ) (
-	out chan int) { // to receive all results
+	out chan int, // to receive all results
+) { //  Body:
 
 	cha := inp
 
@@ -84,10 +88,13 @@ func intDaisyChain(inp chan int,
 // thus making null values useful.
 //
 // Note: intDaisyChaiN(inp, 1, procs) <==> intDaisyChain(inp, procs)
-func intDaisyChaiN(inp chan int, somany int,
-	procs ...func(out chan<- int, inp <-chan int), // ProcInt processes
+func intDaisyChaiN(
+	inp chan int, // a daisy to be chained
+	somany int, // how many times? so many times
+	procs ...func(out chan<- int, inp <-chan int), // a process function
 ) (
-	out chan int) { // to receive all results
+	out chan int, // to receive all results
+) { //  Body:
 
 	cha := inp
 

@@ -31,10 +31,12 @@ var _ ThingProc = func(out chan<- Thing, inp <-chan Thing) {
 }
 
 // daisyThing returns a channel to receive all inp after having passed thru process `proc`.
-func daisyThing(inp <-chan Thing,
-	proc func(into chan<- Thing, from <-chan Thing), // a ThingProc process
+func daisyThing(
+	inp <-chan Thing, // a daisy to be chained
+	proc func(into chan<- Thing, from <-chan Thing), // a process function
 ) (
-	out chan Thing) { // a daisy to be chained
+	out chan Thing, // to receive all results
+) { //  Body:
 
 	cha := make(chan Thing)
 	go proc(cha, inp)
@@ -49,10 +51,12 @@ func daisyThing(inp <-chan Thing,
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func ThingDaisyChain(inp chan Thing,
-	procs ...func(out chan<- Thing, inp <-chan Thing), // ThingProc processes
+func ThingDaisyChain(
+	inp chan Thing, // a daisy to be chained
+	procs ...func(out chan<- Thing, inp <-chan Thing), // a process function
 ) (
-	out chan Thing) { // to receive all results
+	out chan Thing, // to receive all results
+) { //  Body:
 
 	cha := inp
 
@@ -84,10 +88,13 @@ func ThingDaisyChain(inp chan Thing,
 // thus making null values useful.
 //
 // Note: ThingDaisyChaiN(inp, 1, procs) <==> ThingDaisyChain(inp, procs)
-func ThingDaisyChaiN(inp chan Thing, somany int,
-	procs ...func(out chan<- Thing, inp <-chan Thing), // ProcThing processes
+func ThingDaisyChaiN(
+	inp chan Thing, // a daisy to be chained
+	somany int, // how many times? so many times
+	procs ...func(out chan<- Thing, inp <-chan Thing), // a process function
 ) (
-	out chan Thing) { // to receive all results
+	out chan Thing, // to receive all results
+) { //  Body:
 
 	cha := inp
 
