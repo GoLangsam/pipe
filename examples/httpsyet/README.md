@@ -43,7 +43,7 @@ In order to abstract (latin: abstrahere = "to take away") "the coordination usin
 
 This leaves `crawler.go` focused on the actual crawl functionality.
 
-"The coordination using channels" is redone on a slightly higher level of abstration: using a pipe network.
+"The coordination using channels" is redone on a slightly higher level of abstraction: using a pipe network.
 Yes, channels connect the parts - but they are not the main focus anymore,
 
 And no `wait` channel (and it's management) is needed to keep track of the traffic.
