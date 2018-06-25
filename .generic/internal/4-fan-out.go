@@ -23,7 +23,7 @@ func ThingFanOut(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 
 	outS = make([]<-chan Thing, size)
 	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+		outS[i] = (<-chan Thing)(chaS[i]) // convert `chan` to `<-chan`
 	}
 
 	return outS
