@@ -101,7 +101,7 @@ A battery called `àdjust` provides a flexibly buffered pipe. so we use `SitePipe
 and do not need to have `Feed` spawn the `queueURLs` function any more. We may feed synchonously now!
 
 But now we also do not need to bother `Feed` with the need of registering new traffic (using `t.Add(len(urls))`) up front.
-Instead we use `SitePipeEnter` (a companion of `SiteDoneLeave`) at the entrnace of our network processor.
+Instead we use `SitePipeEnter` (a companion of `SiteDoneLeave`) at the entrance of our network processor.
 
 Thus, the network becomes more flexible and more self-contained and gives less burden to it's surroundings.
 

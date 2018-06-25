@@ -44,5 +44,6 @@ Adjust to having `result` as explicit type now.
 
 No need here to touch the previosly refactured `crawler.go` 
 except for the one line where the result is sent and we simply need to cast it to the new explicit type now
+
 ----
 [Back to Overview](../)
