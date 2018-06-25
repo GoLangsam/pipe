@@ -17,6 +17,10 @@ import "sync"
 // on variadic inps
 // before close.
 //
+//  Note: For each input one go routine is spawned to forward arrivals.
+//
+// See intFanIn1 in `fan-in1` for another implementation.
+//
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
 func intFanIn(inps ...<-chan int) (out <-chan int) {
@@ -25,21 +29,25 @@ func intFanIn(inps ...<-chan int) (out <-chan int) {
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
-	go func(wg *sync.WaitGroup, out chan int) { // Spawn "close(out)" once all inps are done
-		wg.Wait()
-		close(out)
-	}(wg, cha)
+	go fanInintWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
 	for i := range inps {
-		go func(out chan<- int, inp <-chan int) { // Spawn "output(c)"s
-			defer wg.Done()
-			for i := range inp {
-				out <- i
-			}
-		}(cha, inps[i])
+		go fanInint(cha, inps[i], wg) // Spawn "output(c)"s
 	}
 
 	return cha
+}
+
+func fanInint(out chan<- int, inp <-chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for i := range inp {
+		out <- i
+	}
+}
+
+func fanInintWaitAndClose(out chan<- int, wg *sync.WaitGroup) {
+	wg.Wait()
+	close(out)
 }
 
 // End of intFanIn
