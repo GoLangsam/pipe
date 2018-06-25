@@ -28,7 +28,7 @@ Use type aliases:
 ```go
 type site = Site
 type traffic = Traffic
-```go
+```
 
 - Make `result` an explicit type now.
 - Move methods `processor` and `add` into new [`traffic.go`](traffic.go).
