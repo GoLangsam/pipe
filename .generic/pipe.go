@@ -396,6 +396,7 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 }
 
 // End of ThingFanIn2 simple binary Fan-In
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
@@ -425,6 +426,7 @@ func ThingTubeBuffered(cap int) (tube func(inp <-chan Thing) (out <-chan Thing))
 }
 
 // End of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingPipeEnter/Leave - Flapdoors observed by a Waiter
@@ -574,6 +576,7 @@ func ThingFiniWait(wg ThingWaiter) func(inp chan<- Thing) (done <-chan struct{})
 }
 
 // End of ThingPipeEnter/Leave - Flapdoors observed by a Waiter
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingPipeDone
@@ -596,6 +599,7 @@ func pipeThingDone(out chan<- Thing, done chan<- struct{}, inp <-chan Thing) {
 }
 
 // End of ThingPipeDone
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingPlug - graceful terminator
@@ -642,6 +646,7 @@ func plugThing(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, stop <-
 }
 
 // End of ThingPlug - graceful terminator
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingPlugAfter - graceful terminator
@@ -689,6 +694,7 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 }
 
 // End of ThingPlugAfter - graceful terminator
+// ===========================================================================
 
 // Note: pipeThingAdjust imports "container/ring" for the expanding buffer.
 
@@ -802,6 +808,7 @@ func pipeThingAdjust(out chan<- Thing, inp <-chan Thing, QUE int) {
 }
 
 // End of sendThingProxy
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingFanOut
@@ -840,6 +847,7 @@ func fanThingOut(inp <-chan Thing, outs ...chan Thing) {
 }
 
 // End of ThingFanOut
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingStrew - scatter them
@@ -894,6 +902,7 @@ func trySendThing(inp Thing, outS ...chan Thing) bool {
 }
 
 // End of ThingStrew - scatter them
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingPipeSeen/ThingForkSeen - an "I've seen this Thing before" filter / forker
@@ -1014,6 +1023,7 @@ func ThingTubeSeenAttr(attr func(a Thing) interface{}) (tube func(inp <-chan Thi
 }
 
 // End of ThingPipeSeen/ThingForkSeen - an "I've seen this Thing before" filter / forker
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingFanIn
@@ -1056,6 +1066,7 @@ func fanInThingWaitAndClose(out chan<- Thing, wg *sync.WaitGroup) {
 }
 
 // End of ThingFanIn
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingFanIn1 - fan-in using only one go routine
@@ -1109,6 +1120,7 @@ func fanin1Thing(out chan<- Thing, inpS ...<-chan Thing) {
 }
 
 // End of ThingFanIn1 - fan-in using only one go routine
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingFan2 easy fan-in's
@@ -1162,6 +1174,7 @@ func ThingFan2FuncErr(ori <-chan Thing, gen func() (Thing, error)) (out <-chan T
 }
 
 // End of ThingFan2 easy fan-in's
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingMerge
@@ -1244,6 +1257,7 @@ func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thi
 // Thus: Your hint, dear reader, is highly appreciated!
 
 // End of ThingMerge
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingSame comparator
@@ -1278,6 +1292,7 @@ func sameThing(out chan<- bool, same func(a, b Thing) bool, inp1, inp2 <-chan Th
 }
 
 // End of ThingSame comparator
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingJoin feedback back-feeders for circular networks
@@ -1330,6 +1345,7 @@ func joinThingChan(done chan<- struct{}, out chan<- Thing, inp <-chan Thing) {
 }
 
 // End of ThingJoin feedback back-feeders for circular networks
+// ===========================================================================
 
 // ===========================================================================
 // Beg of ThingDaisyChain
@@ -1439,5 +1455,4 @@ func ThingDaisyChaiN(
 }
 
 // End of ThingDaisyChain
-
-// This file uses geanny to pull the type specific generic code
+// ===========================================================================

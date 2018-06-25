@@ -59,3 +59,4 @@ func joinThingChan(done chan<- struct{}, out chan<- Thing, inp <-chan Thing) {
 }
 
 // End of ThingJoin feedback back-feeders for circular networks
+// ===========================================================================

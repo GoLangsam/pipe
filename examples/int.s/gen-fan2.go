@@ -60,3 +60,4 @@ func intFan2FuncErr(ori <-chan int, gen func() (int, error)) (out <-chan int) {
 }
 
 // End of intFan2 easy fan-in's
+// ===========================================================================

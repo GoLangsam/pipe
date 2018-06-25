@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// This file uses geanny to pull the type specific generic code
+
 // Oh my god!		-in github.com/GoLangsam/pipe/s/pipe.go does not work :-(
 // have to keep using	-in ../../../s/pipe.go
 
@@ -12,5 +14,3 @@
 //go:generate genny	-in ../../../s/seen/seen.go	-out gen-seen.go	-pkg httpsyet gen "anyThing=site"
 
 package httpsyet
-
-// This file uses geanny to pull the type specific generic code

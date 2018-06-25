@@ -400,6 +400,7 @@ func fanIn2Any(out chan<- Any, inp1, inp2 <-chan Any) {
 }
 
 // End of AnyFanIn2 simple binary Fan-In
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyPipeBuffered - a buffered channel with capacity `cap` to receive
@@ -429,6 +430,7 @@ func AnyTubeBuffered(cap int) (tube func(inp <-chan Any) (out <-chan Any)) {
 }
 
 // End of AnyPipeBuffered - a buffered channel with capacity `cap` to receive
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyPipeEnter/Leave - Flapdoors observed by a Waiter
@@ -578,6 +580,7 @@ func AnyFiniWait(wg AnyWaiter) func(inp chan<- Any) (done <-chan struct{}) {
 }
 
 // End of AnyPipeEnter/Leave - Flapdoors observed by a Waiter
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyPipeDone
@@ -600,6 +603,7 @@ func pipeAnyDone(out chan<- Any, done chan<- struct{}, inp <-chan Any) {
 }
 
 // End of AnyPipeDone
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyPlug - graceful terminator
@@ -646,6 +650,7 @@ func plugAny(out chan<- Any, done chan<- struct{}, inp <-chan Any, stop <-chan s
 }
 
 // End of AnyPlug - graceful terminator
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyPlugAfter - graceful terminator
@@ -693,6 +698,7 @@ func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-
 }
 
 // End of AnyPlugAfter - graceful terminator
+// ===========================================================================
 
 // Note: pipeAnyAdjust imports "container/ring" for the expanding buffer.
 
@@ -806,6 +812,7 @@ func pipeAnyAdjust(out chan<- Any, inp <-chan Any, QUE int) {
 }
 
 // End of sendAnyProxy
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyFanOut
@@ -844,6 +851,7 @@ func fanAnyOut(inp <-chan Any, outs ...chan Any) {
 }
 
 // End of AnyFanOut
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyStrew - scatter them
@@ -898,6 +906,7 @@ func trySendAny(inp Any, outS ...chan Any) bool {
 }
 
 // End of AnyStrew - scatter them
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyPipeSeen/AnyForkSeen - an "I've seen this Any before" filter / forker
@@ -1018,6 +1027,7 @@ func AnyTubeSeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (o
 }
 
 // End of AnyPipeSeen/AnyForkSeen - an "I've seen this Any before" filter / forker
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyFanIn
@@ -1060,6 +1070,7 @@ func fanInAnyWaitAndClose(out chan<- Any, wg *sync.WaitGroup) {
 }
 
 // End of AnyFanIn
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyFanIn1 - fan-in using only one go routine
@@ -1113,6 +1124,7 @@ func fanin1Any(out chan<- Any, inpS ...<-chan Any) {
 }
 
 // End of AnyFanIn1 - fan-in using only one go routine
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyFan2 easy fan-in's
@@ -1166,6 +1178,7 @@ func AnyFan2FuncErr(ori <-chan Any, gen func() (Any, error)) (out <-chan Any) {
 }
 
 // End of AnyFan2 easy fan-in's
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyMerge
@@ -1248,6 +1261,7 @@ func mergeAny(less func(i, j Any) bool, i1, i2 <-chan Any) (out <-chan Any) {
 // Thus: Your hint, dear reader, is highly appreciated!
 
 // End of AnyMerge
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnySame comparator
@@ -1282,6 +1296,7 @@ func sameAny(out chan<- bool, same func(a, b Any) bool, inp1, inp2 <-chan Any) {
 }
 
 // End of AnySame comparator
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyJoin feedback back-feeders for circular networks
@@ -1334,6 +1349,7 @@ func joinAnyChan(done chan<- struct{}, out chan<- Any, inp <-chan Any) {
 }
 
 // End of AnyJoin feedback back-feeders for circular networks
+// ===========================================================================
 
 // ===========================================================================
 // Beg of AnyDaisyChain

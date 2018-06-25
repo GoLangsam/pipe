@@ -89,3 +89,4 @@ func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thi
 // Thus: Your hint, dear reader, is highly appreciated!
 
 // End of ThingMerge
+// ===========================================================================

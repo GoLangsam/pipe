@@ -63,3 +63,4 @@ func trySendint(inp int, outS ...chan int) bool {
 }
 
 // End of intStrew - scatter them
+// ===========================================================================

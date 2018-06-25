@@ -53,3 +53,4 @@ func plugThing(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, stop <-
 }
 
 // End of ThingPlug - graceful terminator
+// ===========================================================================

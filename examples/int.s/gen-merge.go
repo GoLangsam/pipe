@@ -89,3 +89,4 @@ func mergeint(less func(i, j int) bool, i1, i2 <-chan int) (out <-chan int) {
 // Thus: Your hint, dear reader, is highly appreciated!
 
 // End of intMerge
+// ===========================================================================

@@ -63,3 +63,4 @@ func trySendThing(inp Thing, outS ...chan Thing) bool {
 }
 
 // End of ThingStrew - scatter them
+// ===========================================================================

@@ -389,3 +389,4 @@ func fanIn2string(out chan<- string, inp1, inp2 <-chan string) {
 }
 
 // End of stringFanIn2 simple binary Fan-In
+// ===========================================================================

@@ -389,3 +389,4 @@ func fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 }
 
 // End of SiteFanIn2 simple binary Fan-In
+// ===========================================================================

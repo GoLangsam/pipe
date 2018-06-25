@@ -389,3 +389,4 @@ func fanIn2result(out chan<- result, inp1, inp2 <-chan result) {
 }
 
 // End of resultFanIn2 simple binary Fan-In
+// ===========================================================================

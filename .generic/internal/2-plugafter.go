@@ -56,3 +56,4 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 }
 
 // End of ThingPlugAfter - graceful terminator
+// ===========================================================================

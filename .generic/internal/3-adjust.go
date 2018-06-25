@@ -129,3 +129,4 @@ func pipeThingAdjust(out chan<- Thing, inp <-chan Thing, QUE int) {
 }
 
 // End of sendThingProxy
+// ===========================================================================

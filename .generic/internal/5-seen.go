@@ -129,3 +129,4 @@ func ThingTubeSeenAttr(attr func(a Thing) interface{}) (tube func(inp <-chan Thi
 }
 
 // End of ThingPipeSeen/ThingForkSeen - an "I've seen this Thing before" filter / forker
+// ===========================================================================

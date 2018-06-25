@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// This file uses geanny to pull the type specific generic code
+
 //go:generate genny -in ../../s/pipe.go			-out gen-pipe.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/.fan2/fan2.go		-out gen-fan2.go	-pkg pipe gen "anyThing=int"
 //go:generate genny -in ../../s/adjust/adjust.go	-out gen-adjust.go	-pkg pipe gen "anyThing=int"
@@ -23,5 +25,3 @@
 //go:generate genny -in ../../s/seen/seen.go		-out gen-seen.go	-pkg pipe gen "anyThing=int"
 
 package pipe
-
-// This file uses geanny to pull the type specific generic code

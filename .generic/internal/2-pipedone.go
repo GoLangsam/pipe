@@ -29,3 +29,4 @@ func pipeThingDone(out chan<- Thing, done chan<- struct{}, inp <-chan Thing) {
 }
 
 // End of ThingPipeDone
+// ===========================================================================

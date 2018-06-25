@@ -156,3 +156,4 @@ func intFiniWait(wg intWaiter) func(inp chan<- int) (done <-chan struct{}) {
 }
 
 // End of intPipeEnter/Leave - Flapdoors observed by a Waiter
+// ===========================================================================

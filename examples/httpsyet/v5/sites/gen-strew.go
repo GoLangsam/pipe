@@ -63,3 +63,4 @@ func (my *Traffic) trySendSite(inp Site, outS ...chan Site) bool {
 }
 
 // End of SiteStrew - scatter them
+// ===========================================================================

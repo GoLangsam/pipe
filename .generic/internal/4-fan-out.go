@@ -45,3 +45,4 @@ func fanThingOut(inp <-chan Thing, outs ...chan Thing) {
 }
 
 // End of ThingFanOut
+// ===========================================================================

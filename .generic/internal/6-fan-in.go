@@ -51,3 +51,4 @@ func fanInThingWaitAndClose(out chan<- Thing, wg *sync.WaitGroup) {
 }
 
 // End of ThingFanIn
+// ===========================================================================

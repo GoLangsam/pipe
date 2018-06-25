@@ -36,3 +36,4 @@ func ThingTubeBuffered(cap int) (tube func(inp <-chan Thing) (out <-chan Thing))
 }
 
 // End of ThingPipeBuffered - a buffered channel with capacity `cap` to receive
+// ===========================================================================

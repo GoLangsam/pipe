@@ -62,3 +62,4 @@ func fanin1int(out chan<- int, inpS ...<-chan int) {
 }
 
 // End of intFanIn1 - fan-in using only one go routine
+// ===========================================================================

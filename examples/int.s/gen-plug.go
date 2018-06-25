@@ -53,3 +53,4 @@ func plugint(out chan<- int, done chan<- struct{}, inp <-chan int, stop <-chan s
 }
 
 // End of intPlug - graceful terminator
+// ===========================================================================

@@ -156,3 +156,4 @@ func siteFiniWait(wg siteWaiter) func(inp chan<- site) (done <-chan struct{}) {
 }
 
 // End of sitePipeEnter/Leave - Flapdoors observed by a Waiter
+// ===========================================================================

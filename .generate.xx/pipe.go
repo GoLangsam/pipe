@@ -253,4 +253,3 @@ func pairanyThing(out1, out2 anymode, inp anymode) {
 
 // End of anyThingPair functions
 // ===========================================================================
-//

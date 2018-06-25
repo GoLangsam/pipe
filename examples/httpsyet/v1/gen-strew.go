@@ -63,3 +63,4 @@ func trySendsite(inp site, outS ...chan site) bool {
 }
 
 // End of siteStrew - scatter them
+// ===========================================================================

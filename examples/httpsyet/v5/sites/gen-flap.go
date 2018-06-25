@@ -156,3 +156,4 @@ func (my *Traffic) SiteFiniWait(wg SiteWaiter) func(inp chan<- Site) (done <-cha
 }
 
 // End of SitePipeEnter/Leave - Flapdoors observed by a Waiter
+// ===========================================================================

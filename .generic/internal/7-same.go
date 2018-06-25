@@ -41,3 +41,4 @@ func sameThing(out chan<- bool, same func(a, b Thing) bool, inp1, inp2 <-chan Th
 }
 
 // End of ThingSame comparator
+// ===========================================================================

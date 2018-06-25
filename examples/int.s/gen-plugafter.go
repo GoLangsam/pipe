@@ -56,3 +56,4 @@ func plugintAfter(out chan<- int, done chan<- struct{}, inp <-chan int, after <-
 }
 
 // End of intPlugAfter - graceful terminator
+// ===========================================================================
