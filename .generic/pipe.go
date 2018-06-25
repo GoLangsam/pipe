@@ -818,7 +818,7 @@ func ThingFanOut(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 
 	outS = make([]<-chan Thing, size)
 	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+		outS[i] = (<-chan Thing)(chaS[i]) // convert `chan` to `<-chan`
 	}
 
 	return outS
@@ -1022,6 +1022,10 @@ func ThingTubeSeenAttr(attr func(a Thing) interface{}) (tube func(inp <-chan Thi
 // on variadic inps
 // before close.
 //
+//  Note: For each input one go routine is spawned to forward arrivals.
+//
+// See ThingFanIn1 in `fan-in1` for another implementation.
+//
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
 func ThingFanIn(inps ...<-chan Thing) (out <-chan Thing) {
@@ -1030,24 +1034,81 @@ func ThingFanIn(inps ...<-chan Thing) (out <-chan Thing) {
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
-	go func(wg *sync.WaitGroup, out chan Thing) { // Spawn "close(out)" once all inps are done
-		wg.Wait()
-		close(out)
-	}(wg, cha)
+	go fanInThingWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
 	for i := range inps {
-		go func(out chan<- Thing, inp <-chan Thing) { // Spawn "output(c)"s
-			defer wg.Done()
-			for i := range inp {
-				out <- i
-			}
-		}(cha, inps[i])
+		go fanInThing(cha, inps[i], wg) // Spawn "output(c)"s
 	}
 
 	return cha
 }
 
+func fanInThing(out chan<- Thing, inp <-chan Thing, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for i := range inp {
+		out <- i
+	}
+}
+
+func fanInThingWaitAndClose(out chan<- Thing, wg *sync.WaitGroup) {
+	wg.Wait()
+	close(out)
+}
+
 // End of ThingFanIn
+
+// ===========================================================================
+// Beg of ThingFanIn1 - fan-in using only one go routine
+
+// ThingFanIn1 returns a channel to receive all inputs arriving
+// on variadic inps
+// before close.
+//
+//  Note: Only one go routine is used for all receives,
+//  which keeps trying open inputs in round-robin fashion
+//  until all inputs are closed.
+//
+// See ThingFanIn in `fan-in` for another implementation.
+func ThingFanIn1(inpS ...<-chan Thing) (out <-chan Thing) {
+	cha := make(chan Thing)
+	go fanin1Thing(cha, inpS...)
+	return cha
+}
+
+func fanin1Thing(out chan<- Thing, inpS ...<-chan Thing) {
+	defer close(out)
+
+	open := len(inpS)                 // assume: all are open
+	closed := make([]bool, len(inpS)) // assume: each is not closed
+
+	var item Thing // item received
+	var ok bool    // receive channel is open?
+	var sent bool  // some v has been sent?
+
+	for open > 0 {
+		sent = false
+		for i := range inpS {
+			if !closed[i] {
+				select { // try to receive
+				case item, ok = <-inpS[i]:
+					if ok {
+						out <- item
+						sent = true
+					} else {
+						closed[i] = true
+						open--
+					}
+				default: // keep going
+				} // try
+			} // not closed
+		} // inpS
+		if !sent && open > 0 {
+			time.Sleep(time.Millisecond * 10) // wait a little before retry
+		}
+	} // open
+}
+
+// End of ThingFanIn1 - fan-in using only one go routine
 
 // ===========================================================================
 // Beg of ThingFan2 easy fan-in's
@@ -1293,10 +1354,12 @@ var _ ThingProc = func(out chan<- Thing, inp <-chan Thing) {
 }
 
 // daisyThing returns a channel to receive all inp after having passed thru process `proc`.
-func daisyThing(inp <-chan Thing,
-	proc func(into chan<- Thing, from <-chan Thing), // a ThingProc process
+func daisyThing(
+	inp <-chan Thing, // a daisy to be chained
+	proc func(into chan<- Thing, from <-chan Thing), // a process function
 ) (
-	out chan Thing) { // a daisy to be chained
+	out chan Thing, // to receive all results
+) { //  Body:
 
 	cha := make(chan Thing)
 	go proc(cha, inp)
@@ -1311,10 +1374,12 @@ func daisyThing(inp <-chan Thing,
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func ThingDaisyChain(inp chan Thing,
-	procs ...func(out chan<- Thing, inp <-chan Thing), // ThingProc processes
+func ThingDaisyChain(
+	inp chan Thing, // a daisy to be chained
+	procs ...func(out chan<- Thing, inp <-chan Thing), // a process function
 ) (
-	out chan Thing) { // to receive all results
+	out chan Thing, // to receive all results
+) { //  Body:
 
 	cha := inp
 
@@ -1346,10 +1411,13 @@ func ThingDaisyChain(inp chan Thing,
 // thus making null values useful.
 //
 // Note: ThingDaisyChaiN(inp, 1, procs) <==> ThingDaisyChain(inp, procs)
-func ThingDaisyChaiN(inp chan Thing, somany int,
-	procs ...func(out chan<- Thing, inp <-chan Thing), // ProcThing processes
+func ThingDaisyChaiN(
+	inp chan Thing, // a daisy to be chained
+	somany int, // how many times? so many times
+	procs ...func(out chan<- Thing, inp <-chan Thing), // a process function
 ) (
-	out chan Thing) { // to receive all results
+	out chan Thing, // to receive all results
+) { //  Body:
 
 	cha := inp
 

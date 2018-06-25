@@ -822,7 +822,7 @@ func AnyFanOut(inp <-chan Any, size int) (outS [](<-chan Any)) {
 
 	outS = make([]<-chan Any, size)
 	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+		outS[i] = (<-chan Any)(chaS[i]) // convert `chan` to `<-chan`
 	}
 
 	return outS
@@ -1026,6 +1026,10 @@ func AnyTubeSeenAttr(attr func(a Any) interface{}) (tube func(inp <-chan Any) (o
 // on variadic inps
 // before close.
 //
+//  Note: For each input one go routine is spawned to forward arrivals.
+//
+// See AnyFanIn1 in `fan-in1` for another implementation.
+//
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
 func AnyFanIn(inps ...<-chan Any) (out <-chan Any) {
@@ -1034,24 +1038,81 @@ func AnyFanIn(inps ...<-chan Any) (out <-chan Any) {
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
-	go func(wg *sync.WaitGroup, out chan Any) { // Spawn "close(out)" once all inps are done
-		wg.Wait()
-		close(out)
-	}(wg, cha)
+	go fanInAnyWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
 	for i := range inps {
-		go func(out chan<- Any, inp <-chan Any) { // Spawn "output(c)"s
-			defer wg.Done()
-			for i := range inp {
-				out <- i
-			}
-		}(cha, inps[i])
+		go fanInAny(cha, inps[i], wg) // Spawn "output(c)"s
 	}
 
 	return cha
 }
 
+func fanInAny(out chan<- Any, inp <-chan Any, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for i := range inp {
+		out <- i
+	}
+}
+
+func fanInAnyWaitAndClose(out chan<- Any, wg *sync.WaitGroup) {
+	wg.Wait()
+	close(out)
+}
+
 // End of AnyFanIn
+
+// ===========================================================================
+// Beg of AnyFanIn1 - fan-in using only one go routine
+
+// AnyFanIn1 returns a channel to receive all inputs arriving
+// on variadic inps
+// before close.
+//
+//  Note: Only one go routine is used for all receives,
+//  which keeps trying open inputs in round-robin fashion
+//  until all inputs are closed.
+//
+// See AnyFanIn in `fan-in` for another implementation.
+func AnyFanIn1(inpS ...<-chan Any) (out <-chan Any) {
+	cha := make(chan Any)
+	go fanin1Any(cha, inpS...)
+	return cha
+}
+
+func fanin1Any(out chan<- Any, inpS ...<-chan Any) {
+	defer close(out)
+
+	open := len(inpS)                 // assume: all are open
+	closed := make([]bool, len(inpS)) // assume: each is not closed
+
+	var item Any  // item received
+	var ok bool   // receive channel is open?
+	var sent bool // some v has been sent?
+
+	for open > 0 {
+		sent = false
+		for i := range inpS {
+			if !closed[i] {
+				select { // try to receive
+				case item, ok = <-inpS[i]:
+					if ok {
+						out <- item
+						sent = true
+					} else {
+						closed[i] = true
+						open--
+					}
+				default: // keep going
+				} // try
+			} // not closed
+		} // inpS
+		if !sent && open > 0 {
+			time.Sleep(time.Millisecond * 10) // wait a little before retry
+		}
+	} // open
+}
+
+// End of AnyFanIn1 - fan-in using only one go routine
 
 // ===========================================================================
 // Beg of AnyFan2 easy fan-in's
@@ -1297,10 +1358,12 @@ var _ AnyProc = func(out chan<- Any, inp <-chan Any) {
 }
 
 // daisyAny returns a channel to receive all inp after having passed thru process `proc`.
-func daisyAny(inp <-chan Any,
-	proc func(into chan<- Any, from <-chan Any), // a AnyProc process
+func daisyAny(
+	inp <-chan Any, // a daisy to be chained
+	proc func(into chan<- Any, from <-chan Any), // a process function
 ) (
-	out chan Any) { // a daisy to be chained
+	out chan Any, // to receive all results
+) { //  Body:
 
 	cha := make(chan Any)
 	go proc(cha, inp)
@@ -1315,10 +1378,12 @@ func daisyAny(inp <-chan Any,
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func AnyDaisyChain(inp chan Any,
-	procs ...func(out chan<- Any, inp <-chan Any), // AnyProc processes
+func AnyDaisyChain(
+	inp chan Any, // a daisy to be chained
+	procs ...func(out chan<- Any, inp <-chan Any), // a process function
 ) (
-	out chan Any) { // to receive all results
+	out chan Any, // to receive all results
+) { //  Body:
 
 	cha := inp
 
@@ -1350,10 +1415,13 @@ func AnyDaisyChain(inp chan Any,
 // thus making null values useful.
 //
 // Note: AnyDaisyChaiN(inp, 1, procs) <==> AnyDaisyChain(inp, procs)
-func AnyDaisyChaiN(inp chan Any, somany int,
-	procs ...func(out chan<- Any, inp <-chan Any), // ProcAny processes
+func AnyDaisyChaiN(
+	inp chan Any, // a daisy to be chained
+	somany int, // how many times? so many times
+	procs ...func(out chan<- Any, inp <-chan Any), // a process function
 ) (
-	out chan Any) { // to receive all results
+	out chan Any, // to receive all results
+) { //  Body:
 
 	cha := inp
 
