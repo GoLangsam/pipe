@@ -24,6 +24,9 @@ type anyOwner generic.Number
 // on variadic inps
 // before close.
 //
+//  Note: here one go routine per input is used to forward arrivals.
+//  See anyThingFanIn1 in `fan-in1` for another implementation.
+//
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
 func (my anyOwner) anyThingFanIn(inps ...<-chan anyThing) (out <-chan anyThing) {

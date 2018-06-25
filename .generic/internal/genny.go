@@ -8,6 +8,7 @@
 //go:generate genny	-in ../../s/buffered/buffered.go	-out 2-buffered.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/daisy/daisy.go		-out 9-daisy.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/fan-in/fan-in.go		-out 6-fan-in.go	-pkg pipe gen "anyThing=Thing"
+//go:generate genny	-in ../../s/fan-in1/fan-in1.go		-out 6-fan-in1.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/fan-out/fan-out.go		-out 4-fan-out.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/flap/flap.go		-out 2-flap.go		-pkg pipe gen "anyThing=Thing"
 //  :generate genny	-in ../../s/is-nil/is-nil.go		-out x-is-nil.go	-pkg pipe gen "anyThing=Thing"
