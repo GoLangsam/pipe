@@ -71,6 +71,7 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 
 - [fan2](s/fan2/)	- feed some inputs into your channel
 - [fan-in](s/fan-in/)	- gather all inputs into one output
+- [fan-in1](s/fan-in1/)	- same - just using only one goroutine
 
 - [merge](s/merge/)	- gather sorted streams into one
 - [same](s/same/)	- compare two streams
