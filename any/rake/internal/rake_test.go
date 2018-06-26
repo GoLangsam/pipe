@@ -16,7 +16,7 @@ func Example_Rake() {
 	var r *Rake
 	crawl := func(item Any) {
 		log.Println("have:", item)
-		for i := 0; i < rand.Intn(11); i++ {
+		for i := 0; i < rand.Intn(9) + 2 ; i++ {
 			r.Feed(rand.Intn(2000)) // up to 10 new numbers < 2.000
 		}
 		time.Sleep(time.Millisecond * 10)
