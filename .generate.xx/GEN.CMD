@@ -4,7 +4,7 @@
 @Echo.
 go generate .
 @Echo.
-@Echo compare .generate.xx/pipe.* - 3 Differences
+@Echo compare .generate.xx/pipe.* - 2 Differences
 @Echo.
 
 @pause
