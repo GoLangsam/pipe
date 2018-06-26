@@ -49,7 +49,7 @@ Yes, channels connect the parts - but they are not the main focus anymore,
 And no `wait` channel (and it's management) is needed to keep track of the traffic.
 A properly used `*sync.WaitGroup` is all we need.
 
-And the code for the arrangement of parts is shown above - the body of a `func (c *crawling)` :
+And the code for the arrangement of parts as shown above - the body of a `func (c *crawling)` :
 - what arrives in `c.sites` is separated (by the `site.Attr` method)
 - new (previously unseen) sites get strewed (scattered) onto a slice of channels - size determines the parallelism
   - for each ranged channel all what needs to be done is to apply the crawl function (a method of crawling)
@@ -149,6 +149,9 @@ and `m` generate methods on `traffic` (instead of package functions).
 
 Further, using `anyThing=Site` (watch the change to the public type!)
 generated stuff becomes public (where intended) and can be seen in godoc.
+
+Last, but not least, the idea to have `Results` in a separate package has been abandoned,
+as this adds more complications than benefit.
 
 ---
 
