@@ -68,7 +68,7 @@ func New(
 	}
 
 	// build the concurrent pipe network
-	items, seen := my.itemForkSeenAttr(my.itemPipeEnter(my.items, my.wg), attr)
+	items, seen := my.itemForkSeenAttr(my.items, attr)
 	_ = my.itemDoneLeave(seen, my.wg) // `seen` leave without further processing
 
 	for _, items := range my.itemStrew(my.itemPipeAdjust(items), somany) {
@@ -92,6 +92,7 @@ func (my *Rake) Feed(items ...item) *Rake {
 		return my
 	}
 
+	my.wg.Add(len(items))
 	for _, i := range items {
 		my.items <- i
 	}
