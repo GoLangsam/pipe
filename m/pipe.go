@@ -18,8 +18,6 @@ type anyThing generic.Type
 type anyOwner generic.Number
 
 // ===========================================================================
-
-// ===========================================================================
 // Beg of anyThingMake creators
 
 // anyThingMakeChan returns a new open channel
