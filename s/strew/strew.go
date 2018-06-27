@@ -29,7 +29,7 @@ func anyThingStrew(inp <-chan anyThing, size int) (outS [](<-chan anyThing)) {
 	outS = make([]<-chan anyThing, size)
 	i := 0
 	for c := range chaS {
-		outS[i] = (<-chan anyThing))(c) // convert `chan` to `<-chan`
+		outS[i] = (<-chan anyThing)(c) // convert `chan` to `<-chan`
 		i++
 	}
 
