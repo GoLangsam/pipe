@@ -62,10 +62,10 @@ Please feel free and encouraged to suggest, improve, comment or ask - You'll be 
 - [flap](s/flap/)	- keep track how many enter and leave
 - [buffered](s/buffered/)	- insert a buffered channel
 
-- [adjust](s/adjust/)	- insert an adjustable buffer 
+- [adjust](s/adjust/)	- insert an adjusting buffer 
 
-- [strew](s/strew/)	- throw it at some available receiver
-- [fan-out](s/fan-out/)	- throw it at all receivers
+- [strew](s/strew/)	- send each to one receiver available
+- [fan-out](s/fan-out/)	- send each to all receivers (lock-step)
 
 - [seen](s/seen/)	- an "I've seen this before" filter / forker
 
