@@ -13,6 +13,5 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingRoC is a read-only anyThing channel
+type anyThingRoC <-chan anyThing // read-only anyThing channel

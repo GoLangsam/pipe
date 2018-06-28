@@ -26,7 +26,7 @@ package pipe
 //
 //  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
-func (my anyOwner) anyThingMakeChan() (out chan anyThing) {
+func anyThingMakeChan() (out chan anyThing) {
 	return make(chan anyThing)
 }
 

@@ -12,16 +12,16 @@ package pipe
 // before close.
 // Note: it 'could' be PipeanyThingMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (my anyOwner) anyThingPipeFunc(inp <-chan anyThing, act func(a anyThing) anyThing) (out <-chan anyThing) {
+func (inp anyThingRoC) anyThingPipeFunc(act func(a anyThing) anyThing) (out anyThingRoC) {
 	cha := make(chan anyThing)
 	if act == nil { // Make `nil` value useful
 		act = func(a anyThing) anyThing { return a }
 	}
-	go my.pipeanyThingFunc(cha, inp, act)
+	go inp.pipeanyThingFunc(cha, act)
 	return cha
 }
 
-func (my anyOwner) pipeanyThingFunc(out chan<- anyThing, inp <-chan anyThing, act func(a anyThing) anyThing) {
+func (inp anyThingRoC) pipeanyThingFunc(out chan<- anyThing, act func(a anyThing) anyThing) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action

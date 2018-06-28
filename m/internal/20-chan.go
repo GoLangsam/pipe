@@ -10,13 +10,13 @@ package pipe
 // anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func (my anyOwner) anyThingChan(inp ...anyThing) (out <-chan anyThing) {
+func anyThingChan(inp ...anyThing) (out anyThingRoC) {
 	cha := make(chan anyThing)
-	go my.chananyThing(cha, inp...)
+	go chananyThing(cha, inp...)
 	return cha
 }
 
-func (my anyOwner) chananyThing(out chan<- anyThing, inp ...anyThing) {
+func chananyThing(out chan<- anyThing, inp ...anyThing) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -26,13 +26,13 @@ func (my anyOwner) chananyThing(out chan<- anyThing, inp ...anyThing) {
 // anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func (my anyOwner) anyThingChanSlice(inp ...[]anyThing) (out <-chan anyThing) {
+func anyThingChanSlice(inp ...[]anyThing) (out anyThingRoC) {
 	cha := make(chan anyThing)
-	go my.chananyThingSlice(cha, inp...)
+	go chananyThingSlice(cha, inp...)
 	return cha
 }
 
-func (my anyOwner) chananyThingSlice(out chan<- anyThing, inp ...[]anyThing) {
+func chananyThingSlice(out chan<- anyThing, inp ...[]anyThing) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -45,13 +45,13 @@ func (my anyOwner) chananyThingSlice(out chan<- anyThing, inp ...[]anyThing) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (my anyOwner) anyThingChanFuncNok(gen func() (anyThing, bool)) (out <-chan anyThing) {
+func anyThingChanFuncNok(gen func() (anyThing, bool)) (out anyThingRoC) {
 	cha := make(chan anyThing)
-	go my.chananyThingFuncNok(cha, gen)
+	go chananyThingFuncNok(cha, gen)
 	return cha
 }
 
-func (my anyOwner) chananyThingFuncNok(out chan<- anyThing, gen func() (anyThing, bool)) {
+func chananyThingFuncNok(out chan<- anyThing, gen func() (anyThing, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -66,13 +66,13 @@ func (my anyOwner) chananyThingFuncNok(out chan<- anyThing, gen func() (anyThing
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (my anyOwner) anyThingChanFuncErr(gen func() (anyThing, error)) (out <-chan anyThing) {
+func anyThingChanFuncErr(gen func() (anyThing, error)) (out anyThingRoC) {
 	cha := make(chan anyThing)
-	go my.chananyThingFuncErr(cha, gen)
+	go chananyThingFuncErr(cha, gen)
 	return cha
 }
 
-func (my anyOwner) chananyThingFuncErr(out chan<- anyThing, gen func() (anyThing, error)) {
+func chananyThingFuncErr(out chan<- anyThing, gen func() (anyThing, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate

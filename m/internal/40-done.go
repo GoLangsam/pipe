@@ -9,13 +9,13 @@ package pipe
 
 // anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func (my anyOwner) anyThingDone(inp <-chan anyThing) (done <-chan struct{}) {
+func (inp anyThingRoC) anyThingDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneanyThing(sig, inp)
+	go inp.doneanyThing(sig)
 	return sig
 }
 
-func (my anyOwner) doneanyThing(done chan<- struct{}, inp <-chan anyThing) {
+func (inp anyThingRoC) doneanyThing(done chan<- struct{}) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -28,13 +28,13 @@ func (my anyOwner) doneanyThing(done chan<- struct{}, inp <-chan anyThing) {
 // before close.
 //
 //  Note: Unlike anyThingDone, DoneanyThingSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (my anyOwner) anyThingDoneSlice(inp <-chan anyThing) (done <-chan []anyThing) {
+func (inp anyThingRoC) anyThingDoneSlice() (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
-	go my.doneanyThingSlice(sig, inp)
+	go inp.doneanyThingSlice(sig)
 	return sig
 }
 
-func (my anyOwner) doneanyThingSlice(done chan<- []anyThing, inp <-chan anyThing) {
+func (inp anyThingRoC) doneanyThingSlice(done chan<- []anyThing) {
 	defer close(done)
 	slice := []anyThing{}
 	for i := range inp {
@@ -46,16 +46,16 @@ func (my anyOwner) doneanyThingSlice(done chan<- []anyThing, inp <-chan anyThing
 // anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func (my anyOwner) anyThingDoneFunc(inp <-chan anyThing, act func(a anyThing)) (done <-chan struct{}) {
+func (inp anyThingRoC) anyThingDoneFunc(act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a anyThing) { return }
 	}
-	go my.doneanyThingFunc(sig, inp, act)
+	go inp.doneanyThingFunc(sig, act)
 	return sig
 }
 
-func (my anyOwner) doneanyThingFunc(done chan<- struct{}, inp <-chan anyThing, act func(a anyThing)) {
+func (inp anyThingRoC) doneanyThingFunc(done chan<- struct{}, act func(a anyThing)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action

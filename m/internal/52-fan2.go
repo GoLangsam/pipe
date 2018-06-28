@@ -7,19 +7,21 @@ package pipe
 // ===========================================================================
 // Beg of anyThingFanIn2 simple binary Fan-In
 
-// anyThingFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func (my anyOwner) anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
+// anyThingFanIn2 returns a channel to receive
+// all from both `inp` and `inp2`
+// before close.
+func (inp anyThingRoC) anyThingFanIn2(inp2 anyThingRoC) (out anyThingRoC) {
 	cha := make(chan anyThing)
-	go my.fanIn2anyThing(cha, inp1, inp2)
+	go inp.fanIn2anyThing(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (my anyOwner) fanin2anyThing as seen in Go Concurrency Patterns
-func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+// (inp anyThingRoC) fanin2anyThing as seen in Go Concurrency Patterns
+func fanin2anyThing(out chan<- anyThing, inp, inp2 anyThingRoC) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -27,7 +29,7 @@ func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 	}
 } */
 
-func (my anyOwner) fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+func (inp anyThingRoC) fanIn2anyThing(out chan<- anyThing, inp2 anyThingRoC) {
 	defer close(out)
 
 	var (
@@ -38,11 +40,11 @@ func (my anyOwner) fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThin
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2   // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -54,8 +56,8 @@ func (my anyOwner) fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThin
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

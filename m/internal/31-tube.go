@@ -8,10 +8,10 @@ package pipe
 // Beg of anyThingTube closures around anyThingPipe
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func (my anyOwner) anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingRoC) (out anyThingRoC)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return my.anyThingPipeFunc(inp, act)
+	return func(inp anyThingRoC) (out anyThingRoC) {
+		return inp.anyThingPipeFunc(act)
 	}
 }
 
