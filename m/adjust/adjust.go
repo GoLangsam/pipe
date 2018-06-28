@@ -99,7 +99,7 @@ func (inp anyThingFrom) pipeanyThingAdjust(out anyThingInto, QUE int) {
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
 	last := first
-	var c chan<- anyThing
+	var c anyThingInto
 	var e anyThing
 	ok := true
 	for ok {

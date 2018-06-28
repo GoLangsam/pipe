@@ -22,7 +22,7 @@ type anyThing generic.Type
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func (inp anyThingFrom) anyThingPlugAfter(after <-chan time.Time) (out <-chan anyThing, done <-chan struct{}) {
+func (inp anyThingFrom) anyThingPlugAfter(after <-chan time.Time) (out anyThingFrom, done <-chan struct{}) {
 	cha := make(chan anyThing)
 	doit := make(chan struct{})
 	go inp.pluganyThingAfter(cha, doit, after)

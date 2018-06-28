@@ -52,7 +52,7 @@ func (inp anyThingFrom) anyThingPipeSeenAttr(attr func(a anyThing) interface{}) 
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp anyThingFrom) anyThingForkSeen() (new, old <-chan anyThing) {
+func (inp anyThingFrom) anyThingForkSeen() (new, old anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
 	go inp.forkanyThingSeenAttr(cha1, cha2, nil)

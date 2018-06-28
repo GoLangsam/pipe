@@ -42,7 +42,7 @@ type anyThingWaiter interface {
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func (inp anyThingFrom) anyThingPipeEnter(wg anyThingWaiter) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeEnter(wg anyThingWaiter) (out anyThingFrom) {
 	cha := make(chan anyThing)
 	go inp.pipeanyThingEnter(cha, wg)
 	return cha
@@ -54,7 +54,7 @@ func (inp anyThingFrom) anyThingPipeEnter(wg anyThingWaiter) (out <-chan anyThin
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func (inp anyThingFrom) anyThingPipeLeave(wg anyThingWaiter) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeLeave(wg anyThingWaiter) (out anyThingFrom) {
 	cha := make(chan anyThing)
 	go inp.pipeanyThingLeave(cha, wg)
 	return cha

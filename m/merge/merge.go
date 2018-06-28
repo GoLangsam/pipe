@@ -42,7 +42,7 @@ func (inp anyThingFrom) anyThingMerge(less func(i, j anyThing) bool, inps ...any
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
 func (inp anyThingFrom) mergeanyThing(less func(i, j anyThing) bool, inp2 anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go func(out chan<- anyThing, inp, inp2 anyThingFrom) {
+	go func(out anyThingInto, inp, inp2 anyThingFrom) {
 		defer close(out)
 		var (
 			clos1, clos2 bool     // we found the chan closed
