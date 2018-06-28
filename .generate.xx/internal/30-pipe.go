@@ -14,7 +14,7 @@ package pipe
 // but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp anymode, act func(a anyThing) anyThing) (out anymode) {
 	cha := anymodeMakeChan()
-	if act == nil {
+	if act == nil { // Make `nil` value useful
 		act = func(a anyThing) anyThing { return a }
 	}
 	go pipeanyThingFunc(cha, inp, act)
