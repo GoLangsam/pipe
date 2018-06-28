@@ -26,8 +26,9 @@ type anyThingInto chan<- anyThing
 // on variadic inps
 // before close.
 //
-//  Note: here one go routine per input is used to forward arrivals.
-//  See anyThingFanIn1 in `fan-in1` for another implementation.
+//  Note: For each input one go routine is spawned to forward arrivals.
+//
+// See anyThingFanIn1 in `fan-in1` for another implementation.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
