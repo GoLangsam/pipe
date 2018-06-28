@@ -585,6 +585,57 @@ func ThingFiniWait(wg ThingWaiter) func(inp chan<- Thing) (done <-chan struct{})
 // ===========================================================================
 
 // ===========================================================================
+// Beg of ThingDoneFreq - receive a frequency histogram
+
+// ThingDoneFreq returns a channel to receive
+// a frequency histogram (as a `map[Thing]int64`)
+// upon close.
+func ThingDoneFreq(inp <-chan Thing) (freq <-chan map[Thing]int64) {
+	cha := make(chan map[Thing]int64)
+	go doneThingFreq(cha, inp)
+	return cha
+}
+
+// ThingDoneFreqAttr returns a channel to receive
+// a frequency histogram (as a `map[interface{}]int64`)
+// upon close.
+//
+// `attr` provides the key to the frequency map.
+// If `nil` is passed as `attr` then Thing is used as key.
+func ThingDoneFreqAttr(inp <-chan Thing, attr func(a Thing) interface{}) (freq <-chan map[interface{}]int64) {
+	cha := make(chan map[interface{}]int64)
+	go doneThingFreqAttr(cha, inp, attr)
+	return cha
+}
+
+func doneThingFreq(out chan<- map[Thing]int64, inp <-chan Thing) {
+	defer close(out)
+	freq := make(map[Thing]int64)
+
+	for i := range inp {
+		freq[i]++
+	}
+	out <- freq
+}
+
+func doneThingFreqAttr(out chan<- map[interface{}]int64, inp <-chan Thing, attr func(a Thing) interface{}) {
+	defer close(out)
+	freq := make(map[interface{}]int64)
+
+	if attr == nil { // Make `nil` value useful
+		attr = func(a Thing) interface{} { return a }
+	}
+
+	for i := range inp {
+		freq[attr(i)]++
+	}
+	out <- freq
+}
+
+// End of ThingDoneFreq - receive a frequency histogram
+// ===========================================================================
+
+// ===========================================================================
 // Beg of ThingPipeDone
 
 // ThingPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.

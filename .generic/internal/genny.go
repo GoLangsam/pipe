@@ -13,6 +13,7 @@
 //go:generate genny	-in ../../s/fan-in1/fan-in1.go		-out 6-fan-in1.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/fan-out/fan-out.go		-out 4-fan-out.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/flap/flap.go		-out 2-flap.go		-pkg pipe gen "anyThing=Thing"
+//go:generate genny	-in ../../s/freq/freq.go		-out 2-freq.go		-pkg pipe gen "anyThing=Thing"
 //  :generate genny	-in ../../s/is-nil/is-nil.go		-out x-is-nil.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/join/join.go		-out 8-join.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/merge/merge.go		-out 7-merge.go		-pkg pipe gen "anyThing=Thing"

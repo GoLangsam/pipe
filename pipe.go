@@ -589,6 +589,57 @@ func AnyFiniWait(wg AnyWaiter) func(inp chan<- Any) (done <-chan struct{}) {
 // ===========================================================================
 
 // ===========================================================================
+// Beg of AnyDoneFreq - receive a frequency histogram
+
+// AnyDoneFreq returns a channel to receive
+// a frequency histogram (as a `map[Any]int64`)
+// upon close.
+func AnyDoneFreq(inp <-chan Any) (freq <-chan map[Any]int64) {
+	cha := make(chan map[Any]int64)
+	go doneAnyFreq(cha, inp)
+	return cha
+}
+
+// AnyDoneFreqAttr returns a channel to receive
+// a frequency histogram (as a `map[interface{}]int64`)
+// upon close.
+//
+// `attr` provides the key to the frequency map.
+// If `nil` is passed as `attr` then Any is used as key.
+func AnyDoneFreqAttr(inp <-chan Any, attr func(a Any) interface{}) (freq <-chan map[interface{}]int64) {
+	cha := make(chan map[interface{}]int64)
+	go doneAnyFreqAttr(cha, inp, attr)
+	return cha
+}
+
+func doneAnyFreq(out chan<- map[Any]int64, inp <-chan Any) {
+	defer close(out)
+	freq := make(map[Any]int64)
+
+	for i := range inp {
+		freq[i]++
+	}
+	out <- freq
+}
+
+func doneAnyFreqAttr(out chan<- map[interface{}]int64, inp <-chan Any, attr func(a Any) interface{}) {
+	defer close(out)
+	freq := make(map[interface{}]int64)
+
+	if attr == nil { // Make `nil` value useful
+		attr = func(a Any) interface{} { return a }
+	}
+
+	for i := range inp {
+		freq[attr(i)]++
+	}
+	out <- freq
+}
+
+// End of AnyDoneFreq - receive a frequency histogram
+// ===========================================================================
+
+// ===========================================================================
 // Beg of AnyPipeDone
 
 // AnyPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
