@@ -16,16 +16,18 @@ import "time"
 // intStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
 func intStrew(inp <-chan int, size int) (outS [](<-chan int)) {
-	chaS := make([]chan int, size)
+	chaS := make(map[chan int]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan int)
+		chaS[make(chan int)] = struct{}{}
 	}
 
-	go strewint(inp, chaS...)
+	go strewint(inp, chaS)
 
 	outS = make([]<-chan int, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	i := 0
+	for c := range chaS {
+		outS[i] = (<-chan int)(c) // convert `chan` to `<-chan`
+		i++
 	}
 
 	return outS
@@ -34,25 +36,25 @@ func intStrew(inp <-chan int, size int) (outS [](<-chan int)) {
 // c strewint(inp <-chan int, outS ...chan<- int) {
 // Note: go does not convert the passed slice `[]chan int` to `[]chan<- int` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewint(inp <-chan int, outS ...chan int) {
+func strewint(inp <-chan int, outS map[chan int]struct{}) {
 
 	for i := range inp {
-		for !trySendint(i, outS...) {
+		for !trySendint(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func trySendint(inp int, outS ...chan int) bool {
+func trySendint(inp int, outS map[chan int]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying

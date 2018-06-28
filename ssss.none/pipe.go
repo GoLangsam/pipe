@@ -114,8 +114,8 @@ func anyThingChanFuncErr(gen func() (anyThing, error)) chan anyThing {
 // anyThingPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-//  Note: it 'could' be anyThingPipeMap for functional people,
-//  but 'map' has a very different meaning in go lang.
+// Note: it 'could' be anyThingPipeMap for functional people,
+// but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp chan anyThing, act func(a anyThing) anyThing) chan anyThing {
 	out := make(chan anyThing)
 	go func() {
@@ -147,7 +147,9 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp chan anyThin
 // Beg of anyThingDone terminators
 
 // anyThingDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func anyThingDone(inp chan anyThing) chan struct{} {
 	done := make(chan struct{})
 	go func() {
@@ -161,7 +163,7 @@ func anyThingDone(inp chan anyThing) chan struct{} {
 
 // anyThingDoneSlice returns a channel to receive
 // a slice with every anyThing received on `inp`
-// before close.
+// upon close.
 //
 //  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func anyThingDoneSlice(inp chan anyThing) chan []anyThing {
@@ -176,9 +178,11 @@ func anyThingDoneSlice(inp chan anyThing) chan []anyThing {
 	return done
 }
 
-// anyThingDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// anyThingDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func anyThingDoneFunc(inp chan anyThing, act func(a anyThing)) chan struct{} {
 	done := make(chan struct{})
 	go func() {

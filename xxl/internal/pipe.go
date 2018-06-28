@@ -118,7 +118,7 @@ func pipeanyThingFunc(out *anyDemand, inp *anyDemand, act func(a anyThing) anyTh
 // ===========================================================================
 
 // ===========================================================================
-// Beg of anyThingTube closures
+// Beg of anyThingTube closures around anyThingPipe
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
 func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp *anyDemand) (out *anyDemand)) {
@@ -128,14 +128,16 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp *anyDemand) 
 	}
 }
 
-// End of anyThingTube closures
+// End of anyThingTube closures around anyThingPipe
 // ===========================================================================
 
 // ===========================================================================
 // Beg of anyThingDone terminators
 
 // anyThingDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func anyThingDone(inp *anyDemand) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doitanyThing(sig, inp)
@@ -152,7 +154,7 @@ func doitanyThing(done chan<- struct{}, inp *anyDemand) {
 
 // anyThingDoneSlice returns a channel to receive
 // a slice with every anyThing received on `inp`
-// before close.
+// upon close.
 //
 //  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func anyThingDoneSlice(inp *anyDemand) (done <-chan []anyThing) {
@@ -170,9 +172,11 @@ func doitanyThingSlice(done chan<- []anyThing, inp *anyDemand) {
 	done <- slice
 }
 
-// anyThingDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// anyThingDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func anyThingDoneFunc(inp *anyDemand, act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {

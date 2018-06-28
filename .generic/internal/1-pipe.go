@@ -127,7 +127,7 @@ func chanThingFuncErr(out chan<- Thing, gen func() (Thing, error)) {
 // ThingPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeThingMap for functional people,
+// Note: it 'could' be ThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func ThingPipeFunc(inp <-chan Thing, act func(a Thing) Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
@@ -166,7 +166,9 @@ func ThingTubeFunc(act func(a Thing) Thing) (tube func(inp <-chan Thing) (out <-
 // Beg of ThingDone terminators
 
 // ThingDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func ThingDone(inp <-chan Thing) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneThing(sig, inp)
@@ -183,9 +185,9 @@ func doneThing(done chan<- struct{}, inp <-chan Thing) {
 
 // ThingDoneSlice returns a channel to receive
 // a slice with every Thing received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike ThingDone, DoneThingSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike ThingDone, ThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func ThingDoneSlice(inp <-chan Thing) (done <-chan []Thing) {
 	sig := make(chan []Thing)
 	go doneThingSlice(sig, inp)
@@ -201,9 +203,11 @@ func doneThingSlice(done chan<- []Thing, inp <-chan Thing) {
 	done <- slice
 }
 
-// ThingDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// ThingDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func ThingDoneFunc(inp <-chan Thing, act func(a Thing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -335,7 +339,9 @@ func forkThing(out1, out2 chan<- Thing, inp <-chan Thing) {
 // ===========================================================================
 // Beg of ThingFanIn2 simple binary Fan-In
 
-// ThingFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// ThingFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func ThingFanIn2(inp1, inp2 <-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
 	go fanIn2Thing(cha, inp1, inp2)

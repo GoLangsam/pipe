@@ -130,7 +130,7 @@ func chananyThingFuncErr(out chan<- anyThing, gen func() (anyThing, error)) {
 // anyThingPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeanyThingMap for functional people,
+// Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp <-chan anyThing, act func(a anyThing) anyThing) (out <-chan anyThing) {
 	cha := make(chan anyThing)
@@ -169,7 +169,9 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp <-chan anyTh
 // Beg of anyThingDone terminators
 
 // anyThingDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func anyThingDone(inp <-chan anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneanyThing(sig, inp)
@@ -186,9 +188,9 @@ func doneanyThing(done chan<- struct{}, inp <-chan anyThing) {
 
 // anyThingDoneSlice returns a channel to receive
 // a slice with every anyThing received on `inp`
-// before close.
+// upon close.
 //
-//  Note: Unlike anyThingDone, DoneanyThingSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+//  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func anyThingDoneSlice(inp <-chan anyThing) (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
 	go doneanyThingSlice(sig, inp)
@@ -204,9 +206,11 @@ func doneanyThingSlice(done chan<- []anyThing, inp <-chan anyThing) {
 	done <- slice
 }
 
-// anyThingDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// anyThingDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func anyThingDoneFunc(inp <-chan anyThing, act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -338,7 +342,9 @@ func forkanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing) {
 // ===========================================================================
 // Beg of anyThingFanIn2 simple binary Fan-In
 
-// anyThingFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// anyThingFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
 	cha := make(chan anyThing)
 	go fanIn2anyThing(cha, inp1, inp2)

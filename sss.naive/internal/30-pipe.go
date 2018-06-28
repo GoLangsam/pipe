@@ -10,8 +10,8 @@ package pipe
 // anyThingPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-//  Note: it 'could' be anyThingPipeMap for functional people,
-//  but 'map' has a very different meaning in go lang.
+// Note: it 'could' be anyThingPipeMap for functional people,
+// but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp chan anyThing, act func(a anyThing) anyThing) chan anyThing {
 	out := make(chan anyThing)
 	if act == nil { // Make `nil` value useful

@@ -138,7 +138,7 @@ func chanAnyFuncErr(out chan<- Any, gen func() (Any, error)) {
 // AnyPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeAnyMap for functional people,
+// Note: it 'could' be AnyPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func AnyPipeFunc(inp <-chan Any, act func(a Any) Any) (out <-chan Any) {
 	cha := make(chan Any)
@@ -177,7 +177,9 @@ func AnyTubeFunc(act func(a Any) Any) (tube func(inp <-chan Any) (out <-chan Any
 // Beg of AnyDone terminators
 
 // AnyDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func AnyDone(inp <-chan Any) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneAny(sig, inp)
@@ -194,9 +196,9 @@ func doneAny(done chan<- struct{}, inp <-chan Any) {
 
 // AnyDoneSlice returns a channel to receive
 // a slice with every Any received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike AnyDone, DoneAnySlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike AnyDone, AnyDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func AnyDoneSlice(inp <-chan Any) (done <-chan []Any) {
 	sig := make(chan []Any)
 	go doneAnySlice(sig, inp)
@@ -212,9 +214,11 @@ func doneAnySlice(done chan<- []Any, inp <-chan Any) {
 	done <- slice
 }
 
-// AnyDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// AnyDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func AnyDoneFunc(inp <-chan Any, act func(a Any)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -346,7 +350,9 @@ func forkAny(out1, out2 chan<- Any, inp <-chan Any) {
 // ===========================================================================
 // Beg of AnyFanIn2 simple binary Fan-In
 
-// AnyFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// AnyFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func AnyFanIn2(inp1, inp2 <-chan Any) (out <-chan Any) {
 	cha := make(chan Any)
 	go fanIn2Any(cha, inp1, inp2)
@@ -859,16 +865,18 @@ func fanAnyOut(inp <-chan Any, outs ...chan Any) {
 // AnyStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
 func AnyStrew(inp <-chan Any, size int) (outS [](<-chan Any)) {
-	chaS := make([]chan Any, size)
+	chaS := make(map[chan Any]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Any)
+		chaS[make(chan Any)] = struct{}{}
 	}
 
-	go strewAny(inp, chaS...)
+	go strewAny(inp, chaS)
 
 	outS = make([]<-chan Any, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	i := 0
+	for c := range chaS {
+		outS[i] = (<-chan Any)(c) // convert `chan` to `<-chan`
+		i++
 	}
 
 	return outS
@@ -877,25 +885,25 @@ func AnyStrew(inp <-chan Any, size int) (outS [](<-chan Any)) {
 // c strewAny(inp <-chan Any, outS ...chan<- Any) {
 // Note: go does not convert the passed slice `[]chan Any` to `[]chan<- Any` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewAny(inp <-chan Any, outS ...chan Any) {
+func strewAny(inp <-chan Any, outS map[chan Any]struct{}) {
 
 	for i := range inp {
-		for !trySendAny(i, outS...) {
+		for !trySendAny(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func trySendAny(inp Any, outS ...chan Any) bool {
+func trySendAny(inp Any, outS map[chan Any]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying

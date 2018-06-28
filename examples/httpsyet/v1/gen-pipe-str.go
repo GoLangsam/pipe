@@ -127,7 +127,7 @@ func chanstringFuncErr(out chan<- string, gen func() (string, error)) {
 // stringPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeStringMap for functional people,
+// Note: it 'could' be stringPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func stringPipeFunc(inp <-chan string, act func(a string) string) (out <-chan string) {
 	cha := make(chan string)
@@ -166,7 +166,9 @@ func stringTubeFunc(act func(a string) string) (tube func(inp <-chan string) (ou
 // Beg of stringDone terminators
 
 // stringDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func stringDone(inp <-chan string) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go donestring(sig, inp)
@@ -183,9 +185,9 @@ func donestring(done chan<- struct{}, inp <-chan string) {
 
 // stringDoneSlice returns a channel to receive
 // a slice with every string received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike stringDone, DoneStringSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike stringDone, stringDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func stringDoneSlice(inp <-chan string) (done <-chan []string) {
 	sig := make(chan []string)
 	go donestringSlice(sig, inp)
@@ -201,9 +203,11 @@ func donestringSlice(done chan<- []string, inp <-chan string) {
 	done <- slice
 }
 
-// stringDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// stringDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func stringDoneFunc(inp <-chan string, act func(a string)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -335,7 +339,9 @@ func forkstring(out1, out2 chan<- string, inp <-chan string) {
 // ===========================================================================
 // Beg of stringFanIn2 simple binary Fan-In
 
-// stringFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// stringFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func stringFanIn2(inp1, inp2 <-chan string) (out <-chan string) {
 	cha := make(chan string)
 	go fanIn2string(cha, inp1, inp2)

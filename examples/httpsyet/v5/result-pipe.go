@@ -133,7 +133,7 @@ func chanresultFuncErr(out resultInto, gen func() (result, error)) {
 // resultPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeResultMap for functional people,
+// Note: it 'could' be resultPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func (inp resultFrom) resultPipeFunc(act func(a result) result) (out resultFrom) {
 	cha := make(chan result)
@@ -172,7 +172,9 @@ func resultTubeFunc(act func(a result) result) (tube func(inp resultFrom) (out r
 // Beg of resultDone terminators
 
 // resultDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func (inp resultFrom) resultDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go inp.doneresult(sig)
@@ -189,9 +191,9 @@ func (inp resultFrom) doneresult(done chan<- struct{}) {
 
 // resultDoneSlice returns a channel to receive
 // a slice with every result received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike resultDone, DoneResultSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike resultDone, resultDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func (inp resultFrom) resultDoneSlice() (done <-chan []result) {
 	sig := make(chan []result)
 	go inp.doneresultSlice(sig)
@@ -207,9 +209,11 @@ func (inp resultFrom) doneresultSlice(done chan<- []result) {
 	done <- slice
 }
 
-// resultDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// resultDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func (inp resultFrom) resultDoneFunc(act func(a result)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {

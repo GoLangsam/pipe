@@ -16,16 +16,18 @@ import "time"
 // ThingStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
 func ThingStrew(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
-	chaS := make([]chan Thing, size)
+	chaS := make(map[chan Thing]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Thing)
+		chaS[make(chan Thing)] = struct{}{}
 	}
 
-	go strewThing(inp, chaS...)
+	go strewThing(inp, chaS)
 
 	outS = make([]<-chan Thing, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	i := 0
+	for c := range chaS {
+		outS[i] = (<-chan Thing)(c) // convert `chan` to `<-chan`
+		i++
 	}
 
 	return outS
@@ -34,25 +36,25 @@ func ThingStrew(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 // c strewThing(inp <-chan Thing, outS ...chan<- Thing) {
 // Note: go does not convert the passed slice `[]chan Thing` to `[]chan<- Thing` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewThing(inp <-chan Thing, outS ...chan Thing) {
+func strewThing(inp <-chan Thing, outS map[chan Thing]struct{}) {
 
 	for i := range inp {
-		for !trySendThing(i, outS...) {
+		for !trySendThing(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func trySendThing(inp Thing, outS ...chan Thing) bool {
+func trySendThing(inp Thing, outS map[chan Thing]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying

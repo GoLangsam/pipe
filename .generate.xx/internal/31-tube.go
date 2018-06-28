@@ -5,7 +5,7 @@
 package pipe
 
 // ===========================================================================
-// Beg of anyThingTube closures
+// Beg of anyThingTube closures around anyThingPipe
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
 func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anymode) (out anymode)) {
@@ -15,5 +15,5 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anymode) (ou
 	}
 }
 
-// End of anyThingTube closures
+// End of anyThingTube closures around anyThingPipe
 // ===========================================================================

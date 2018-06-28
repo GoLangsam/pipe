@@ -127,7 +127,7 @@ func chanintFuncErr(out chan<- int, gen func() (int, error)) {
 // intPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeIntMap for functional people,
+// Note: it 'could' be intPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func intPipeFunc(inp <-chan int, act func(a int) int) (out <-chan int) {
 	cha := make(chan int)
@@ -166,7 +166,9 @@ func intTubeFunc(act func(a int) int) (tube func(inp <-chan int) (out <-chan int
 // Beg of intDone terminators
 
 // intDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func intDone(inp <-chan int) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneint(sig, inp)
@@ -183,9 +185,9 @@ func doneint(done chan<- struct{}, inp <-chan int) {
 
 // intDoneSlice returns a channel to receive
 // a slice with every int received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike intDone, DoneIntSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike intDone, intDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func intDoneSlice(inp <-chan int) (done <-chan []int) {
 	sig := make(chan []int)
 	go doneintSlice(sig, inp)
@@ -201,9 +203,11 @@ func doneintSlice(done chan<- []int, inp <-chan int) {
 	done <- slice
 }
 
-// intDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// intDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func intDoneFunc(inp <-chan int, act func(a int)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -335,7 +339,9 @@ func forkint(out1, out2 chan<- int, inp <-chan int) {
 // ===========================================================================
 // Beg of intFanIn2 simple binary Fan-In
 
-// intFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// intFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func intFanIn2(inp1, inp2 <-chan int) (out <-chan int) {
 	cha := make(chan int)
 	go fanIn2int(cha, inp1, inp2)

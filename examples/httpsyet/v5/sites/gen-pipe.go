@@ -133,7 +133,7 @@ func chanSiteFuncErr(out SiteInto, gen func() (Site, error)) {
 // SitePipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeSiteMap for functional people,
+// Note: it 'could' be SitePipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func (inp SiteFrom) SitePipeFunc(act func(a Site) Site) (out SiteFrom) {
 	cha := make(chan Site)
@@ -172,7 +172,9 @@ func SiteTubeFunc(act func(a Site) Site) (tube func(inp SiteFrom) (out SiteFrom)
 // Beg of SiteDone terminators
 
 // SiteDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func (inp SiteFrom) SiteDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go inp.doneSite(sig)
@@ -189,9 +191,9 @@ func (inp SiteFrom) doneSite(done chan<- struct{}) {
 
 // SiteDoneSlice returns a channel to receive
 // a slice with every Site received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike SiteDone, DoneSiteSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike SiteDone, SiteDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func (inp SiteFrom) SiteDoneSlice() (done <-chan []Site) {
 	sig := make(chan []Site)
 	go inp.doneSiteSlice(sig)
@@ -207,9 +209,11 @@ func (inp SiteFrom) doneSiteSlice(done chan<- []Site) {
 	done <- slice
 }
 
-// SiteDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// SiteDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func (inp SiteFrom) SiteDoneFunc(act func(a Site)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {

@@ -16,16 +16,18 @@ import "time"
 // SiteStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
 func SiteStrew(inp <-chan Site, size int) (outS [](<-chan Site)) {
-	chaS := make([]chan Site, size)
+	chaS := make(map[chan Site]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Site)
+		chaS[make(chan Site)] = struct{}{}
 	}
 
-	go strewSite(inp, chaS...)
+	go strewSite(inp, chaS)
 
 	outS = make([]<-chan Site, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	i := 0
+	for c := range chaS {
+		outS[i] = (<-chan Site)(c) // convert `chan` to `<-chan`
+		i++
 	}
 
 	return outS
@@ -34,25 +36,25 @@ func SiteStrew(inp <-chan Site, size int) (outS [](<-chan Site)) {
 // c strewSite(inp <-chan Site, outS ...chan<- Site) {
 // Note: go does not convert the passed slice `[]chan Site` to `[]chan<- Site` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewSite(inp <-chan Site, outS ...chan Site) {
+func strewSite(inp <-chan Site, outS map[chan Site]struct{}) {
 
 	for i := range inp {
-		for !trySendSite(i, outS...) {
+		for !trySendSite(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func trySendSite(inp Site, outS ...chan Site) bool {
+func trySendSite(inp Site, outS map[chan Site]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying

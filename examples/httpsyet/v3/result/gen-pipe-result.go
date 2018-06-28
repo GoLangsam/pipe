@@ -127,7 +127,7 @@ func chanResultFuncErr(out chan<- Result, gen func() (Result, error)) {
 // ResultPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeResultMap for functional people,
+// Note: it 'could' be ResultPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func ResultPipeFunc(inp <-chan Result, act func(a Result) Result) (out <-chan Result) {
 	cha := make(chan Result)
@@ -166,7 +166,9 @@ func ResultTubeFunc(act func(a Result) Result) (tube func(inp <-chan Result) (ou
 // Beg of ResultDone terminators
 
 // ResultDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func ResultDone(inp <-chan Result) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneResult(sig, inp)
@@ -183,9 +185,9 @@ func doneResult(done chan<- struct{}, inp <-chan Result) {
 
 // ResultDoneSlice returns a channel to receive
 // a slice with every Result received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike ResultDone, DoneResultSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike ResultDone, ResultDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func ResultDoneSlice(inp <-chan Result) (done <-chan []Result) {
 	sig := make(chan []Result)
 	go doneResultSlice(sig, inp)
@@ -201,9 +203,11 @@ func doneResultSlice(done chan<- []Result, inp <-chan Result) {
 	done <- slice
 }
 
-// ResultDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// ResultDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func ResultDoneFunc(inp <-chan Result, act func(a Result)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -335,7 +339,9 @@ func forkResult(out1, out2 chan<- Result, inp <-chan Result) {
 // ===========================================================================
 // Beg of ResultFanIn2 simple binary Fan-In
 
-// ResultFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// ResultFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func ResultFanIn2(inp1, inp2 <-chan Result) (out <-chan Result) {
 	cha := make(chan Result)
 	go fanIn2Result(cha, inp1, inp2)

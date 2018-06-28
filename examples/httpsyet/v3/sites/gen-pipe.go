@@ -127,7 +127,7 @@ func chanSiteFuncErr(out chan<- Site, gen func() (Site, error)) {
 // SitePipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeSiteMap for functional people,
+// Note: it 'could' be SitePipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func SitePipeFunc(inp <-chan Site, act func(a Site) Site) (out <-chan Site) {
 	cha := make(chan Site)
@@ -166,7 +166,9 @@ func SiteTubeFunc(act func(a Site) Site) (tube func(inp <-chan Site) (out <-chan
 // Beg of SiteDone terminators
 
 // SiteDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func SiteDone(inp <-chan Site) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneSite(sig, inp)
@@ -183,9 +185,9 @@ func doneSite(done chan<- struct{}, inp <-chan Site) {
 
 // SiteDoneSlice returns a channel to receive
 // a slice with every Site received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike SiteDone, DoneSiteSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+// Note: Unlike SiteDone, SiteDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func SiteDoneSlice(inp <-chan Site) (done <-chan []Site) {
 	sig := make(chan []Site)
 	go doneSiteSlice(sig, inp)
@@ -201,9 +203,11 @@ func doneSiteSlice(done chan<- []Site, inp <-chan Site) {
 	done <- slice
 }
 
-// SiteDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// SiteDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func SiteDoneFunc(inp <-chan Site, act func(a Site)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
@@ -335,7 +339,9 @@ func forkSite(out1, out2 chan<- Site, inp <-chan Site) {
 // ===========================================================================
 // Beg of SiteFanIn2 simple binary Fan-In
 
-// SiteFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// SiteFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func SiteFanIn2(inp1, inp2 <-chan Site) (out <-chan Site) {
 	cha := make(chan Site)
 	go fanIn2Site(cha, inp1, inp2)

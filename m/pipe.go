@@ -136,7 +136,7 @@ func chananyThingFuncErr(out anyThingInto, gen func() (anyThing, error)) {
 // anyThingPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeanyThingMap for functional people,
+// Note: it 'could' be anyThingPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
 func (inp anyThingFrom) anyThingPipeFunc(act func(a anyThing) anyThing) (out anyThingFrom) {
 	cha := make(chan anyThing)
@@ -175,7 +175,9 @@ func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingFrom
 // Beg of anyThingDone terminators
 
 // anyThingDone returns a channel to receive
-// one signal before close after `inp` has been drained.
+// one signal
+// upon close
+// and after `inp` has been drained.
 func (inp anyThingFrom) anyThingDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go inp.doneanyThing(sig)
@@ -192,9 +194,9 @@ func (inp anyThingFrom) doneanyThing(done chan<- struct{}) {
 
 // anyThingDoneSlice returns a channel to receive
 // a slice with every anyThing received on `inp`
-// before close.
+// upon close.
 //
-//  Note: Unlike anyThingDone, DoneanyThingSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+//  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func (inp anyThingFrom) anyThingDoneSlice() (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
 	go inp.doneanyThingSlice(sig)
@@ -210,9 +212,11 @@ func (inp anyThingFrom) doneanyThingSlice(done chan<- []anyThing) {
 	done <- slice
 }
 
-// anyThingDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
+// anyThingDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
 func (inp anyThingFrom) anyThingDoneFunc(act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
