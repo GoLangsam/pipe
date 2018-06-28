@@ -22,7 +22,7 @@ import (
 // walking each in its own goroutine,
 // sending their contents through a channel
 // to a third goroutine that compares them.
-func ExampleanyThingSame_tree() {
+func ExampleanyThingFrom_anyThingSame_tree() {
 
 	// same reports iff a and b are equal
 	same := func(a, b anyThing) bool {
