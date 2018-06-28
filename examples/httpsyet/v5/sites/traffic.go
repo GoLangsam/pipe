@@ -46,7 +46,7 @@ func (t *Traffic) Feed(urls []*url.URL, parent *url.URL, depth int) {
 
 	t.once.Do(func() {
 		go func(t *Traffic) {
-			t.done <- <-t.SiteDoneWait(t.sites, t.wg)
+			t.done <- <-(SiteInto)(t.sites).SiteDoneWait(t.wg)
 			close(t.done)
 		}(t)
 	})
@@ -64,11 +64,11 @@ func (t *Traffic) Processor(crawl func(s Site), parallel int) (done <-chan struc
 		t.wg.Done() // have this site leave
 	}
 
-	sites, seen := t.SiteForkSeenAttr(t.SitePipeEnter(t.sites, t.wg), Site.attr)
-	for _, sites := range t.SiteStrew(t.SitePipeAdjust(sites), parallel) {
-		t.SiteDoneFunc(sites, proc) // strewed `sites` leave in wrapped `crawl`
+	sites, seen := (SiteFrom)(t.sites).SitePipeEnter(t.wg).SiteForkSeenAttr(Site.attr)
+	for _, sites := range sites.SitePipeAdjust().SiteStrew(parallel) {
+		sites.SiteDoneFunc(proc) // strewed `sites` leave in wrapped `crawl`
 	}
-	t.SiteDoneLeave(seen, t.wg) // `seen` leave without further processing
+	seen.SiteDoneLeave(t.wg) // `seen` leave without further processing
 
 	return t.Done()
 }

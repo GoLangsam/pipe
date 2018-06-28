@@ -26,18 +26,18 @@ import "container/ring"
 // all `inp`
 // buffered by a SiteSendProxy process
 // before close.
-func (my *Traffic) SitePipeAdjust(inp <-chan Site, sizes ...int) (out <-chan Site) {
-	cap, que := my.sendSiteProxySizes(sizes...)
+func (inp SiteFrom) SitePipeAdjust(sizes ...int) (out SiteFrom) {
+	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan Site, cap)
-	go my.pipeSiteAdjust(cha, inp, que)
+	go inp.pipeSiteAdjust(cha, que)
 	return cha
 }
 
 // SiteTubeAdjust returns a closure around SitePipeAdjust (_, sizes ...int).
-func (my *Traffic) SiteTubeAdjust(sizes ...int) (tube func(inp <-chan Site) (out <-chan Site)) {
+func (inp SiteFrom) SiteTubeAdjust(sizes ...int) (tube func(inp SiteFrom) (out SiteFrom)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return my.SitePipeAdjust(inp, sizes...)
+	return func(inp SiteFrom) (out SiteFrom) {
+		return inp.SitePipeAdjust(sizes...)
 	}
 }
 
@@ -47,7 +47,7 @@ func (my *Traffic) SiteTubeAdjust(sizes ...int) (tube func(inp <-chan Site) (out
 // ===========================================================================
 // Beg of sendSiteProxy
 
-func (my *Traffic) sendSiteProxySizes(sizes ...int) (cap, que int) {
+func sendSiteProxySizes(sizes ...int) (cap, que int) {
 
 	// CAP is the minimum capacity of the buffered proxy channel in `SiteSendProxy`
 	const CAP = 10
@@ -81,10 +81,10 @@ func (my *Traffic) sendSiteProxySizes(sizes ...int) (cap, que int) {
 // Note: SiteSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
 // even so it does not fit the pipe tube pattern as SitePipeAdjust does.
-func (my *Traffic) SiteSendProxy(out chan<- Site, sizes ...int) chan<- Site {
-	cap, que := my.sendSiteProxySizes(sizes...)
+func SiteSendProxy(out SiteInto, sizes ...int) (send SiteInto) {
+	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan Site, cap)
-	go my.pipeSiteAdjust(out, cha, que)
+	go (SiteFrom)(cha).pipeSiteAdjust(out, que)
 	return cha
 }
 
@@ -92,12 +92,12 @@ func (my *Traffic) SiteSendProxy(out chan<- Site, sizes ...int) chan<- Site {
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (my *Traffic) pipeSiteAdjust(out chan<- Site, inp <-chan Site, QUE int) {
+func (inp SiteFrom) pipeSiteAdjust(out SiteInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
 	last := first
-	var c chan<- Site
+	var c SiteInto
 	var e Site
 	ok := true
 	for ok {

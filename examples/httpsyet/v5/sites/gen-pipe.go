@@ -10,6 +10,12 @@
 
 package sites
 
+// SiteFrom is a receive-only Site channel
+type SiteFrom <-chan Site
+
+// SiteInto is a send-only Site channel
+type SiteInto chan<- Site
+
 // ===========================================================================
 // Beg of SiteMake creators
 
@@ -32,7 +38,7 @@ close(mySitePipelineStartsHere)
 //
 // Note: as always (except for SitePipeBuffer) the channel is unbuffered.
 //
-func (my *Traffic) SiteMakeChan() (out chan Site) {
+func SiteMakeChan() (out chan Site) {
 	return make(chan Site)
 }
 
@@ -45,13 +51,13 @@ func (my *Traffic) SiteMakeChan() (out chan Site) {
 // SiteChan returns a channel to receive
 // all inputs
 // before close.
-func (my *Traffic) SiteChan(inp ...Site) (out <-chan Site) {
+func SiteChan(inp ...Site) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.chanSite(cha, inp...)
+	go chanSite(cha, inp...)
 	return cha
 }
 
-func (my *Traffic) chanSite(out chan<- Site, inp ...Site) {
+func chanSite(out SiteInto, inp ...Site) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -61,13 +67,13 @@ func (my *Traffic) chanSite(out chan<- Site, inp ...Site) {
 // SiteChanSlice returns a channel to receive
 // all inputs
 // before close.
-func (my *Traffic) SiteChanSlice(inp ...[]Site) (out <-chan Site) {
+func SiteChanSlice(inp ...[]Site) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.chanSiteSlice(cha, inp...)
+	go chanSiteSlice(cha, inp...)
 	return cha
 }
 
-func (my *Traffic) chanSiteSlice(out chan<- Site, inp ...[]Site) {
+func chanSiteSlice(out SiteInto, inp ...[]Site) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -80,13 +86,13 @@ func (my *Traffic) chanSiteSlice(out chan<- Site, inp ...[]Site) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (my *Traffic) SiteChanFuncNok(gen func() (Site, bool)) (out <-chan Site) {
+func SiteChanFuncNok(gen func() (Site, bool)) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.chanSiteFuncNok(cha, gen)
+	go chanSiteFuncNok(cha, gen)
 	return cha
 }
 
-func (my *Traffic) chanSiteFuncNok(out chan<- Site, gen func() (Site, bool)) {
+func chanSiteFuncNok(out SiteInto, gen func() (Site, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -101,13 +107,13 @@ func (my *Traffic) chanSiteFuncNok(out chan<- Site, gen func() (Site, bool)) {
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (my *Traffic) SiteChanFuncErr(gen func() (Site, error)) (out <-chan Site) {
+func SiteChanFuncErr(gen func() (Site, error)) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.chanSiteFuncErr(cha, gen)
+	go chanSiteFuncErr(cha, gen)
 	return cha
 }
 
-func (my *Traffic) chanSiteFuncErr(out chan<- Site, gen func() (Site, error)) {
+func chanSiteFuncErr(out SiteInto, gen func() (Site, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -129,16 +135,16 @@ func (my *Traffic) chanSiteFuncErr(out chan<- Site, gen func() (Site, error)) {
 // before close.
 // Note: it 'could' be PipeSiteMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (my *Traffic) SitePipeFunc(inp <-chan Site, act func(a Site) Site) (out <-chan Site) {
+func (inp SiteFrom) SitePipeFunc(act func(a Site) Site) (out SiteFrom) {
 	cha := make(chan Site)
 	if act == nil { // Make `nil` value useful
 		act = func(a Site) Site { return a }
 	}
-	go my.pipeSiteFunc(cha, inp, act)
+	go inp.pipeSiteFunc(cha, act)
 	return cha
 }
 
-func (my *Traffic) pipeSiteFunc(out chan<- Site, inp <-chan Site, act func(a Site) Site) {
+func (inp SiteFrom) pipeSiteFunc(out SiteInto, act func(a Site) Site) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action
@@ -152,10 +158,10 @@ func (my *Traffic) pipeSiteFunc(out chan<- Site, inp <-chan Site, act func(a Sit
 // Beg of SiteTube closures around SitePipe
 
 // SiteTubeFunc returns a closure around PipeSiteFunc (_, act).
-func (my *Traffic) SiteTubeFunc(act func(a Site) Site) (tube func(inp <-chan Site) (out <-chan Site)) {
+func SiteTubeFunc(act func(a Site) Site) (tube func(inp SiteFrom) (out SiteFrom)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return my.SitePipeFunc(inp, act)
+	return func(inp SiteFrom) (out SiteFrom) {
+		return inp.SitePipeFunc(act)
 	}
 }
 
@@ -167,13 +173,13 @@ func (my *Traffic) SiteTubeFunc(act func(a Site) Site) (tube func(inp <-chan Sit
 
 // SiteDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func (my *Traffic) SiteDone(inp <-chan Site) (done <-chan struct{}) {
+func (inp SiteFrom) SiteDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneSite(sig, inp)
+	go inp.doneSite(sig)
 	return sig
 }
 
-func (my *Traffic) doneSite(done chan<- struct{}, inp <-chan Site) {
+func (inp SiteFrom) doneSite(done chan<- struct{}) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -186,13 +192,13 @@ func (my *Traffic) doneSite(done chan<- struct{}, inp <-chan Site) {
 // before close.
 //
 // Note: Unlike SiteDone, DoneSiteSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (my *Traffic) SiteDoneSlice(inp <-chan Site) (done <-chan []Site) {
+func (inp SiteFrom) SiteDoneSlice() (done <-chan []Site) {
 	sig := make(chan []Site)
-	go my.doneSiteSlice(sig, inp)
+	go inp.doneSiteSlice(sig)
 	return sig
 }
 
-func (my *Traffic) doneSiteSlice(done chan<- []Site, inp <-chan Site) {
+func (inp SiteFrom) doneSiteSlice(done chan<- []Site) {
 	defer close(done)
 	slice := []Site{}
 	for i := range inp {
@@ -204,16 +210,16 @@ func (my *Traffic) doneSiteSlice(done chan<- []Site, inp <-chan Site) {
 // SiteDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func (my *Traffic) SiteDoneFunc(inp <-chan Site, act func(a Site)) (done <-chan struct{}) {
+func (inp SiteFrom) SiteDoneFunc(act func(a Site)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a Site) { return }
 	}
-	go my.doneSiteFunc(sig, inp, act)
+	go inp.doneSiteFunc(sig, act)
 	return sig
 }
 
-func (my *Traffic) doneSiteFunc(done chan<- struct{}, inp <-chan Site, act func(a Site)) {
+func (inp SiteFrom) doneSiteFunc(done chan<- struct{}, act func(a Site)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action
@@ -227,27 +233,27 @@ func (my *Traffic) doneSiteFunc(done chan<- struct{}, inp <-chan Site, act func(
 // ===========================================================================
 // Beg of SiteFini closures
 
-// SiteFini returns a closure around `SiteDone(_)`.
-func (my *Traffic) SiteFini() func(inp <-chan Site) (done <-chan struct{}) {
+// SiteFini returns a closure around `SiteDone()`.
+func (inp SiteFrom) SiteFini() func(inp SiteFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan Site) (done <-chan struct{}) {
-		return my.SiteDone(inp)
+	return func(inp SiteFrom) (done <-chan struct{}) {
+		return inp.SiteDone()
 	}
 }
 
-// SiteFiniSlice returns a closure around `SiteDoneSlice(_)`.
-func (my *Traffic) SiteFiniSlice() func(inp <-chan Site) (done <-chan []Site) {
+// SiteFiniSlice returns a closure around `SiteDoneSlice()`.
+func (inp SiteFrom) SiteFiniSlice() func(inp SiteFrom) (done <-chan []Site) {
 
-	return func(inp <-chan Site) (done <-chan []Site) {
-		return my.SiteDoneSlice(inp)
+	return func(inp SiteFrom) (done <-chan []Site) {
+		return inp.SiteDoneSlice()
 	}
 }
 
-// SiteFiniFunc returns a closure around `SiteDoneFunc(_, act)`.
-func (my *Traffic) SiteFiniFunc(act func(a Site)) func(inp <-chan Site) (done <-chan struct{}) {
+// SiteFiniFunc returns a closure around `SiteDoneFunc(act)`.
+func (inp SiteFrom) SiteFiniFunc(act func(a Site)) func(inp SiteFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan Site) (done <-chan struct{}) {
-		return my.SiteDoneFunc(inp, act)
+	return func(inp SiteFrom) (done <-chan struct{}) {
+		return inp.SiteDoneFunc(act)
 	}
 }
 
@@ -259,15 +265,15 @@ func (my *Traffic) SiteFiniFunc(act func(a Site)) func(inp <-chan Site) (done <-
 
 // SitePair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (my *Traffic) SitePair(inp <-chan Site) (out1, out2 <-chan Site) {
+func (inp SiteFrom) SitePair() (out1, out2 SiteFrom) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
-	go my.pairSite(cha1, cha2, inp)
+	go inp.pairSite(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my *Traffic) pairSite(out1, out2 chan<- Site, inp <-chan Site) {
+func (inp SiteFrom) pairSite(out1, out2 SiteInto, inp SiteFrom) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -276,7 +282,7 @@ func (my *Traffic) pairSite(out1, out2 chan<- Site, inp <-chan Site) {
 	}
 } */
 
-func (my *Traffic) pairSite(out1, out2 chan<- Site, inp <-chan Site) {
+func (inp SiteFrom) pairSite(out1, out2 SiteInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -299,15 +305,15 @@ func (my *Traffic) pairSite(out1, out2 chan<- Site, inp <-chan Site) {
 // either of which is to receive
 // every result of inp
 // before close.
-func (my *Traffic) SiteFork(inp <-chan Site) (out1, out2 <-chan Site) {
+func (inp SiteFrom) SiteFork() (out1, out2 SiteFrom) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
-	go my.forkSite(cha1, cha2, inp)
+	go inp.forkSite(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my *Traffic) forkSite(out1, out2 chan<- Site, inp <-chan Site) {
+func (inp SiteFrom) forkSite(out1, out2 SiteInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -316,7 +322,7 @@ func (my *Traffic) forkSite(out1, out2 chan<- Site, inp <-chan Site) {
 	}
 } */
 
-func (my *Traffic) forkSite(out1, out2 chan<- Site, inp <-chan Site) {
+func (inp SiteFrom) forkSite(out1, out2 SiteInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -335,19 +341,21 @@ func (my *Traffic) forkSite(out1, out2 chan<- Site, inp <-chan Site) {
 // ===========================================================================
 // Beg of SiteFanIn2 simple binary Fan-In
 
-// SiteFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func (my *Traffic) SiteFanIn2(inp1, inp2 <-chan Site) (out <-chan Site) {
+// SiteFanIn2 returns a channel to receive
+// all from both `inp` and `inp2`
+// before close.
+func (inp SiteFrom) SiteFanIn2(inp2 SiteFrom) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.fanIn2Site(cha, inp1, inp2)
+	go inp.fanIn2Site(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (my *Traffic) fanin2Site as seen in Go Concurrency Patterns
-func fanin2Site(out chan<- Site, inp1, inp2 <-chan Site) {
+// (inp SiteFrom) fanin2Site as seen in Go Concurrency Patterns
+func fanin2Site(out SiteInto, inp, inp2 SiteFrom) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -355,7 +363,7 @@ func fanin2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 	}
 } */
 
-func (my *Traffic) fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
+func (inp SiteFrom) fanIn2Site(out SiteInto, inp2 SiteFrom) {
 	defer close(out)
 
 	var (
@@ -366,11 +374,11 @@ func (my *Traffic) fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -382,8 +390,8 @@ func (my *Traffic) fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

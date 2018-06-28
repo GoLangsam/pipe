@@ -15,44 +15,43 @@ import "time"
 
 // SiteStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (my *Traffic) SiteStrew(inp <-chan Site, size int) (outS [](<-chan Site)) {
-	chaS := make([]chan Site, size)
+func (inp SiteFrom) SiteStrew(size int) (outS []SiteFrom) {
+	chaS := make(map[chan Site]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan Site)
+		chaS[make(chan Site)] = struct{}{}
 	}
 
-	go my.strewSite(inp, chaS...)
+	go inp.strewSite(chaS)
 
-	outS = make([]<-chan Site, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	outS = make([]SiteFrom, size)
+	i := 0
+	for c := range chaS {
+		outS[i] = (SiteFrom)(c) // convert `chan Site` to SiteFrom
+		i++
 	}
 
 	return outS
 }
 
-// c strewSite(inp <-chan Site, outS ...chan<- Site) {
-// Note: go does not convert the passed slice `[]chan Site` to `[]chan<- Site` automatically.
-// So, we do neither here, as we are lazy (we just call an internal helper function).
-func (my *Traffic) strewSite(inp <-chan Site, outS ...chan Site) {
+func (inp SiteFrom) strewSite(outS map[chan Site]struct{}) {
 
 	for i := range inp {
-		for !my.trySendSite(i, outS...) {
+		for !inp.trySendSite(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func (my *Traffic) trySendSite(inp Site, outS ...chan Site) bool {
+func (static SiteFrom) trySendSite(inp Site, outS map[chan Site]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying

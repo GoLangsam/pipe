@@ -39,9 +39,9 @@ type SiteWaiter interface {
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func (my *Traffic) SitePipeEnter(inp <-chan Site, wg SiteWaiter) (out <-chan Site) {
+func (inp SiteFrom) SitePipeEnter(wg SiteWaiter) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.pipeSiteEnter(cha, wg, inp)
+	go inp.pipeSiteEnter(cha, wg)
 	return cha
 }
 
@@ -51,9 +51,9 @@ func (my *Traffic) SitePipeEnter(inp <-chan Site, wg SiteWaiter) (out <-chan Sit
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func (my *Traffic) SitePipeLeave(inp <-chan Site, wg SiteWaiter) (out <-chan Site) {
+func (inp SiteFrom) SitePipeLeave(wg SiteWaiter) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.pipeSiteLeave(cha, wg, inp)
+	go inp.pipeSiteLeave(cha, wg)
 	return cha
 }
 
@@ -64,13 +64,13 @@ func (my *Traffic) SitePipeLeave(inp <-chan Site, wg SiteWaiter) (out <-chan Sit
 // as departure
 // on the given `sync.WaitGroup`
 // before close.
-func (my *Traffic) SiteDoneLeave(inp <-chan Site, wg SiteWaiter) (done <-chan struct{}) {
+func (inp SiteFrom) SiteDoneLeave(wg SiteWaiter) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneSiteLeave(sig, wg, inp)
+	go inp.doneSiteLeave(sig, wg)
 	return sig
 }
 
-func (my *Traffic) pipeSiteEnter(out chan<- Site, wg SiteWaiter, inp <-chan Site) {
+func (inp SiteFrom) pipeSiteEnter(out SiteInto, wg SiteWaiter) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -78,7 +78,7 @@ func (my *Traffic) pipeSiteEnter(out chan<- Site, wg SiteWaiter, inp <-chan Site
 	}
 }
 
-func (my *Traffic) pipeSiteLeave(out chan<- Site, wg SiteWaiter, inp <-chan Site) {
+func (inp SiteFrom) pipeSiteLeave(out SiteInto, wg SiteWaiter) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -86,7 +86,7 @@ func (my *Traffic) pipeSiteLeave(out chan<- Site, wg SiteWaiter, inp <-chan Site
 	}
 }
 
-func (my *Traffic) doneSiteLeave(done chan<- struct{}, wg SiteWaiter, inp <-chan Site) {
+func (inp SiteFrom) doneSiteLeave(done chan<- struct{}, wg SiteWaiter) {
 	defer close(done)
 	for i := range inp {
 		_ = i // discard
@@ -95,36 +95,36 @@ func (my *Traffic) doneSiteLeave(done chan<- struct{}, wg SiteWaiter, inp <-chan
 	done <- struct{}{}
 }
 
-// SiteTubeEnter returns a closure around SitePipeEnter (_, wg)
+// SiteTubeEnter returns a closure around SitePipeEnter (wg)
 // registering throughput
 // as arrival
 // on the given `sync.WaitGroup`.
-func (my *Traffic) SiteTubeEnter(wg SiteWaiter) (tube func(inp <-chan Site) (out <-chan Site)) {
+func (inp SiteFrom) SiteTubeEnter(wg SiteWaiter) (tube func(inp SiteFrom) (out SiteFrom)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return my.SitePipeEnter(inp, wg)
+	return func(inp SiteFrom) (out SiteFrom) {
+		return inp.SitePipeEnter(wg)
 	}
 }
 
-// SiteTubeLeave returns a closure around SitePipeLeave (_, wg)
+// SiteTubeLeave returns a closure around SitePipeLeave (wg)
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (my *Traffic) SiteTubeLeave(wg SiteWaiter) (tube func(inp <-chan Site) (out <-chan Site)) {
+func (inp SiteFrom) SiteTubeLeave(wg SiteWaiter) (tube func(inp SiteFrom) (out SiteFrom)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return my.SitePipeLeave(inp, wg)
+	return func(inp SiteFrom) (out SiteFrom) {
+		return inp.SitePipeLeave(wg)
 	}
 }
 
-// SiteFiniLeave returns a closure around `SiteDoneLeave(_, wg)`
+// SiteFiniLeave returns a closure around `SiteDoneLeave(wg)`
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (my *Traffic) SiteFiniLeave(wg SiteWaiter) func(inp <-chan Site) (done <-chan struct{}) {
+func (inp SiteFrom) SiteFiniLeave(wg SiteWaiter) func(inp SiteFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan Site) (done <-chan struct{}) {
-		return my.SiteDoneLeave(inp, wg)
+	return func(inp SiteFrom) (done <-chan struct{}) {
+		return inp.SiteDoneLeave(wg)
 	}
 }
 
@@ -134,24 +134,24 @@ func (my *Traffic) SiteFiniLeave(wg SiteWaiter) func(inp <-chan Site) (done <-ch
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func (my *Traffic) SiteDoneWait(inp chan<- Site, wg SiteWaiter) (done <-chan struct{}) {
+func (inp SiteInto) SiteDoneWait(wg SiteWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go my.doneSiteWait(cha, inp, wg)
+	go inp.doneSiteWait(cha, wg)
 	return cha
 }
 
-func (my *Traffic) doneSiteWait(done chan<- struct{}, inp chan<- Site, wg SiteWaiter) {
+func (inp SiteInto) doneSiteWait(done chan<- struct{}, wg SiteWaiter) {
 	defer close(done)
 	wg.Wait()
 	close(inp)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// SiteFiniWait returns a closure around `DoneSiteWait(_, wg)`.
-func (my *Traffic) SiteFiniWait(wg SiteWaiter) func(inp chan<- Site) (done <-chan struct{}) {
+// SiteFiniWait returns a closure around `DoneSiteWait(wg)`.
+func (inp SiteInto) SiteFiniWait(wg SiteWaiter) func(inp SiteInto) (done <-chan struct{}) {
 
-	return func(inp chan<- Site) (done <-chan struct{}) {
-		return my.SiteDoneWait(inp, wg)
+	return func(inp SiteInto) (done <-chan struct{}) {
+		return inp.SiteDoneWait(wg)
 	}
 }
 

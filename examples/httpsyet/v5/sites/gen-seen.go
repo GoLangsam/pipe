@@ -20,9 +20,9 @@ import "sync"
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 // Note: SitePipeFilterNotSeenYet might be a better name, but is fairly long.
-func (my *Traffic) SitePipeSeen(inp <-chan Site) (out <-chan Site) {
+func (inp SiteFrom) SitePipeSeen() (out SiteFrom) {
 	cha := make(chan Site)
-	go my.pipeSiteSeenAttr(cha, inp, nil)
+	go inp.pipeSiteSeenAttr(cha, nil)
 	return cha
 }
 
@@ -34,9 +34,9 @@ func (my *Traffic) SitePipeSeen(inp <-chan Site) (out <-chan Site) {
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 // Note: SitePipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (my *Traffic) SitePipeSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (out <-chan Site) {
+func (inp SiteFrom) SitePipeSeenAttr(attr func(a Site) interface{}) (out SiteFrom) {
 	cha := make(chan Site)
-	go my.pipeSiteSeenAttr(cha, inp, attr)
+	go inp.pipeSiteSeenAttr(cha, attr)
 	return cha
 }
 
@@ -49,10 +49,10 @@ func (my *Traffic) SitePipeSeenAttr(inp <-chan Site, attr func(a Site) interface
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my *Traffic) SiteForkSeen(inp <-chan Site) (new, old <-chan Site) {
+func (inp SiteFrom) SiteForkSeen() (new, old SiteFrom) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
-	go my.forkSiteSeenAttr(cha1, cha2, inp, nil)
+	go inp.forkSiteSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
@@ -66,14 +66,14 @@ func (my *Traffic) SiteForkSeen(inp <-chan Site) (new, old <-chan Site) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my *Traffic) SiteForkSeenAttr(inp <-chan Site, attr func(a Site) interface{}) (new, old <-chan Site) {
+func (inp SiteFrom) SiteForkSeenAttr(attr func(a Site) interface{}) (new, old SiteFrom) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
-	go my.forkSiteSeenAttr(cha1, cha2, inp, attr)
+	go inp.forkSiteSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (my *Traffic) pipeSiteSeenAttr(out chan<- Site, inp <-chan Site, attr func(a Site) interface{}) {
+func (inp SiteFrom) pipeSiteSeenAttr(out SiteInto, attr func(a Site) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -90,7 +90,7 @@ func (my *Traffic) pipeSiteSeenAttr(out chan<- Site, inp <-chan Site, attr func(
 	}
 }
 
-func (my *Traffic) forkSiteSeenAttr(new, old chan<- Site, inp <-chan Site, attr func(a Site) interface{}) {
+func (inp SiteFrom) forkSiteSeenAttr(new, old SiteInto, attr func(a Site) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -110,21 +110,21 @@ func (my *Traffic) forkSiteSeenAttr(new, old chan<- Site, inp <-chan Site, attr 
 
 // SiteTubeSeen returns a closure around SitePipeSeen()
 // (silently dropping every Site seen before).
-func (my *Traffic) SiteTubeSeen() (tube func(inp <-chan Site) (out <-chan Site)) {
+func (inp SiteFrom) SiteTubeSeen() (tube func(inp SiteFrom) (out SiteFrom)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return my.SitePipeSeen(inp)
+	return func(inp SiteFrom) (out SiteFrom) {
+		return inp.SitePipeSeen()
 	}
 }
 
-// SiteTubeSeenAttr returns a closure around SitePipeSeenAttr()
+// SiteTubeSeenAttr returns a closure around SitePipeSeenAttr(attr)
 // (silently dropping every Site
 // whose attribute `attr` was
 // seen before).
-func (my *Traffic) SiteTubeSeenAttr(attr func(a Site) interface{}) (tube func(inp <-chan Site) (out <-chan Site)) {
+func (inp SiteFrom) SiteTubeSeenAttr(attr func(a Site) interface{}) (tube func(inp SiteFrom) (out SiteFrom)) {
 
-	return func(inp <-chan Site) (out <-chan Site) {
-		return my.SitePipeSeenAttr(inp, attr)
+	return func(inp SiteFrom) (out SiteFrom) {
+		return inp.SitePipeSeenAttr(attr)
 	}
 }
 
