@@ -73,8 +73,7 @@ func (c *Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 
 	crawling.Feed(urls, nil, c.Depth) // feed initial urls
 
-	var my result                                        // Note: the generated functions owned by result are so-called 'static' functions
-	return my.resultDoneFunc(crawling.results, c.report) // signal when results report are done
+	return (resultFrom)(crawling.results).resultDoneFunc(c.report) // signal when results report are done
 }
 
 // ===========================================================================

@@ -10,6 +10,12 @@
 
 package httpsyet
 
+// resultFrom is a receive-only result channel
+type resultFrom <-chan result
+
+// resultInto is a send-only result channel
+type resultInto chan<- result
+
 // ===========================================================================
 // Beg of resultMake creators
 
@@ -32,7 +38,7 @@ close(myresultPipelineStartsHere)
 //
 // Note: as always (except for resultPipeBuffer) the channel is unbuffered.
 //
-func (my *result) resultMakeChan() (out chan result) {
+func resultMakeChan() (out chan result) {
 	return make(chan result)
 }
 
@@ -45,13 +51,13 @@ func (my *result) resultMakeChan() (out chan result) {
 // resultChan returns a channel to receive
 // all inputs
 // before close.
-func (my *result) resultChan(inp ...result) (out <-chan result) {
+func resultChan(inp ...result) (out resultFrom) {
 	cha := make(chan result)
-	go my.chanresult(cha, inp...)
+	go chanresult(cha, inp...)
 	return cha
 }
 
-func (my *result) chanresult(out chan<- result, inp ...result) {
+func chanresult(out resultInto, inp ...result) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -61,13 +67,13 @@ func (my *result) chanresult(out chan<- result, inp ...result) {
 // resultChanSlice returns a channel to receive
 // all inputs
 // before close.
-func (my *result) resultChanSlice(inp ...[]result) (out <-chan result) {
+func resultChanSlice(inp ...[]result) (out resultFrom) {
 	cha := make(chan result)
-	go my.chanresultSlice(cha, inp...)
+	go chanresultSlice(cha, inp...)
 	return cha
 }
 
-func (my *result) chanresultSlice(out chan<- result, inp ...[]result) {
+func chanresultSlice(out resultInto, inp ...[]result) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -80,13 +86,13 @@ func (my *result) chanresultSlice(out chan<- result, inp ...[]result) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (my *result) resultChanFuncNok(gen func() (result, bool)) (out <-chan result) {
+func resultChanFuncNok(gen func() (result, bool)) (out resultFrom) {
 	cha := make(chan result)
-	go my.chanresultFuncNok(cha, gen)
+	go chanresultFuncNok(cha, gen)
 	return cha
 }
 
-func (my *result) chanresultFuncNok(out chan<- result, gen func() (result, bool)) {
+func chanresultFuncNok(out resultInto, gen func() (result, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -101,13 +107,13 @@ func (my *result) chanresultFuncNok(out chan<- result, gen func() (result, bool)
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (my *result) resultChanFuncErr(gen func() (result, error)) (out <-chan result) {
+func resultChanFuncErr(gen func() (result, error)) (out resultFrom) {
 	cha := make(chan result)
-	go my.chanresultFuncErr(cha, gen)
+	go chanresultFuncErr(cha, gen)
 	return cha
 }
 
-func (my *result) chanresultFuncErr(out chan<- result, gen func() (result, error)) {
+func chanresultFuncErr(out resultInto, gen func() (result, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -129,16 +135,16 @@ func (my *result) chanresultFuncErr(out chan<- result, gen func() (result, error
 // before close.
 // Note: it 'could' be PipeResultMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (my *result) resultPipeFunc(inp <-chan result, act func(a result) result) (out <-chan result) {
+func (inp resultFrom) resultPipeFunc(act func(a result) result) (out resultFrom) {
 	cha := make(chan result)
 	if act == nil { // Make `nil` value useful
 		act = func(a result) result { return a }
 	}
-	go my.piperesultFunc(cha, inp, act)
+	go inp.piperesultFunc(cha, act)
 	return cha
 }
 
-func (my *result) piperesultFunc(out chan<- result, inp <-chan result, act func(a result) result) {
+func (inp resultFrom) piperesultFunc(out resultInto, act func(a result) result) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action
@@ -152,10 +158,10 @@ func (my *result) piperesultFunc(out chan<- result, inp <-chan result, act func(
 // Beg of resultTube closures around resultPipe
 
 // resultTubeFunc returns a closure around PipeResultFunc (_, act).
-func (my *result) resultTubeFunc(act func(a result) result) (tube func(inp <-chan result) (out <-chan result)) {
+func resultTubeFunc(act func(a result) result) (tube func(inp resultFrom) (out resultFrom)) {
 
-	return func(inp <-chan result) (out <-chan result) {
-		return my.resultPipeFunc(inp, act)
+	return func(inp resultFrom) (out resultFrom) {
+		return inp.resultPipeFunc(act)
 	}
 }
 
@@ -167,13 +173,13 @@ func (my *result) resultTubeFunc(act func(a result) result) (tube func(inp <-cha
 
 // resultDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func (my *result) resultDone(inp <-chan result) (done <-chan struct{}) {
+func (inp resultFrom) resultDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneresult(sig, inp)
+	go inp.doneresult(sig)
 	return sig
 }
 
-func (my *result) doneresult(done chan<- struct{}, inp <-chan result) {
+func (inp resultFrom) doneresult(done chan<- struct{}) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -186,13 +192,13 @@ func (my *result) doneresult(done chan<- struct{}, inp <-chan result) {
 // before close.
 //
 // Note: Unlike resultDone, DoneResultSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (my *result) resultDoneSlice(inp <-chan result) (done <-chan []result) {
+func (inp resultFrom) resultDoneSlice() (done <-chan []result) {
 	sig := make(chan []result)
-	go my.doneresultSlice(sig, inp)
+	go inp.doneresultSlice(sig)
 	return sig
 }
 
-func (my *result) doneresultSlice(done chan<- []result, inp <-chan result) {
+func (inp resultFrom) doneresultSlice(done chan<- []result) {
 	defer close(done)
 	slice := []result{}
 	for i := range inp {
@@ -204,16 +210,16 @@ func (my *result) doneresultSlice(done chan<- []result, inp <-chan result) {
 // resultDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func (my *result) resultDoneFunc(inp <-chan result, act func(a result)) (done <-chan struct{}) {
+func (inp resultFrom) resultDoneFunc(act func(a result)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a result) { return }
 	}
-	go my.doneresultFunc(sig, inp, act)
+	go inp.doneresultFunc(sig, act)
 	return sig
 }
 
-func (my *result) doneresultFunc(done chan<- struct{}, inp <-chan result, act func(a result)) {
+func (inp resultFrom) doneresultFunc(done chan<- struct{}, act func(a result)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action
@@ -227,27 +233,27 @@ func (my *result) doneresultFunc(done chan<- struct{}, inp <-chan result, act fu
 // ===========================================================================
 // Beg of resultFini closures
 
-// resultFini returns a closure around `resultDone(_)`.
-func (my *result) resultFini() func(inp <-chan result) (done <-chan struct{}) {
+// resultFini returns a closure around `resultDone()`.
+func (inp resultFrom) resultFini() func(inp resultFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan result) (done <-chan struct{}) {
-		return my.resultDone(inp)
+	return func(inp resultFrom) (done <-chan struct{}) {
+		return inp.resultDone()
 	}
 }
 
-// resultFiniSlice returns a closure around `resultDoneSlice(_)`.
-func (my *result) resultFiniSlice() func(inp <-chan result) (done <-chan []result) {
+// resultFiniSlice returns a closure around `resultDoneSlice()`.
+func (inp resultFrom) resultFiniSlice() func(inp resultFrom) (done <-chan []result) {
 
-	return func(inp <-chan result) (done <-chan []result) {
-		return my.resultDoneSlice(inp)
+	return func(inp resultFrom) (done <-chan []result) {
+		return inp.resultDoneSlice()
 	}
 }
 
-// resultFiniFunc returns a closure around `resultDoneFunc(_, act)`.
-func (my *result) resultFiniFunc(act func(a result)) func(inp <-chan result) (done <-chan struct{}) {
+// resultFiniFunc returns a closure around `resultDoneFunc(act)`.
+func (inp resultFrom) resultFiniFunc(act func(a result)) func(inp resultFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan result) (done <-chan struct{}) {
-		return my.resultDoneFunc(inp, act)
+	return func(inp resultFrom) (done <-chan struct{}) {
+		return inp.resultDoneFunc(act)
 	}
 }
 
@@ -259,15 +265,15 @@ func (my *result) resultFiniFunc(act func(a result)) func(inp <-chan result) (do
 
 // resultPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (my *result) resultPair(inp <-chan result) (out1, out2 <-chan result) {
+func (inp resultFrom) resultPair() (out1, out2 resultFrom) {
 	cha1 := make(chan result)
 	cha2 := make(chan result)
-	go my.pairresult(cha1, cha2, inp)
+	go inp.pairresult(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my *result) pairresult(out1, out2 chan<- result, inp <-chan result) {
+func (inp resultFrom) pairresult(out1, out2 resultInto, inp resultFrom) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -276,7 +282,7 @@ func (my *result) pairresult(out1, out2 chan<- result, inp <-chan result) {
 	}
 } */
 
-func (my *result) pairresult(out1, out2 chan<- result, inp <-chan result) {
+func (inp resultFrom) pairresult(out1, out2 resultInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -299,15 +305,15 @@ func (my *result) pairresult(out1, out2 chan<- result, inp <-chan result) {
 // either of which is to receive
 // every result of inp
 // before close.
-func (my *result) resultFork(inp <-chan result) (out1, out2 <-chan result) {
+func (inp resultFrom) resultFork() (out1, out2 resultFrom) {
 	cha1 := make(chan result)
 	cha2 := make(chan result)
-	go my.forkresult(cha1, cha2, inp)
+	go inp.forkresult(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my *result) forkresult(out1, out2 chan<- result, inp <-chan result) {
+func (inp resultFrom) forkresult(out1, out2 resultInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -316,7 +322,7 @@ func (my *result) forkresult(out1, out2 chan<- result, inp <-chan result) {
 	}
 } */
 
-func (my *result) forkresult(out1, out2 chan<- result, inp <-chan result) {
+func (inp resultFrom) forkresult(out1, out2 resultInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -335,19 +341,21 @@ func (my *result) forkresult(out1, out2 chan<- result, inp <-chan result) {
 // ===========================================================================
 // Beg of resultFanIn2 simple binary Fan-In
 
-// resultFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func (my *result) resultFanIn2(inp1, inp2 <-chan result) (out <-chan result) {
+// resultFanIn2 returns a channel to receive
+// all from both `inp` and `inp2`
+// before close.
+func (inp resultFrom) resultFanIn2(inp2 resultFrom) (out resultFrom) {
 	cha := make(chan result)
-	go my.fanIn2result(cha, inp1, inp2)
+	go inp.fanIn2result(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (my *result) fanin2result as seen in Go Concurrency Patterns
-func fanin2result(out chan<- result, inp1, inp2 <-chan result) {
+// (inp resultFrom) fanin2result as seen in Go Concurrency Patterns
+func fanin2result(out resultInto, inp, inp2 resultFrom) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -355,7 +363,7 @@ func fanin2result(out chan<- result, inp1, inp2 <-chan result) {
 	}
 } */
 
-func (my *result) fanIn2result(out chan<- result, inp1, inp2 <-chan result) {
+func (inp resultFrom) fanIn2result(out resultInto, inp2 resultFrom) {
 	defer close(out)
 
 	var (
@@ -366,11 +374,11 @@ func (my *result) fanIn2result(out chan<- result, inp1, inp2 <-chan result) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -382,8 +390,8 @@ func (my *result) fanIn2result(out chan<- result, inp1, inp2 <-chan result) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }
