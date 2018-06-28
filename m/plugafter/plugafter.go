@@ -13,12 +13,6 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyThingFrom is a receive-only anyThing channel
-type anyThingFrom <-chan anyThing
-
-// anyThingInto is a send-only anyThing channel
-type anyThingInto chan<- anyThing
-
 // ===========================================================================
 // Beg of anyThingPlugAfter - graceful terminator
 
