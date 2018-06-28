@@ -24,8 +24,6 @@ import (
 // to a third goroutine that compares them.
 func ExampleanyThingSame_tree() {
 
-	var my anyOwner // so we may call his methods
-
 	// same reports iff a and b are equal
 	same := func(a, b anyThing) bool {
 		v1 := a.(int)
@@ -38,7 +36,7 @@ func ExampleanyThingSame_tree() {
 	// if t1 and t2 have the same contents.
 	Compare := func(t1, t2 *Tree) bool {
 		c1, c2 := Walker(t1), Walker(t2)
-		return <-my.anyThingSame(same, c1, c2)
+		return <-c1.anyThingSame(same, c2)
 	}
 
 	t1 := New(100, 1)

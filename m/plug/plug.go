@@ -11,9 +11,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingPlug - graceful terminator
@@ -23,14 +25,14 @@ type anyOwner generic.Number
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func (my anyOwner) anyThingPlug(inp <-chan anyThing, stop <-chan struct{}) (out <-chan anyThing, done <-chan struct{}) {
+func (inp anyThingFrom) anyThingPlug(stop <-chan struct{}) (out anyThingFrom, done <-chan struct{}) {
 	cha := make(chan anyThing)
 	doit := make(chan struct{})
-	go my.pluganyThing(cha, doit, inp, stop)
+	go inp.pluganyThing(cha, doit, stop)
 	return cha, doit
 }
 
-func (my anyOwner) pluganyThing(out chan<- anyThing, done chan<- struct{}, inp <-chan anyThing, stop <-chan struct{}) {
+func (inp anyThingFrom) pluganyThing(out anyThingInto, done chan<- struct{}, stop <-chan struct{}) {
 	defer close(done)
 
 	var end bool   // shall we end?

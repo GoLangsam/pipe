@@ -26,7 +26,7 @@ func Walk(t *Tree, ch chan anyThing) {
 
 // Walker launches Walk in a new goroutine,
 // and returns a read-only channel of values.
-func Walker(t *Tree) <-chan anyThing {
+func Walker(t *Tree) anyThingFrom {
 	ch := make(chan anyThing)
 	go func() {
 		Walk(t, ch)

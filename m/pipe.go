@@ -13,9 +13,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingMake creators
@@ -39,7 +41,7 @@ type anyOwner generic.Number
 //
 //  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
-func (my anyOwner) anyThingMakeChan() (out chan anyThing) {
+func anyThingMakeChan() (out chan anyThing) {
 	return make(chan anyThing)
 }
 
@@ -52,13 +54,13 @@ func (my anyOwner) anyThingMakeChan() (out chan anyThing) {
 // anyThingChan returns a channel to receive
 // all inputs
 // before close.
-func (my anyOwner) anyThingChan(inp ...anyThing) (out <-chan anyThing) {
+func anyThingChan(inp ...anyThing) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.chananyThing(cha, inp...)
+	go chananyThing(cha, inp...)
 	return cha
 }
 
-func (my anyOwner) chananyThing(out chan<- anyThing, inp ...anyThing) {
+func chananyThing(out anyThingInto, inp ...anyThing) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -68,13 +70,13 @@ func (my anyOwner) chananyThing(out chan<- anyThing, inp ...anyThing) {
 // anyThingChanSlice returns a channel to receive
 // all inputs
 // before close.
-func (my anyOwner) anyThingChanSlice(inp ...[]anyThing) (out <-chan anyThing) {
+func anyThingChanSlice(inp ...[]anyThing) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.chananyThingSlice(cha, inp...)
+	go chananyThingSlice(cha, inp...)
 	return cha
 }
 
-func (my anyOwner) chananyThingSlice(out chan<- anyThing, inp ...[]anyThing) {
+func chananyThingSlice(out anyThingInto, inp ...[]anyThing) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -87,13 +89,13 @@ func (my anyOwner) chananyThingSlice(out chan<- anyThing, inp ...[]anyThing) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (my anyOwner) anyThingChanFuncNok(gen func() (anyThing, bool)) (out <-chan anyThing) {
+func anyThingChanFuncNok(gen func() (anyThing, bool)) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.chananyThingFuncNok(cha, gen)
+	go chananyThingFuncNok(cha, gen)
 	return cha
 }
 
-func (my anyOwner) chananyThingFuncNok(out chan<- anyThing, gen func() (anyThing, bool)) {
+func chananyThingFuncNok(out anyThingInto, gen func() (anyThing, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -108,13 +110,13 @@ func (my anyOwner) chananyThingFuncNok(out chan<- anyThing, gen func() (anyThing
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (my anyOwner) anyThingChanFuncErr(gen func() (anyThing, error)) (out <-chan anyThing) {
+func anyThingChanFuncErr(gen func() (anyThing, error)) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.chananyThingFuncErr(cha, gen)
+	go chananyThingFuncErr(cha, gen)
 	return cha
 }
 
-func (my anyOwner) chananyThingFuncErr(out chan<- anyThing, gen func() (anyThing, error)) {
+func chananyThingFuncErr(out anyThingInto, gen func() (anyThing, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -136,16 +138,16 @@ func (my anyOwner) chananyThingFuncErr(out chan<- anyThing, gen func() (anyThing
 // before close.
 // Note: it 'could' be PipeanyThingMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (my anyOwner) anyThingPipeFunc(inp <-chan anyThing, act func(a anyThing) anyThing) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeFunc(act func(a anyThing) anyThing) (out anyThingFrom) {
 	cha := make(chan anyThing)
 	if act == nil { // Make `nil` value useful
 		act = func(a anyThing) anyThing { return a }
 	}
-	go my.pipeanyThingFunc(cha, inp, act)
+	go inp.pipeanyThingFunc(cha, act)
 	return cha
 }
 
-func (my anyOwner) pipeanyThingFunc(out chan<- anyThing, inp <-chan anyThing, act func(a anyThing) anyThing) {
+func (inp anyThingFrom) pipeanyThingFunc(out anyThingInto, act func(a anyThing) anyThing) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action
@@ -159,10 +161,10 @@ func (my anyOwner) pipeanyThingFunc(out chan<- anyThing, inp <-chan anyThing, ac
 // Beg of anyThingTube closures around anyThingPipe
 
 // anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func (my anyOwner) anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return my.anyThingPipeFunc(inp, act)
+	return func(inp anyThingFrom) (out anyThingFrom) {
+		return inp.anyThingPipeFunc(act)
 	}
 }
 
@@ -174,13 +176,13 @@ func (my anyOwner) anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(in
 
 // anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func (my anyOwner) anyThingDone(inp <-chan anyThing) (done <-chan struct{}) {
+func (inp anyThingFrom) anyThingDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneanyThing(sig, inp)
+	go inp.doneanyThing(sig)
 	return sig
 }
 
-func (my anyOwner) doneanyThing(done chan<- struct{}, inp <-chan anyThing) {
+func (inp anyThingFrom) doneanyThing(done chan<- struct{}) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -193,13 +195,13 @@ func (my anyOwner) doneanyThing(done chan<- struct{}, inp <-chan anyThing) {
 // before close.
 //
 //  Note: Unlike anyThingDone, DoneanyThingSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (my anyOwner) anyThingDoneSlice(inp <-chan anyThing) (done <-chan []anyThing) {
+func (inp anyThingFrom) anyThingDoneSlice() (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
-	go my.doneanyThingSlice(sig, inp)
+	go inp.doneanyThingSlice(sig)
 	return sig
 }
 
-func (my anyOwner) doneanyThingSlice(done chan<- []anyThing, inp <-chan anyThing) {
+func (inp anyThingFrom) doneanyThingSlice(done chan<- []anyThing) {
 	defer close(done)
 	slice := []anyThing{}
 	for i := range inp {
@@ -211,16 +213,16 @@ func (my anyOwner) doneanyThingSlice(done chan<- []anyThing, inp <-chan anyThing
 // anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func (my anyOwner) anyThingDoneFunc(inp <-chan anyThing, act func(a anyThing)) (done <-chan struct{}) {
+func (inp anyThingFrom) anyThingDoneFunc(act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a anyThing) { return }
 	}
-	go my.doneanyThingFunc(sig, inp, act)
+	go inp.doneanyThingFunc(sig, act)
 	return sig
 }
 
-func (my anyOwner) doneanyThingFunc(done chan<- struct{}, inp <-chan anyThing, act func(a anyThing)) {
+func (inp anyThingFrom) doneanyThingFunc(done chan<- struct{}, act func(a anyThing)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action
@@ -234,27 +236,27 @@ func (my anyOwner) doneanyThingFunc(done chan<- struct{}, inp <-chan anyThing, a
 // ===========================================================================
 // Beg of anyThingFini closures
 
-// anyThingFini returns a closure around `anyThingDone(_)`.
-func (my anyOwner) anyThingFini() func(inp <-chan anyThing) (done <-chan struct{}) {
+// anyThingFini returns a closure around `anyThingDone()`.
+func (inp anyThingFrom) anyThingFini() func(inp anyThingFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan anyThing) (done <-chan struct{}) {
-		return my.anyThingDone(inp)
+	return func(inp anyThingFrom) (done <-chan struct{}) {
+		return inp.anyThingDone()
 	}
 }
 
-// anyThingFiniSlice returns a closure around `anyThingDoneSlice(_)`.
-func (my anyOwner) anyThingFiniSlice() func(inp <-chan anyThing) (done <-chan []anyThing) {
+// anyThingFiniSlice returns a closure around `anyThingDoneSlice()`.
+func (inp anyThingFrom) anyThingFiniSlice() func(inp anyThingFrom) (done <-chan []anyThing) {
 
-	return func(inp <-chan anyThing) (done <-chan []anyThing) {
-		return my.anyThingDoneSlice(inp)
+	return func(inp anyThingFrom) (done <-chan []anyThing) {
+		return inp.anyThingDoneSlice()
 	}
 }
 
-// anyThingFiniFunc returns a closure around `anyThingDoneFunc(_, act)`.
-func (my anyOwner) anyThingFiniFunc(act func(a anyThing)) func(inp <-chan anyThing) (done <-chan struct{}) {
+// anyThingFiniFunc returns a closure around `anyThingDoneFunc(act)`.
+func (inp anyThingFrom) anyThingFiniFunc(act func(a anyThing)) func(inp anyThingFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan anyThing) (done <-chan struct{}) {
-		return my.anyThingDoneFunc(inp, act)
+	return func(inp anyThingFrom) (done <-chan struct{}) {
+		return inp.anyThingDoneFunc(act)
 	}
 }
 
@@ -266,15 +268,15 @@ func (my anyOwner) anyThingFiniFunc(act func(a anyThing)) func(inp <-chan anyThi
 
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (my anyOwner) anyThingPair(inp <-chan anyThing) (out1, out2 <-chan anyThing) {
+func (inp anyThingFrom) anyThingPair() (out1, out2 anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go my.pairanyThing(cha1, cha2, inp)
+	go inp.pairanyThing(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my anyOwner) pairanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing) {
+func (inp anyThingFrom) pairanyThing(out1, out2 anyThingInto, inp anyThingFrom) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -283,7 +285,7 @@ func (my anyOwner) pairanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing)
 	}
 } */
 
-func (my anyOwner) pairanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing) {
+func (inp anyThingFrom) pairanyThing(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -306,15 +308,15 @@ func (my anyOwner) pairanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing)
 // either of which is to receive
 // every result of inp
 // before close.
-func (my anyOwner) anyThingFork(inp <-chan anyThing) (out1, out2 <-chan anyThing) {
+func (inp anyThingFrom) anyThingFork() (out1, out2 anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go my.forkanyThing(cha1, cha2, inp)
+	go inp.forkanyThing(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my anyOwner) forkanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing) {
+func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -323,7 +325,7 @@ func (my anyOwner) forkanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing)
 	}
 } */
 
-func (my anyOwner) forkanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing) {
+func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -342,19 +344,21 @@ func (my anyOwner) forkanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing)
 // ===========================================================================
 // Beg of anyThingFanIn2 simple binary Fan-In
 
-// anyThingFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func (my anyOwner) anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
+// anyThingFanIn2 returns a channel to receive
+// all from both `inp` and `inp2`
+// before close.
+func (inp anyThingFrom) anyThingFanIn2(inp2 anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.fanIn2anyThing(cha, inp1, inp2)
+	go inp.fanIn2anyThing(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (my anyOwner) fanin2anyThing as seen in Go Concurrency Patterns
-func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+// (inp anyThingFrom) fanin2anyThing as seen in Go Concurrency Patterns
+func fanin2anyThing(out anyThingInto, inp, inp2 anyThingFrom) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -362,7 +366,7 @@ func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 	}
 } */
 
-func (my anyOwner) fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+func (inp anyThingFrom) fanIn2anyThing(out anyThingInto, inp2 anyThingFrom) {
 	defer close(out)
 
 	var (
@@ -373,11 +377,11 @@ func (my anyOwner) fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThin
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -389,8 +393,8 @@ func (my anyOwner) fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThin
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

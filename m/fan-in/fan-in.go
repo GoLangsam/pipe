@@ -13,9 +13,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingFanIn
@@ -29,29 +31,30 @@ type anyOwner generic.Number
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func (my anyOwner) anyThingFanIn(inps ...<-chan anyThing) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingFanIn(inps ...anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
 
 	wg := new(sync.WaitGroup)
-	wg.Add(len(inps))
+	wg.Add(len(inps) + 1)
 
-	go my.fanInanyThingWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
+	go inp.fanInanyThingWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
+	go inp.fanInanyThing(cha, wg)
 	for i := range inps {
-		go my.fanInanyThing(cha, inps[i], wg) // Spawn "output(c)"s
+		go inps[i].fanInanyThing(cha, wg) // Spawn "output(c)"s
 	}
 
 	return cha
 }
 
-func (my anyOwner) fanInanyThing(out chan<- anyThing, inp <-chan anyThing, wg *sync.WaitGroup) {
+func (inp anyThingFrom) fanInanyThing(out anyThingInto, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for i := range inp {
 		out <- i
 	}
 }
 
-func (my anyOwner) fanInanyThingWaitAndClose(out chan<- anyThing, wg *sync.WaitGroup) {
+func (inp anyThingFrom) fanInanyThingWaitAndClose(out anyThingInto, wg *sync.WaitGroup) {
 	wg.Wait()
 	close(out)
 }

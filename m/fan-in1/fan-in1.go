@@ -13,9 +13,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingFanIn1 - fan-in using only one go routine
@@ -29,13 +31,13 @@ type anyOwner generic.Number
 //  until all inputs are closed.
 //
 // See anyThingFanIn in `fan-in` for another implementation.
-func (my anyOwner) anyThingFanIn1(inpS ...<-chan anyThing) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingFanIn1(inpS ...anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.fanin1anyThing(cha, inpS...)
+	go fanin1anyThing(cha, append(inpS, inp)...)
 	return cha
 }
 
-func (my anyOwner) fanin1anyThing(out chan<- anyThing, inpS ...<-chan anyThing) {
+func fanin1anyThing(out anyThingInto, inpS ...anyThingFrom) {
 	defer close(out)
 
 	open := len(inpS)                 // assume: all are open

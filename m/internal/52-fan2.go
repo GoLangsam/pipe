@@ -10,15 +10,15 @@ package pipe
 // anyThingFanIn2 returns a channel to receive
 // all from both `inp` and `inp2`
 // before close.
-func (inp anyThingRoC) anyThingFanIn2(inp2 anyThingRoC) (out anyThingRoC) {
+func (inp anyThingFrom) anyThingFanIn2(inp2 anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
 	go inp.fanIn2anyThing(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (inp anyThingRoC) fanin2anyThing as seen in Go Concurrency Patterns
-func fanin2anyThing(out chan<- anyThing, inp, inp2 anyThingRoC) {
+// (inp anyThingFrom) fanin2anyThing as seen in Go Concurrency Patterns
+func fanin2anyThing(out anyThingInto, inp, inp2 anyThingFrom) {
 	for {
 		select {
 		case e := <-inp:
@@ -29,7 +29,7 @@ func fanin2anyThing(out chan<- anyThing, inp, inp2 anyThingRoC) {
 	}
 } */
 
-func (inp anyThingRoC) fanIn2anyThing(out chan<- anyThing, inp2 anyThingRoC) {
+func (inp anyThingFrom) fanIn2anyThing(out anyThingInto, inp2 anyThingFrom) {
 	defer close(out)
 
 	var (
@@ -44,7 +44,7 @@ func (inp anyThingRoC) fanIn2anyThing(out chan<- anyThing, inp2 anyThingRoC) {
 			if ok {
 				out <- e
 			} else {
-				inp = inp2   // swap inp2 into inp
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:

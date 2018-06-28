@@ -11,33 +11,35 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingFanOut
 
 // anyThingFanOut returns a slice (of size = size) of channels
 // each of which shall receive any inp before close.
-func (my anyOwner) anyThingFanOut(inp <-chan anyThing, size int) (outS [](<-chan anyThing)) {
+func (inp anyThingFrom) anyThingFanOut(size int) (outS [](anyThingFrom)) {
 	chaS := make([]chan anyThing, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan anyThing)
 	}
 
-	go my.fananyThingOut(inp, chaS...)
+	go inp.fananyThingOut(chaS...)
 
-	outS = make([]<-chan anyThing, size)
+	outS = make([]anyThingFrom, size)
 	for i := 0; i < size; i++ {
-		outS[i] = (<-chan anyThing)(chaS[i]) // convert `chan` to `<-chan`
+		outS[i] = (anyThingFrom)(chaS[i]) // convert `chan` to `<-chan`
 	}
 
 	return outS
 }
 
-// c (my anyOwner) fananyThingOut(inp <-chan anyThing, outs ...chan<- anyThing) {
-func (my anyOwner) fananyThingOut(inp <-chan anyThing, outs ...chan anyThing) {
+// c (inp anyThingFrom) fananyThingOut(outs ...anyThingInto) {
+func (inp anyThingFrom) fananyThingOut(outs ...chan anyThing) {
 
 	for i := range inp {
 		for o := range outs {

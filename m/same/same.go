@@ -11,9 +11,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingSame comparator
@@ -24,16 +26,16 @@ type anyOwner generic.Number
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func (my anyOwner) anyThingSame(same func(a, b anyThing) bool, inp1, inp2 <-chan anyThing) (out <-chan bool) {
+func (inp anyThingFrom) anyThingSame(same func(a, b anyThing) bool, inp2 anyThingFrom) (out <-chan bool) {
 	cha := make(chan bool)
-	go my.sameanyThing(cha, same, inp1, inp2)
+	go inp.sameanyThing(cha, same, inp2)
 	return cha
 }
 
-func (my anyOwner) sameanyThing(out chan<- bool, same func(a, b anyThing) bool, inp1, inp2 <-chan anyThing) {
+func (inp anyThingFrom) sameanyThing(out chan<- bool, same func(a, b anyThing) bool, inp2 anyThingFrom) {
 	defer close(out)
 	for {
-		v1, ok1 := <-inp1
+		v1, ok1 := <-inp
 		v2, ok2 := <-inp2
 
 		if !ok1 || !ok2 {

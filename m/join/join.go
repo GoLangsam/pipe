@@ -11,21 +11,23 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingJoin feedback back-feeders for circular networks
 
 // anyThingJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func (my anyOwner) anyThingJoin(out chan<- anyThing, inp ...anyThing) (done <-chan struct{}) {
+func (out anyThingInto) anyThingJoin(inp ...anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.joinanyThing(sig, out, inp...)
+	go out.joinanyThing(sig, inp...)
 	return sig
 }
 
-func (my anyOwner) joinanyThing(done chan<- struct{}, out chan<- anyThing, inp ...anyThing) {
+func (out anyThingInto) joinanyThing(done chan<- struct{}, inp ...anyThing) {
 	defer close(done)
 	for i := range inp {
 		out <- inp[i]
@@ -34,13 +36,13 @@ func (my anyOwner) joinanyThing(done chan<- struct{}, out chan<- anyThing, inp .
 }
 
 // anyThingJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func (my anyOwner) anyThingJoinSlice(out chan<- anyThing, inp ...[]anyThing) (done <-chan struct{}) {
+func (out anyThingInto) anyThingJoinSlice(inp ...[]anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.joinanyThingSlice(sig, out, inp...)
+	go out.joinanyThingSlice(sig, inp...)
 	return sig
 }
 
-func (my anyOwner) joinanyThingSlice(done chan<- struct{}, out chan<- anyThing, inp ...[]anyThing) {
+func (out anyThingInto) joinanyThingSlice(done chan<- struct{}, inp ...[]anyThing) {
 	defer close(done)
 	for i := range inp {
 		for j := range inp[i] {
@@ -51,13 +53,13 @@ func (my anyOwner) joinanyThingSlice(done chan<- struct{}, out chan<- anyThing, 
 }
 
 // anyThingJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func (my anyOwner) anyThingJoinChan(out chan<- anyThing, inp <-chan anyThing) (done <-chan struct{}) {
+func (out anyThingInto) anyThingJoinChan(inp anyThingFrom) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.joinanyThingChan(sig, out, inp)
+	go out.joinanyThingChan(sig, inp)
 	return sig
 }
 
-func (my anyOwner) joinanyThingChan(done chan<- struct{}, out chan<- anyThing, inp <-chan anyThing) {
+func (out anyThingInto) joinanyThingChan(done chan<- struct{}, inp anyThingFrom) {
 	defer close(done)
 	for i := range inp {
 		out <- i

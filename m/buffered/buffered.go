@@ -11,9 +11,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingPipeBuffered - a buffered channel with capacity `cap` to receive
@@ -21,24 +23,24 @@ type anyOwner generic.Number
 // anyThingPipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func (my anyOwner) anyThingPipeBuffered(inp <-chan anyThing, cap int) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeBuffered(cap int) (out anyThingFrom) {
 	cha := make(chan anyThing, cap)
-	go my.pipeanyThingBuffered(cha, inp)
+	go inp.pipeanyThingBuffered(cha)
 	return cha
 }
 
-func (my anyOwner) pipeanyThingBuffered(out chan<- anyThing, inp <-chan anyThing) {
+func (inp anyThingFrom) pipeanyThingBuffered(out anyThingInto) {
 	defer close(out)
 	for i := range inp {
 		out <- i
 	}
 }
 
-// anyThingTubeBuffered returns a closure around PipeanyThingBuffer (_, cap).
-func (my anyOwner) anyThingTubeBuffered(cap int) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+// anyThingTubeBuffered returns a closure around PipeanyThingBuffer (cap).
+func (inp anyThingFrom) anyThingTubeBuffered(cap int) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return my.anyThingPipeBuffered(inp, cap)
+	return func(inp anyThingFrom) (out anyThingFrom) {
+		return inp.anyThingPipeBuffered(cap)
 	}
 }
 

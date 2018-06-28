@@ -9,7 +9,7 @@ package pipe
 
 // anyThingPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (inp anyThingRoC) anyThingPair() (out1, out2 anyThingRoC) {
+func (inp anyThingFrom) anyThingPair() (out1, out2 anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
 	go inp.pairanyThing(cha1, cha2)
@@ -17,7 +17,7 @@ func (inp anyThingRoC) anyThingPair() (out1, out2 anyThingRoC) {
 }
 
 /* not used - kept for reference only.
-func (inp anyThingRoC) pairanyThing(out1, out2 chan<- anyThing, inp anyThingRoC) {
+func (inp anyThingFrom) pairanyThing(out1, out2 anyThingInto, inp anyThingFrom) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -26,7 +26,7 @@ func (inp anyThingRoC) pairanyThing(out1, out2 chan<- anyThing, inp anyThingRoC)
 	}
 } */
 
-func (inp anyThingRoC) pairanyThing(out1, out2 chan<- anyThing) {
+func (inp anyThingFrom) pairanyThing(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {

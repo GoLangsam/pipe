@@ -11,9 +11,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of has nil versions
@@ -25,13 +27,13 @@ type anyOwner generic.Number
 // all results of generator `gen`
 // until nil
 // before close.
-func (my anyOwner) anyThingChanFuncNil(gen func() anyThing) (out <-chan anyThing) {
+func anyThingChanFuncNil(gen func() anyThing) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.chananyThingFuncNil(cha, gen)
+	go chananyThingFuncNil(cha, gen)
 	return cha
 }
 
-func (my anyOwner) chananyThingFuncNil(out chan<- anyThing, gen func() anyThing) {
+func chananyThingFuncNil(out anyThingInto, gen func() anyThing) {
 	defer close(out)
 	for {
 		res := gen() // generate

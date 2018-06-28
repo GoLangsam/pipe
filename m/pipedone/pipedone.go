@@ -11,22 +11,24 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingPipeDone
 
 // anyThingPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
-func (my anyOwner) anyThingPipeDone(inp <-chan anyThing) (out <-chan anyThing, done <-chan struct{}) {
+func (inp anyThingFrom) anyThingPipeDone() (out anyThingFrom, done <-chan struct{}) {
 	cha := make(chan anyThing)
 	doit := make(chan struct{})
-	go my.pipeanyThingDone(cha, doit, inp)
+	go inp.pipeanyThingDone(cha, doit)
 	return cha, doit
 }
 
-func (my anyOwner) pipeanyThingDone(out chan<- anyThing, done chan<- struct{}, inp <-chan anyThing) {
+func (inp anyThingFrom) pipeanyThingDone(out anyThingInto, done chan<- struct{}) {
 	defer close(out)
 	defer close(done)
 	for i := range inp {

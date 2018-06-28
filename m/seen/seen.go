@@ -13,9 +13,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingPipeSeen/anyThingForkSeen - an "I've seen this anyThing before" filter / forker
@@ -27,9 +29,9 @@ type anyOwner generic.Number
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 //  Note: anyThingPipeFilterNotSeenYet might be a better name, but is fairly long.
-func (my anyOwner) anyThingPipeSeen(inp <-chan anyThing) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeSeen() (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.pipeanyThingSeenAttr(cha, inp, nil)
+	go inp.pipeanyThingSeenAttr(cha, nil)
 	return cha
 }
 
@@ -41,9 +43,9 @@ func (my anyOwner) anyThingPipeSeen(inp <-chan anyThing) (out <-chan anyThing) {
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 //  Note: anyThingPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (my anyOwner) anyThingPipeSeenAttr(inp <-chan anyThing, attr func(a anyThing) interface{}) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeSeenAttr(attr func(a anyThing) interface{}) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go my.pipeanyThingSeenAttr(cha, inp, attr)
+	go inp.pipeanyThingSeenAttr(cha, attr)
 	return cha
 }
 
@@ -56,10 +58,10 @@ func (my anyOwner) anyThingPipeSeenAttr(inp <-chan anyThing, attr func(a anyThin
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my anyOwner) anyThingForkSeen(inp <-chan anyThing) (new, old <-chan anyThing) {
+func (inp anyThingFrom) anyThingForkSeen() (new, old <-chan anyThing) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go my.forkanyThingSeenAttr(cha1, cha2, inp, nil)
+	go inp.forkanyThingSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
@@ -73,14 +75,14 @@ func (my anyOwner) anyThingForkSeen(inp <-chan anyThing) (new, old <-chan anyThi
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my anyOwner) anyThingForkSeenAttr(inp <-chan anyThing, attr func(a anyThing) interface{}) (new, old <-chan anyThing) {
+func (inp anyThingFrom) anyThingForkSeenAttr(attr func(a anyThing) interface{}) (new, old anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go my.forkanyThingSeenAttr(cha1, cha2, inp, attr)
+	go inp.forkanyThingSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (my anyOwner) pipeanyThingSeenAttr(out chan<- anyThing, inp <-chan anyThing, attr func(a anyThing) interface{}) {
+func (inp anyThingFrom) pipeanyThingSeenAttr(out anyThingInto, attr func(a anyThing) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -97,7 +99,7 @@ func (my anyOwner) pipeanyThingSeenAttr(out chan<- anyThing, inp <-chan anyThing
 	}
 }
 
-func (my anyOwner) forkanyThingSeenAttr(new, old chan<- anyThing, inp <-chan anyThing, attr func(a anyThing) interface{}) {
+func (inp anyThingFrom) forkanyThingSeenAttr(new, old anyThingInto, attr func(a anyThing) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -117,21 +119,21 @@ func (my anyOwner) forkanyThingSeenAttr(new, old chan<- anyThing, inp <-chan any
 
 // anyThingTubeSeen returns a closure around anyThingPipeSeen()
 // (silently dropping every anyThing seen before).
-func (my anyOwner) anyThingTubeSeen() (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+func (inp anyThingFrom) anyThingTubeSeen() (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return my.anyThingPipeSeen(inp)
+	return func(inp anyThingFrom) (out anyThingFrom) {
+		return inp.anyThingPipeSeen()
 	}
 }
 
-// anyThingTubeSeenAttr returns a closure around anyThingPipeSeenAttr()
+// anyThingTubeSeenAttr returns a closure around anyThingPipeSeenAttr(attr)
 // (silently dropping every anyThing
 // whose attribute `attr` was
 // seen before).
-func (my anyOwner) anyThingTubeSeenAttr(attr func(a anyThing) interface{}) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+func (inp anyThingFrom) anyThingTubeSeenAttr(attr func(a anyThing) interface{}) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return my.anyThingPipeSeenAttr(inp, attr)
+	return func(inp anyThingFrom) (out anyThingFrom) {
+		return inp.anyThingPipeSeenAttr(attr)
 	}
 }
 

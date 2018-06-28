@@ -11,9 +11,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingMerge
@@ -22,25 +24,31 @@ type anyOwner generic.Number
 // Each input channel needs to be sorted ascending and free of duplicates.
 // The passed binary boolean function `less` defines the applicable order.
 //  Note: If no inputs are given, a closed channel is returned.
-func (my anyOwner) anyThingMerge(less func(i, j anyThing) bool, inps ...<-chan anyThing) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingMerge(less func(i, j anyThing) bool, inps ...anyThingFrom) (out anyThingFrom) {
+	var inpS []anyThingFrom
+	if inp == nil {
+		inpS = inps
+	} else {
+		inpS = append(inps, inp)
+	}
 
-	if len(inps) < 1 { // none: return a closed channel
+	if len(inpS) < 1 { // none: return a closed channel
 		cha := make(chan anyThing)
 		defer close(cha)
 		return cha
-	} else if len(inps) < 2 { // just one: return it
-		return inps[0]
+	} else if len(inpS) < 2 { // just one: return it
+		return inpS[0]
 	} else { // tail recurse
-		return my.mergeanyThing(less, inps[0], my.anyThingMerge(less, inps[1:]...))
+		return inpS[0].mergeanyThing(less, inpS[1].anyThingMerge(less, inpS[2:]...))
 	}
 }
 
 // mergeanyThing takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func (my anyOwner) mergeanyThing(less func(i, j anyThing) bool, i1, i2 <-chan anyThing) (out <-chan anyThing) {
+func (inp anyThingFrom) mergeanyThing(less func(i, j anyThing) bool, inp2 anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go func(out chan<- anyThing, i1, i2 <-chan anyThing) {
+	go func(out chan<- anyThing, inp, inp2 anyThingFrom) {
 		defer close(out)
 		var (
 			clos1, clos2 bool     // we found the chan closed
@@ -52,7 +60,7 @@ func (my anyOwner) mergeanyThing(less func(i, j anyThing) bool, i1, i2 <-chan an
 		for !clos1 || !clos2 {
 
 			if !clos1 && !buff1 {
-				if from1, ok = <-i1; ok {
+				if from1, ok = <-inp; ok {
 					buff1 = true
 				} else {
 					clos1 = true
@@ -60,7 +68,7 @@ func (my anyOwner) mergeanyThing(less func(i, j anyThing) bool, i1, i2 <-chan an
 			}
 
 			if !clos2 && !buff2 {
-				if from2, ok = <-i2; ok {
+				if from2, ok = <-inp2; ok {
 					buff2 = true
 				} else {
 					clos2 = true
@@ -86,7 +94,7 @@ func (my anyOwner) mergeanyThing(less func(i, j anyThing) bool, i1, i2 <-chan an
 				buff2 = false
 			}
 		}
-	}(cha, i1, i2)
+	}(cha, inp, inp2)
 	return cha
 }
 

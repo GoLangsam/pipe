@@ -11,9 +11,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingFan2 easy fan-in's
@@ -23,8 +25,8 @@ type anyOwner generic.Number
 // as well as
 // all inputs
 // before close.
-func (my anyOwner) anyThingFan2(ori <-chan anyThing, inp ...anyThing) (out <-chan anyThing) {
-	return my.anyThingFanIn2(ori, my.anyThingChan(inp...))
+func (inp anyThingFrom) anyThingFan2(ori anyThingFrom, inp ...anyThing) (out anyThingFrom) {
+	return ori.anyThingFanIn2(anyThingChan(inp...))
 }
 
 // anyThingFan2Slice returns a channel to receive
@@ -32,8 +34,8 @@ func (my anyOwner) anyThingFan2(ori <-chan anyThing, inp ...anyThing) (out <-cha
 // as well as
 // all inputs
 // before close.
-func (my anyOwner) anyThingFan2Slice(ori <-chan anyThing, inp ...[]anyThing) (out <-chan anyThing) {
-	return my.anyThingFanIn2(ori, my.anyThingChanSlice(inp...))
+func (inp anyThingFrom) anyThingFan2Slice(ori anyThingFrom, inp ...[]anyThing) (out anyThingFrom) {
+	return inp.anyThingFanIn2(anyThingChanSlice(inp...))
 }
 
 // anyThingFan2Chan returns a channel to receive
@@ -42,8 +44,8 @@ func (my anyOwner) anyThingFan2Slice(ori <-chan anyThing, inp ...[]anyThing) (ou
 // from the the input channel `inp`
 // before close.
 //  Note: anyThingFan2Chan is nothing but anyThingFanIn2
-func (my anyOwner) anyThingFan2Chan(ori <-chan anyThing, inp <-chan anyThing) (out <-chan anyThing) {
-	return my.anyThingFanIn2(ori, inp)
+func (inp anyThingFrom) anyThingFan2Chan(ori anyThingFrom) (out anyThingFrom) {
+	return inp.anyThingFanIn2(ori)
 }
 
 // anyThingFan2FuncNok returns a channel to receive
@@ -52,8 +54,8 @@ func (my anyOwner) anyThingFan2Chan(ori <-chan anyThing, inp <-chan anyThing) (o
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (my anyOwner) anyThingFan2FuncNok(ori <-chan anyThing, gen func() (anyThing, bool)) (out <-chan anyThing) {
-	return my.anyThingFanIn2(ori, my.anyThingChanFuncNok(gen))
+func (inp anyThingFrom) anyThingFan2FuncNok(ori anyThingFrom, gen func() (anyThing, bool)) (out anyThingFrom) {
+	return inp.anyThingFanIn2(anyThingChanFuncNok(gen))
 }
 
 // anyThingFan2FuncErr returns a channel to receive
@@ -62,8 +64,8 @@ func (my anyOwner) anyThingFan2FuncNok(ori <-chan anyThing, gen func() (anyThing
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (my anyOwner) anyThingFan2FuncErr(ori <-chan anyThing, gen func() (anyThing, error)) (out <-chan anyThing) {
-	return my.anyThingFanIn2(ori, my.anyThingChanFuncErr(gen))
+func (inp anyThingFrom) anyThingFan2FuncErr(ori anyThingFrom, gen func() (anyThing, error)) (out anyThingFrom) {
+	return inp.anyThingFanIn2(anyThingChanFuncErr(gen))
 }
 
 // End of anyThingFan2 easy fan-in's

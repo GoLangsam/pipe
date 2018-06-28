@@ -157,15 +157,13 @@ func Sieve() chan int {
 
 	// Sieve out 'composites' from 'candidates'.
 	go func() {
-		var my anyOwner // so we may call his methods
-
 		// In order to generate the nth prime we only need multiples of
 		// primes ≤ sqrt(nth prime).  Thus, the merging goroutine will
 		// receive from 'primes' much slower than this goroutine
 		// will send to it, making the buffer accumulate and block this
 		// goroutine from sending, causing a deadlock.  The solution is to
 		// use a proxy goroutine to do automatic buffering.
-		primes := my.anyThingSendProxy(primes)
+		primes := anyThingSendProxy(primes)
 
 		candidates := odds()
 		p := <-candidates

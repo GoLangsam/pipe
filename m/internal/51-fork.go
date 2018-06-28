@@ -11,7 +11,7 @@ package pipe
 // either of which is to receive
 // every result of inp
 // before close.
-func (inp anyThingRoC) anyThingFork() (out1, out2 anyThingRoC) {
+func (inp anyThingFrom) anyThingFork() (out1, out2 anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
 	go inp.forkanyThing(cha1, cha2)
@@ -19,7 +19,7 @@ func (inp anyThingRoC) anyThingFork() (out1, out2 anyThingRoC) {
 }
 
 /* not used - kept for reference only.
-func (inp anyThingRoC) forkanyThing(out1, out2 chan<- anyThing) {
+func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -28,7 +28,7 @@ func (inp anyThingRoC) forkanyThing(out1, out2 chan<- anyThing) {
 	}
 } */
 
-func (inp anyThingRoC) forkanyThing(out1, out2 chan<- anyThing) {
+func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {

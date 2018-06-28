@@ -21,9 +21,11 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingPipeAdjust
@@ -32,18 +34,18 @@ type anyOwner generic.Number
 // all `inp`
 // buffered by a anyThingSendProxy process
 // before close.
-func (my anyOwner) anyThingPipeAdjust(inp <-chan anyThing, sizes ...int) (out <-chan anyThing) {
-	cap, que := my.sendanyThingProxySizes(sizes...)
+func (inp anyThingFrom) anyThingPipeAdjust(sizes ...int) (out anyThingFrom) {
+	cap, que := sendanyThingProxySizes(sizes...)
 	cha := make(chan anyThing, cap)
-	go my.pipeanyThingAdjust(cha, inp, que)
+	go inp.pipeanyThingAdjust(cha, que)
 	return cha
 }
 
 // anyThingTubeAdjust returns a closure around anyThingPipeAdjust (_, sizes ...int).
-func (my anyOwner) anyThingTubeAdjust(sizes ...int) (tube func(inp <-chan anyThing) (out <-chan anyThing)) {
+func (inp anyThingFrom) anyThingTubeAdjust(sizes ...int) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
-	return func(inp <-chan anyThing) (out <-chan anyThing) {
-		return my.anyThingPipeAdjust(inp, sizes...)
+	return func(inp anyThingFrom) (out anyThingFrom) {
+		return inp.anyThingPipeAdjust(sizes...)
 	}
 }
 
@@ -53,7 +55,7 @@ func (my anyOwner) anyThingTubeAdjust(sizes ...int) (tube func(inp <-chan anyThi
 // ===========================================================================
 // Beg of sendanyThingProxy
 
-func (my anyOwner) sendanyThingProxySizes(sizes ...int) (cap, que int) {
+func sendanyThingProxySizes(sizes ...int) (cap, que int) {
 
 	// CAP is the minimum capacity of the buffered proxy channel in `anyThingSendProxy`
 	const CAP = 10
@@ -87,10 +89,10 @@ func (my anyOwner) sendanyThingProxySizes(sizes ...int) (cap, que int) {
 // Note: anyThingSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
 // even so it does not fit the pipe tube pattern as anyThingPipeAdjust does.
-func (my anyOwner) anyThingSendProxy(out chan<- anyThing, sizes ...int) chan<- anyThing {
-	cap, que := my.sendanyThingProxySizes(sizes...)
+func anyThingSendProxy(out anyThingInto, sizes ...int) (send anyThingInto) {
+	cap, que := sendanyThingProxySizes(sizes...)
 	cha := make(chan anyThing, cap)
-	go my.pipeanyThingAdjust(out, cha, que)
+	go (anyThingFrom)(cha).pipeanyThingAdjust(out, que)
 	return cha
 }
 
@@ -98,7 +100,7 @@ func (my anyOwner) anyThingSendProxy(out chan<- anyThing, sizes ...int) chan<- a
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (my anyOwner) pipeanyThingAdjust(out chan<- anyThing, inp <-chan anyThing, QUE int) {
+func (inp anyThingFrom) pipeanyThingAdjust(out anyThingInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)

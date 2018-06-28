@@ -9,13 +9,13 @@ package pipe
 
 // anyThingDone returns a channel to receive
 // one signal before close after `inp` has been drained.
-func (inp anyThingRoC) anyThingDone() (done <-chan struct{}) {
+func (inp anyThingFrom) anyThingDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go inp.doneanyThing(sig)
 	return sig
 }
 
-func (inp anyThingRoC) doneanyThing(done chan<- struct{}) {
+func (inp anyThingFrom) doneanyThing(done chan<- struct{}) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -28,13 +28,13 @@ func (inp anyThingRoC) doneanyThing(done chan<- struct{}) {
 // before close.
 //
 //  Note: Unlike anyThingDone, DoneanyThingSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (inp anyThingRoC) anyThingDoneSlice() (done <-chan []anyThing) {
+func (inp anyThingFrom) anyThingDoneSlice() (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
 	go inp.doneanyThingSlice(sig)
 	return sig
 }
 
-func (inp anyThingRoC) doneanyThingSlice(done chan<- []anyThing) {
+func (inp anyThingFrom) doneanyThingSlice(done chan<- []anyThing) {
 	defer close(done)
 	slice := []anyThing{}
 	for i := range inp {
@@ -46,7 +46,7 @@ func (inp anyThingRoC) doneanyThingSlice(done chan<- []anyThing) {
 // anyThingDoneFunc returns a channel to receive
 // one signal after `act` has been applied to every `inp`
 // before close.
-func (inp anyThingRoC) anyThingDoneFunc(act func(a anyThing)) (done <-chan struct{}) {
+func (inp anyThingFrom) anyThingDoneFunc(act func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a anyThing) { return }
@@ -55,7 +55,7 @@ func (inp anyThingRoC) anyThingDoneFunc(act func(a anyThing)) (done <-chan struc
 	return sig
 }
 
-func (inp anyThingRoC) doneanyThingFunc(done chan<- struct{}, act func(a anyThing)) {
+func (inp anyThingFrom) doneanyThingFunc(done chan<- struct{}, act func(a anyThing)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action

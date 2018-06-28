@@ -11,25 +11,27 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingDaisyChain
 
 // anyThingProc is the signature of the inner process of any linear pipe-network
 //  Example: the identity proc:
-// samesame := func(into chan<- anyThing, from <-chan anyThing) { into <- <-from }
+// samesame := func(into anyThingInto, from anyThingFrom) { into <- <-from }
 //  Note: type anyThingProc is provided for documentation purpose only.
 // The implementation uses the explicit function signature
 // in order to avoid some genny-related issue.
 //  Note: In https://talks.golang.org/2012/waza.slide#40
 //  Rob Pike uses a anyThingProc named `worker`.
-type anyThingProc func(into chan<- anyThing, from <-chan anyThing)
+type anyThingProc func(into anyThingInto, from anyThingFrom)
 
 // Example: the identity proc - see `samesame` below
-var _ anyThingProc = func(out chan<- anyThing, inp <-chan anyThing) {
+var _ anyThingProc = func(out anyThingInto, inp anyThingFrom) {
 	// `out <- <-inp` or `into <- <-from`
 	defer close(out)
 	for i := range inp {
@@ -38,9 +40,9 @@ var _ anyThingProc = func(out chan<- anyThing, inp <-chan anyThing) {
 }
 
 // daisyanyThing returns a channel to receive all inp after having passed thru process `proc`.
-func (my anyOwner) daisyanyThing(
-	inp <-chan anyThing, // a daisy to be chained
-	proc func(into chan<- anyThing, from <-chan anyThing), // a process function
+func daisyanyThing(
+	inp anyThingFrom, // a daisy to be chained
+	proc func(into anyThingInto, from anyThingFrom), // a process function
 ) (
 	out chan anyThing, // to receive all results
 ) { //  Body:
@@ -58,9 +60,9 @@ func (my anyOwner) daisyanyThing(
 // Note: If no `tubes` are provided,
 // `out` shall receive elements from `inp` unaltered (as a convenience),
 // thus making a null value useful.
-func (my anyOwner) anyThingDaisyChain(
+func anyThingDaisyChain(
 	inp chan anyThing, // a daisy to be chained
-	procs ...func(out chan<- anyThing, inp <-chan anyThing), // a process function
+	procs ...func(out anyThingInto, inp anyThingFrom), // a process function
 ) (
 	out chan anyThing, // to receive all results
 ) { //  Body:
@@ -68,17 +70,17 @@ func (my anyOwner) anyThingDaisyChain(
 	cha := inp
 
 	if len(procs) < 1 {
-		samesame := func(out chan<- anyThing, inp <-chan anyThing) {
+		samesame := func(out anyThingInto, inp anyThingFrom) {
 			// `out <- <-inp` or `into <- <-from`
 			defer close(out)
 			for i := range inp {
 				out <- i
 			}
 		}
-		cha = my.daisyanyThing(cha, samesame)
+		cha = daisyanyThing(cha, samesame)
 	} else {
 		for _, proc := range procs {
-			cha = my.daisyanyThing(cha, proc)
+			cha = daisyanyThing(cha, proc)
 		}
 	}
 	return cha
@@ -95,10 +97,10 @@ func (my anyOwner) anyThingDaisyChain(
 // thus making null values useful.
 //
 //  Note: anyThingDaisyChaiN(inp, 1, procs) <==> anyThingDaisyChain(inp, procs)
-func (my anyOwner) anyThingDaisyChaiN(
+func anyThingDaisyChaiN(
 	inp chan anyThing, // a daisy to be chained
 	somany int, // how many times? so many times
-	procs ...func(out chan<- anyThing, inp <-chan anyThing), // a process function
+	procs ...func(out anyThingInto, inp anyThingFrom), // a process function
 ) (
 	out chan anyThing, // to receive all results
 ) { //  Body:
@@ -106,17 +108,17 @@ func (my anyOwner) anyThingDaisyChaiN(
 	cha := inp
 
 	if somany < 1 {
-		samesame := func(out chan<- anyThing, inp <-chan anyThing) {
+		samesame := func(out anyThingInto, inp anyThingFrom) {
 			// `out <- <-inp` or `into <- <-from`
 			defer close(out)
 			for i := range inp {
 				out <- i
 			}
 		}
-		cha = my.daisyanyThing(cha, samesame)
+		cha = daisyanyThing(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {
-			cha = my.anyThingDaisyChain(cha, procs...)
+			cha = anyThingDaisyChain(cha, procs...)
 		}
 	}
 	return cha

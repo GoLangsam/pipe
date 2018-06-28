@@ -9,7 +9,7 @@ import (
 )
 
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
-func Generate(ch chan<- anyThing) {
+func Generate(ch anyThingInto) {
 	for i := 2; ; i++ {
 		ch <- i // Send 'i' to channel 'ch'.
 	}
@@ -18,8 +18,8 @@ func Generate(ch chan<- anyThing) {
 // Filter returns a tube function which does:
 // Copy the values from channel 'in' to channel 'out',
 // removing those divisible by 'prime'.
-func Filter(prime anyThing) (tube func(chan<- anyThing, <-chan anyThing)) {
-	tube = func(out chan<- anyThing, inp <-chan anyThing) {
+func Filter(prime anyThing) (tube func(anyThingInto, anyThingFrom)) {
+	tube = func(out anyThingInto, inp anyThingFrom) {
 		prime := prime.(int)
 		for {
 			n := <-inp // Receive value from 'in'.
@@ -34,14 +34,12 @@ func Filter(prime anyThing) (tube func(chan<- anyThing, <-chan anyThing)) {
 
 // The prime sieve: Daisy-chain Filter processes.
 func ExampleanyThingDaisyChain_sieve() {
-	var my anyOwner // so we may call his methods
-
 	ch := make(chan anyThing) // Create a new channel.
 	go Generate(ch)           // Launch Generate goroutine.
 	for i := 0; i < 10; i++ {
 		prime := <-ch
 		fmt.Println(prime)
-		ch = my.anyThingDaisyChain(ch, Filter(prime))
+		ch = anyThingDaisyChain(ch, Filter(prime))
 	}
 	// Output:
 	// 2

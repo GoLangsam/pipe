@@ -13,27 +13,29 @@ import (
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
-// anyOwner is the generic who shall own the methods.
-//  Note: Need to use `generic.Number` here as `generic.Type` is an interface and cannot have any method.
-type anyOwner generic.Number
+// anyThingFrom is a receive-only anyThing channel
+type anyThingFrom <-chan anyThing
+
+// anyThingInto is a send-only anyThing channel
+type anyThingInto chan<- anyThing
 
 // ===========================================================================
 // Beg of anyThingStrew - scatter them
 
 // anyThingStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (my anyOwner) anyThingStrew(inp <-chan anyThing, size int) (outS [](<-chan anyThing)) {
+func (inp anyThingFrom) anyThingStrew(size int) (outS []anyThingFrom) {
 	chaS := make(map[chan anyThing]struct{}, size)
 	for i := 0; i < size; i++ {
 		chaS[make(chan anyThing)] = struct{}{}
 	}
 
-	go my.strewanyThing(inp, chaS)
+	go inp.strewanyThing(chaS)
 
-	outS = make([]<-chan anyThing, size)
+	outS = make([]anyThingFrom, size)
 	i := 0
 	for c := range chaS {
-		outS[i] = (<-chan anyThing)(c) // convert `chan` to `<-chan`
+		outS[i] = (anyThingFrom)(c) // convert `chan` to `<-chan`
 		i++
 	}
 
@@ -43,10 +45,10 @@ func (my anyOwner) anyThingStrew(inp <-chan anyThing, size int) (outS [](<-chan 
 // c strewanyThing(inp <-chan anyThing, outS ...chan<- anyThing) {
 // Note: go does not convert the passed slice `[]chan anyThing` to `[]chan<- anyThing` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func (my anyOwner) strewanyThing(inp <-chan anyThing, outS map[chan anyThing]struct{}) {
+func (inp anyThingFrom) strewanyThing(outS map[chan anyThing]struct{}) {
 
 	for i := range inp {
-		for !my.trySendanyThing(i, outS) {
+		for !inp.trySendanyThing(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -56,7 +58,7 @@ func (my anyOwner) strewanyThing(inp <-chan anyThing, outS map[chan anyThing]str
 	}
 }
 
-func (my anyOwner) trySendanyThing(inp anyThing, outS map[chan anyThing]struct{}) bool {
+func (static anyThingFrom) trySendanyThing(inp anyThing, outS map[chan anyThing]struct{}) bool {
 
 	for o := range outS {
 
