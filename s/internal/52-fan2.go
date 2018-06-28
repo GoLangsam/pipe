@@ -7,7 +7,9 @@ package pipe
 // ===========================================================================
 // Beg of anyThingFanIn2 simple binary Fan-In
 
-// anyThingFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
+// anyThingFanIn2 returns a channel to receive
+// all from both `inp1` and `inp2`
+// before close.
 func anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
 	cha := make(chan anyThing)
 	go fanIn2anyThing(cha, inp1, inp2)
