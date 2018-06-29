@@ -35,11 +35,11 @@ func (inp anyThingFrom) anyThingPipeFuncMany(act func(a anyThing) anyThing, many
 		many = 1
 	}
 
-	go pipeanyThingFuncMany(cha, inp, act, many)
+	go inp.pipeanyThingFuncMany(cha, act, many)
 	return cha
 }
 
-func (inp anyThingFrom) pipeanyThingFuncMany(out anyThingFrom, act func(a anyThing) anyThing, many int) {
+func (inp anyThingFrom) pipeanyThingFuncMany(out anyThingInto, act func(a anyThing) anyThing, many int) {
 	defer close(out)
 
 	sem := make(chan struct{}, many)
