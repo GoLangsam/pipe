@@ -56,14 +56,14 @@ func pipeanyThingFuncMany(out chan<- anyThing, inp <-chan anyThing, act func(a a
 
 	for i := range inp {
 		wg.Add(1)
-		go func() {
+		go func(i anyThing) {
 			sem <- struct{}{}
 			defer func() {
 				<-sem
 				wg.Done()
 			}()
 			out <- act(i) // apply action
-		}()
+		}(i)
 	}
 	wg.Wait()
 }

@@ -5,6 +5,8 @@
 package pipe
 
 import (
+	"sync"
+
 	"github.com/cheekybits/genny/generic"
 )
 
@@ -19,19 +21,10 @@ type anyThing generic.Type
 // by `many` parallel processing goroutines
 // before close.
 //
-// anyThingPipeFuncMany - a parallel processing anyThingPipeFunc
-//
+//  ref: database/sql/sql_test.go
 //  ref: cmd/compile/internal/gc/noder.go
 //
-// Note: There is no need for a `WaitGroup` in `noder.go`.
-// Each `noder` carries another channel `err`
-// which will be closed upon completition
-// and thus can safely be ranged over
-// in that `range noders` loop which follows
-// the spawning of the parallel processing goroutines.
-// Another useful idiom.
-//
-func anyThingPipeFuncMany(inp <-chan anyThing, act func(a anyThing) anyThing, many int) (out <-chan anyThing) {
+func (inp anyThingFrom) anyThingPipeFuncMany(act func(a anyThing) anyThing, many int) (out anyThingFrom) {
 	cha := make(chan anyThing)
 
 	if act == nil { // Make `nil` value useful
@@ -46,18 +39,24 @@ func anyThingPipeFuncMany(inp <-chan anyThing, act func(a anyThing) anyThing, ma
 	return cha
 }
 
-func pipeanyThingFuncMany(out chan<- anyThing, inp <-chan anyThing, act func(a anyThing) anyThing, many int) {
+func (inp anyThingFrom) pipeanyThingFuncMany(out anyThingFrom, act func(a anyThing) anyThing, many int) {
 	defer close(out)
 
 	sem := make(chan struct{}, many)
+	var wg sync.WaitGroup
 
 	for i := range inp {
+		sem <- struct{}{}
+		wg.Add(1)
 		go func(i anyThing) {
-			sem <- struct{}{}
-			defer func() { <-sem }()
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
 			out <- act(i) // apply action
 		}(i)
 	}
+	wg.Wait()
 }
 
 // End of anyThingSame comparator
