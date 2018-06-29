@@ -20,6 +20,8 @@ type anyThing generic.Type
 // on variadic inps
 // before close.
 //
+//  Note: For each input one go routine is spawned to forward arrivals.
+//
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
 func anyThingFanIn(inps ...<-chan anyThing) (out <-chan anyThing) {
