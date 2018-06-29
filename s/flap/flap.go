@@ -133,28 +133,28 @@ func anyThingFiniLeave(wg anyThingWaiter) func(inp <-chan anyThing) (done <-chan
 
 // anyThingDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func anyThingDoneWait(inp chan<- anyThing, wg anyThingWaiter) (done <-chan struct{}) {
+func anyThingDoneWait(out chan<- anyThing, wg anyThingWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go doneanyThingWait(cha, inp, wg)
+	go doneanyThingWait(cha, out, wg)
 	return cha
 }
 
-func doneanyThingWait(done chan<- struct{}, inp chan<- anyThing, wg anyThingWaiter) {
+func doneanyThingWait(done chan<- struct{}, out chan<- anyThing, wg anyThingWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// anyThingFiniWait returns a closure around `DoneanyThingWait(_, wg)`.
-func anyThingFiniWait(wg anyThingWaiter) func(inp chan<- anyThing) (done <-chan struct{}) {
+// anyThingFiniWait returns a closure around `anyThingDoneWait(_, wg)`.
+func anyThingFiniWait(wg anyThingWaiter) func(out chan<- anyThing) (done <-chan struct{}) {
 
-	return func(inp chan<- anyThing) (done <-chan struct{}) {
-		return anyThingDoneWait(inp, wg)
+	return func(out chan<- anyThing) (done <-chan struct{}) {
+		return anyThingDoneWait(out, wg)
 	}
 }
 

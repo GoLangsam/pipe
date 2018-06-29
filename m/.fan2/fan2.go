@@ -15,50 +15,50 @@ type anyThing generic.Type
 // Beg of anyThingFan2 easy fan-in's
 
 // anyThingFan2 returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func (inp anyThingFrom) anyThingFan2(ori anyThingFrom, inp ...anyThing) (out anyThingFrom) {
-	return ori.anyThingFanIn2(anyThingChan(inp...))
+func (inp anyThingFrom) anyThingFan2(inps ...anyThing) (out anyThingFrom) {
+	return inp.anyThingFanIn2(anyThingChan(inps...))
 }
 
 // anyThingFan2Slice returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func (inp anyThingFrom) anyThingFan2Slice(ori anyThingFrom, inp ...[]anyThing) (out anyThingFrom) {
-	return inp.anyThingFanIn2(anyThingChanSlice(inp...))
+func (inp anyThingFrom) anyThingFan2Slice(inps ...[]anyThing) (out anyThingFrom) {
+	return inp.anyThingFanIn2(anyThingChanSlice(inps...))
 }
 
 // anyThingFan2Chan returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
-// from the the input channel `inp`
+// everything from `inp2`
 // before close.
 //  Note: anyThingFan2Chan is nothing but anyThingFanIn2
-func (inp anyThingFrom) anyThingFan2Chan(ori anyThingFrom) (out anyThingFrom) {
-	return inp.anyThingFanIn2(ori)
+func (inp anyThingFrom) anyThingFan2Chan(inp2 anyThingFrom) (out anyThingFrom) {
+	return inp.anyThingFanIn2(inp2)
 }
 
 // anyThingFan2FuncNok returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (inp anyThingFrom) anyThingFan2FuncNok(ori anyThingFrom, gen func() (anyThing, bool)) (out anyThingFrom) {
+func (inp anyThingFrom) anyThingFan2FuncNok(gen func() (anyThing, bool)) (out anyThingFrom) {
 	return inp.anyThingFanIn2(anyThingChanFuncNok(gen))
 }
 
 // anyThingFan2FuncErr returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (inp anyThingFrom) anyThingFan2FuncErr(ori anyThingFrom, gen func() (anyThing, error)) (out anyThingFrom) {
+func (inp anyThingFrom) anyThingFan2FuncErr(gen func() (anyThing, error)) (out anyThingFrom) {
 	return inp.anyThingFanIn2(anyThingChanFuncErr(gen))
 }
 
