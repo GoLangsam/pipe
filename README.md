@@ -6,91 +6,40 @@ A pipers bag - generic functions to gain concurrency - batteries included :-)
 [![Build Status](https://travis-ci.org/GoLangsam/pipe.svg?branch=master)](https://travis-ci.org/GoLangsam/pipe)
 [![GoDoc](https://godoc.org/github.com/GoLangsam/pipe?status.svg)](https://godoc.org/github.com/GoLangsam/pipe)
 
+`pipe/s` - an extensive and systematic ensemble of [concurrency](readme/adverts.md)-based mechanisms
+
+- as ready-to-use generic production-grade code
+- in different sizes such [`s`](s/) and [`m`](m/) (mind You: one size never fit's all)
+- with comprehensively explained concepts, formulas and terminology - [readme](readme/)
+- complemented with lots of 'how-to-do' and 'how-to-use' [expamples](expamples/).
+
+- Follow a (hopefully) enlightening [evolution](readme/evolve.md).
+- Begin with oversimplified (but popular!) [code](readme/in-the-wild.md).
+- Encounter dangerous [pitfalls and easy-to-do mistakes](readme/pitfalls.md) along the way.
+- Improve Your use of vaccines and protective habits.
+- Ascend to implementations of [some](any/) higher-level concepts such as 'load balancer', 'circular crawler' ...
+- Eventually encounter the little-known land of concurrent *lazy* evaluation.
+
+That's where we aim to go here - using [go](https.//golang.org/ "golang.org"), common sense and playful discipline.
+
+Are You ready for this?
 
 ```
     go get -u github.com/GoLangsam/pipe
 ```
 
+Still in doubt? Have a peek at the [short prolog](readme/prolog.md).
+
+And the [overview](readme/overview.md) is a good place to start...
+
+May what You find here in this repo be a trustworthy and helpful companion along Your journey. Enjoy!
+
 Please feel free and encouraged to suggest, improve, comment or ask - You'll be welcome!
 
-## Overview
-
-- an evolution:
-	- [ssss](ssss.none/) a first 'theoretical' approach - does not get You anywhere
-	- [sss](sss.naive/) a naive approach - as seen in popular slides, talks and blogs
-	- [ss](ss.notyet/) a better way to do it
-
-- the essence
-	- [s](s/) is for You to use - [Batteries](#batteries) included!
-	- [m](m/) prefer to use methods? - Same [batteries](#batteries) included!
-
-- toys and tests
-	- [expamples](expamples/)
-
-- notes and explanations
-	- [readme](readme/) contains further background documentation 
-
-- internals
-	- [internal](internal/) hides [bundledotgo](internal/cmd/bundledotgo), a quick&dirty patch of bundle
-	- [.generate](.generate/) prepares the extended versions
-	- [.generic](.generic/) prepares the all-together pipe.go
-
-- extended
-	- [xxl](xxl/) demand-driven channel - **lazy** evaluation
-	- [xxs](xxs/) supply-driven counter-part
-	- [xxsl](xsl/) the super luxury version has both: demand- and supply-driven channels
+---
+## Think deep - code happy - be simple - see clear :-)
 
 ---
-
-## [ssss](ssss.none/) - simply super stupid small
-
-
-## [sss](sss.naive/) - simple stupid small
-
-
-## [ss](ss.notyet/) - still small
-
-
-## [s](s/) - smart & useful - [batteries](#batteries) included!
-
-
-### Batteries
-
-- [pipedone](s/pipedone/)	- be signalled when flow subsides here
-- [plug](s/plug/)	- pull the plug
-- [plugafter](s/plugafter/) - pull the plug after some time
-- [flap](s/flap/)	- keep track how many enter and leave
-- [buffered](s/buffered/)	- insert a buffered channel
-
-- [adjust](s/adjust/)	- insert an adjusting buffer 
-
-- [strew](s/strew/)	- send each to one receiver available
-- [fan-out](s/fan-out/)	- send each to all receivers (lock-step)
-
-- [seen](s/seen/)	- an "I've seen this before" filter / forker
-
-- [fan2](s/fan2/)	- feed some inputs into your channel
-- [fan-in](s/fan-in/)	- gather all inputs into one output
-- [fan-in1](s/fan-in1/)	- same - just using only one goroutine
-
-- [merge](s/merge/)	- gather sorted streams into one
-- [same](s/same/)	- compare two streams
-
-- [join](s/join/)	- join stuff into the flow
-
-- [daisy](s/daisy/)	- daisy chain tubes
-
-
-## [examples](examples/)
-
-- [a web-crawler](examples/httpsyet/) - a refactored real world example
-
-## [internal](internal/)
-
-- [bundle.go](internal/cmd/bundledotgo/) - a quick&dirty hack
-
----
-Think deep - code happy - be simple - see clear :-)
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
 

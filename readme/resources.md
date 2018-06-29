@@ -26,11 +26,18 @@ Some links to related informations.
     * Reference: http://www.gopl.io/
 
 ## further readings
+- [a laundry list of common mistakes](https://github.com/golang/go/wiki/CodeReviewComments), not a style guide.
+- [package names](http://golang.org/doc/effective_go.html#package-names)
+
 - [Golang Internals Part 2: Nice benefits of named return values](https://blog.minio.io/golang-internals-part-2-nice-benefits-of-named-return-values-1e95305c8687)
 
 - [Go by Example: Channels](https://gobyexample.com/channels)
   "*Channels* are the pipes that connect concurrent goroutines. You can send values into channels from one goroutine and receive those values into another goroutine."
   "Channels are typed by the values they convey."
+
+- [Go101](http://Go101.org/ "Go101")
+  Includes interesting stuff such as basic concurrency patterns. 
+
 
 ---
 - [Simple Data Processing Pipeline with Golang](https://www.hugopicado.com/2016/09/26/simple-data-processing-pipeline-with-golang.html) by [Hugo Picado](https://www.hugopicado.com/) Sep. 26, 2016
