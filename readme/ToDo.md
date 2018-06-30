@@ -1,22 +1,20 @@
 
 General: 
 
---- nonsense !!!
-https://github.com/svenstaro/genact/
-https://svenstaro.github.io/genact?module=cc&module=memdump
-https://github.com/svenstaro/genact/releases/download/0.6.0/genact-win.exe - Win10 only :-(
+--- pipe/m/adjust 
+-- func anyThingSendProxy(out anyThingInto, sizes ...int) (send anyThingInto) {
+=> func (out anyThingInto)anyThingSendProxy(sizes ...int) (send anyThingInto) {
 
-modules: [bootlog, botnet, cargo, cc, composer, cryptomining, simcity, download, memdump, kernel_compile, weblog]
+- rename sizes
+- sendanyThingProxySizes => static method!?! - use ?Into - it's more rare ;-)
 
----
-another button: TODO:investigate
-https://codeclimate.com/github/mauricioklein/go-chainable/maintainability
-
----todo: ?/.fan2 Macht das überhaupt Sinn???
+=> methods? How?
+func ThingDaisyChaiN(inp chan Thing, somany int, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
+func ThingDaisyChain(inp chan Thing, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
 
 ---todo: s/proc
 
----todo: s/bool
+---todo: s/bool & s/true
 
 Partition: github.com\tobyhede\go-underscore\
 
