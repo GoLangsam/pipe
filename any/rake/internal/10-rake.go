@@ -16,10 +16,14 @@ import (
 // A Rake may be used e.g. as a crawling Crawler
 // where every link shall be visited only once.
 type Rake struct {
-	items chan item       // to be processed
-	wg    *sync.WaitGroup // monitor SiteEnter & SiteLeave
-	done  chan struct{}   // to signal termination due to traffic having subsided
-	once  *sync.Once      // to close Done only once - lauched from first feed
+	items chan item                // to be processed
+	wg    *sync.WaitGroup          // monitor SiteEnter & SiteLeave
+	done  chan struct{}            // to signal termination due to traffic having subsided
+	once  *sync.Once               // to close Done only once - lauched from first feed
+	rake  func(a item)             // function to be applied
+	attr  func(a item) interface{} // attribute to discriminate seen
+	runs  bool                     // am I running?
+	many  int                      // # of parallel raking endpoints of the Rake
 }
 
 // New returns a (pointer to a) new operational Rake.
@@ -49,21 +53,78 @@ func New(
 		new(sync.WaitGroup),
 		make(chan struct{}),
 		new(sync.Once),
+		rake,
+		attr,
+		false,
+		somany,
 	}
 
+	return my
+}
+
+// init builds the network
+func (my *Rake) init() *Rake {
 	proc := func(a item) { // wrap rake:
-		rake(a)      // apply original rake
+		my.rake(a)   // apply original rake
 		my.wg.Done() // have this item leave
 	}
 
 	// build the concurrent pipe network
-	items, seen := my.itemForkSeenAttr(my.items, attr)
-	_ = my.itemDoneLeave(seen, my.wg) // `seen` leave without further processing
+	items, seen := (itemFrom)(my.items).itemForkSeenAttr(my.attr)
+	_ = seen.itemDoneLeave(my.wg) // `seen` leave without further processing
 
-	for _, items := range my.itemStrew(my.itemPipeAdjust(items), somany) {
-		_ = my.itemDoneFunc(items, proc) // strewed `items` leave in wrapped `crawl`
+	for _, items := range items.itemPipeAdjust().itemStrew(my.many) {
+		_ = items.itemDoneFunc(proc) // strewed `items` leave in wrapped `crawl`
 	}
 
+	return my
+}
+
+// start builds the network and spawns the closer
+func (my *Rake) start() {
+	my = my.init()
+	my.runs = true
+	go my.closer()
+}
+
+func (my *Rake) closer() *Rake {
+	my.done <- <-(itemInto)(my.items).itemDoneWait(my.wg)
+	close(my.done)
+	return my
+}
+
+// checkRuns for paranoids
+func (my *Rake) checkRuns() *Rake {
+	if my.runs {
+		panic("Rake is running already")
+	}
+	return my
+}
+
+// Rake sets the rake function to be applied (in parallel).
+//
+// `rake` is the operation to be executed in parallel on any item
+// which has not been seen before.
+//
+// You may provide `nil` here and call `Rake(..)` later to provide it.
+// Or have it use `myrake.Feed(items...)` in order to provide feed-back.
+//
+// Rake panics iff called after first nonempty `Feed(...)`
+func (my *Rake) Rake(rake func(a item)) *Rake {
+	my.checkRuns()
+	my.rake = rake
+	return my
+}
+
+// Attr sets the (optional) attribute to discriminate 'seen'.
+//
+// `attr` allows to specify an attribute for the 'seen' filter.
+// If not set 'seen' will discriminate any item by itself.
+//
+// Seen panics iff called after first nonempty `Feed(...)`
+func (my *Rake) Attr(attr func(a item) interface{}) *Rake {
+	my.checkRuns()
+	my.attr = attr
 	return my
 }
 
@@ -78,23 +139,18 @@ func (my *Rake) Done() (done <-chan struct{}) {
 func (my *Rake) Feed(items ...item) *Rake {
 
 	if len(items) == 0 {
-		return my
+		return my // nothing to do
 	}
 
-	my.wg.Add(len(items))
+	my.wg.Add(len(items)) // items enter
+
+	my.once.Do(my.start) // lazy init: build & start the network
+
 	for _, i := range items {
 		my.items <- i
 	}
 
-	my.once.Do(func() {
-		go func(t *Rake) {
-			my.done <- <-my.itemDoneWait(my.items, my.wg)
-			close(my.done)
-		}(my)
-	})
-
 	return my
-
 }
 
 // End of Rake
