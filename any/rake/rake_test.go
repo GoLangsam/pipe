@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func Example_Rake() {
+func ExampleRake_closure() {
 
 	var r *Rake
 	crawl := func(item Any) {
@@ -27,6 +27,28 @@ func Example_Rake() {
 	r = New(crawl, nil, 80)
 
 	r.Feed(1)
+
+	<-r.Done()
+
+	fmt.Println("Done")
+	// Output:
+	// Done
+}
+
+func ExampleRake_chained() {
+
+	var r *Rake
+	crawl := func(item Any) {
+		if false {
+			log.Println("have:", item)
+		}
+		for i := 0; i < rand.Intn(9)+2; i++ {
+			r.Feed(rand.Intn(2000)) // up to 10 new numbers < 2.000
+		}
+		time.Sleep(time.Millisecond * 10)
+	}
+
+	r = New(nil, nil, 80).Rake(crawl).Feed(1)
 
 	<-r.Done()
 
