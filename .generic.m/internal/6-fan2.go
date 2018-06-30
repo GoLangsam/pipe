@@ -32,11 +32,11 @@ func (inp ThingFrom) ThingFan2Slice(inps ...[]Thing) (out ThingFrom) {
 // ThingFan2Chan returns a channel to receive
 // everything from `inp`
 // as well as
-// everything from `ori`
+// everything from `inp2`
 // before close.
 // Note: ThingFan2Chan is nothing but ThingFanIn2
-func (inp ThingFrom) ThingFan2Chan(ori ThingFrom) (out ThingFrom) {
-	return inp.ThingFanIn2(ori)
+func (inp ThingFrom) ThingFan2Chan(inp2 ThingFrom) (out ThingFrom) {
+	return inp.ThingFanIn2(inp2)
 }
 
 // ThingFan2FuncNok returns a channel to receive
@@ -45,7 +45,7 @@ func (inp ThingFrom) ThingFan2Chan(ori ThingFrom) (out ThingFrom) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (inp ThingFrom) ThingFan2FuncNok(ori ThingFrom, gen func() (Thing, bool)) (out ThingFrom) {
+func (inp ThingFrom) ThingFan2FuncNok(gen func() (Thing, bool)) (out ThingFrom) {
 	return inp.ThingFanIn2(ThingChanFuncNok(gen))
 }
 
@@ -55,7 +55,7 @@ func (inp ThingFrom) ThingFan2FuncNok(ori ThingFrom, gen func() (Thing, bool)) (
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (inp ThingFrom) ThingFan2FuncErr(ori ThingFrom, gen func() (Thing, error)) (out ThingFrom) {
+func (inp ThingFrom) ThingFan2FuncErr(gen func() (Thing, error)) (out ThingFrom) {
 	return inp.ThingFanIn2(ThingChanFuncErr(gen))
 }
 

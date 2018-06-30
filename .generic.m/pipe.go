@@ -562,28 +562,28 @@ func (inp ThingFrom) ThingFiniLeave(wg ThingWaiter) func(inp ThingFrom) (done <-
 
 // ThingDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func (inp ThingInto) ThingDoneWait(wg ThingWaiter) (done <-chan struct{}) {
+func (out ThingInto) ThingDoneWait(wg ThingWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go inp.doneThingWait(cha, wg)
+	go out.doneThingWait(cha, wg)
 	return cha
 }
 
-func (inp ThingInto) doneThingWait(done chan<- struct{}, wg ThingWaiter) {
+func (out ThingInto) doneThingWait(done chan<- struct{}, wg ThingWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// ThingFiniWait returns a closure around `DoneThingWait(wg)`.
-func (inp ThingInto) ThingFiniWait(wg ThingWaiter) func(inp ThingInto) (done <-chan struct{}) {
+// ThingFiniWait returns a closure around `ThingDoneWait(wg)`.
+func (out ThingInto) ThingFiniWait(wg ThingWaiter) func(out ThingInto) (done <-chan struct{}) {
 
-	return func(inp ThingInto) (done <-chan struct{}) {
-		return inp.ThingDoneWait(wg)
+	return func(out ThingInto) (done <-chan struct{}) {
+		return out.ThingDoneWait(wg)
 	}
 }
 
@@ -1209,11 +1209,11 @@ func (inp ThingFrom) ThingFan2Slice(inps ...[]Thing) (out ThingFrom) {
 // ThingFan2Chan returns a channel to receive
 // everything from `inp`
 // as well as
-// everything from `ori`
+// everything from `inp2`
 // before close.
 // Note: ThingFan2Chan is nothing but ThingFanIn2
-func (inp ThingFrom) ThingFan2Chan(ori ThingFrom) (out ThingFrom) {
-	return inp.ThingFanIn2(ori)
+func (inp ThingFrom) ThingFan2Chan(inp2 ThingFrom) (out ThingFrom) {
+	return inp.ThingFanIn2(inp2)
 }
 
 // ThingFan2FuncNok returns a channel to receive
@@ -1222,7 +1222,7 @@ func (inp ThingFrom) ThingFan2Chan(ori ThingFrom) (out ThingFrom) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (inp ThingFrom) ThingFan2FuncNok(ori ThingFrom, gen func() (Thing, bool)) (out ThingFrom) {
+func (inp ThingFrom) ThingFan2FuncNok(gen func() (Thing, bool)) (out ThingFrom) {
 	return inp.ThingFanIn2(ThingChanFuncNok(gen))
 }
 
@@ -1232,7 +1232,7 @@ func (inp ThingFrom) ThingFan2FuncNok(ori ThingFrom, gen func() (Thing, bool)) (
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (inp ThingFrom) ThingFan2FuncErr(ori ThingFrom, gen func() (Thing, error)) (out ThingFrom) {
+func (inp ThingFrom) ThingFan2FuncErr(gen func() (Thing, error)) (out ThingFrom) {
 	return inp.ThingFanIn2(ThingChanFuncErr(gen))
 }
 

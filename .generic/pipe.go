@@ -556,28 +556,28 @@ func ThingFiniLeave(wg ThingWaiter) func(inp <-chan Thing) (done <-chan struct{}
 
 // ThingDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func ThingDoneWait(inp chan<- Thing, wg ThingWaiter) (done <-chan struct{}) {
+func ThingDoneWait(out chan<- Thing, wg ThingWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go doneThingWait(cha, inp, wg)
+	go doneThingWait(cha, out, wg)
 	return cha
 }
 
-func doneThingWait(done chan<- struct{}, inp chan<- Thing, wg ThingWaiter) {
+func doneThingWait(done chan<- struct{}, out chan<- Thing, wg ThingWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// ThingFiniWait returns a closure around `DoneThingWait(_, wg)`.
-func ThingFiniWait(wg ThingWaiter) func(inp chan<- Thing) (done <-chan struct{}) {
+// ThingFiniWait returns a closure around `ThingDoneWait(_, wg)`.
+func ThingFiniWait(wg ThingWaiter) func(out chan<- Thing) (done <-chan struct{}) {
 
-	return func(inp chan<- Thing) (done <-chan struct{}) {
-		return ThingDoneWait(inp, wg)
+	return func(out chan<- Thing) (done <-chan struct{}) {
+		return ThingDoneWait(out, wg)
 	}
 }
 
@@ -751,6 +751,55 @@ func plugThingAfter(out chan<- Thing, done chan<- struct{}, inp <-chan Thing, af
 }
 
 // End of ThingPlugAfter - graceful terminator
+// ===========================================================================
+
+// ===========================================================================
+// Beg of ThingSema - limited parallel execution
+
+// ThingPipeFuncMany returns a channel to receive
+// every result of action `act` applied to `inp`
+// by `many` parallel processing goroutines
+// before close.
+//
+//  ref: database/sql/sql_test.go
+//  ref: cmd/compile/internal/gc/noder.go
+//
+func ThingPipeFuncMany(inp <-chan Thing, act func(a Thing) Thing, many int) (out <-chan Thing) {
+	cha := make(chan Thing)
+
+	if act == nil { // Make `nil` value useful
+		act = func(a Thing) Thing { return a }
+	}
+
+	if many < 1 {
+		many = 1
+	}
+
+	go pipeThingFuncMany(cha, inp, act, many)
+	return cha
+}
+
+func pipeThingFuncMany(out chan<- Thing, inp <-chan Thing, act func(a Thing) Thing, many int) {
+	defer close(out)
+
+	sem := make(chan struct{}, many)
+	var wg sync.WaitGroup
+
+	for i := range inp {
+		sem <- struct{}{}
+		wg.Add(1)
+		go func(i Thing) {
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
+			out <- act(i) // apply action
+		}(i)
+	}
+	wg.Wait()
+}
+
+// End of ThingSema - limited parallel execution
 // ===========================================================================
 
 // Note: pipeThingAdjust imports "container/ring" for the expanding buffer.
@@ -1185,51 +1234,51 @@ func fanin1Thing(out chan<- Thing, inpS ...<-chan Thing) {
 // Beg of ThingFan2 easy fan-in's
 
 // ThingFan2 returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func ThingFan2(ori <-chan Thing, inp ...Thing) (out <-chan Thing) {
-	return ThingFanIn2(ori, ThingChan(inp...))
+func ThingFan2(inp <-chan Thing, inps ...Thing) (out <-chan Thing) {
+	return ThingFanIn2(inp, ThingChan(inps...))
 }
 
 // ThingFan2Slice returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func ThingFan2Slice(ori <-chan Thing, inp ...[]Thing) (out <-chan Thing) {
-	return ThingFanIn2(ori, ThingChanSlice(inp...))
+func ThingFan2Slice(inp <-chan Thing, inps ...[]Thing) (out <-chan Thing) {
+	return ThingFanIn2(inp, ThingChanSlice(inps...))
 }
 
 // ThingFan2Chan returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
-// from the the input channel `inp`
+// everything from `inp2`
 // before close.
 // Note: ThingFan2Chan is nothing but ThingFanIn2
-func ThingFan2Chan(ori <-chan Thing, inp <-chan Thing) (out <-chan Thing) {
-	return ThingFanIn2(ori, inp)
+func ThingFan2Chan(inp <-chan Thing, inp2 <-chan Thing) (out <-chan Thing) {
+	return ThingFanIn2(inp, inp2)
 }
 
 // ThingFan2FuncNok returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func ThingFan2FuncNok(ori <-chan Thing, gen func() (Thing, bool)) (out <-chan Thing) {
-	return ThingFanIn2(ori, ThingChanFuncNok(gen))
+func ThingFan2FuncNok(inp <-chan Thing, gen func() (Thing, bool)) (out <-chan Thing) {
+	return ThingFanIn2(inp, ThingChanFuncNok(gen))
 }
 
 // ThingFan2FuncErr returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func ThingFan2FuncErr(ori <-chan Thing, gen func() (Thing, error)) (out <-chan Thing) {
-	return ThingFanIn2(ori, ThingChanFuncErr(gen))
+func ThingFan2FuncErr(inp <-chan Thing, gen func() (Thing, error)) (out <-chan Thing) {
+	return ThingFanIn2(inp, ThingChanFuncErr(gen))
 }
 
 // End of ThingFan2 easy fan-in's

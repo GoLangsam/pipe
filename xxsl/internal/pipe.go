@@ -100,7 +100,7 @@ func chananyThingFuncErr(out anyThingChannel, gen func() (anyThing, error)) {
 // but 'map' has a very different meaning in go lang.
 func anyThingPipeFunc(inp anyThingChannel, act func(a anyThing) anyThing) (out anyThingChannel) {
 	cha := anyThingChannelMakeChan()
-	if act == nil {
+	if act == nil { // Make `nil` value useful
 		act = func(a anyThing) anyThing { return a }
 	}
 	go pipeanyThingFunc(cha, inp, act)
@@ -200,7 +200,7 @@ func doitanyThingFunc(done chan<- struct{}, inp anyThingChannel, act func(a anyT
 // ===========================================================================
 // Beg of anyThingFini closures
 
-// anyThingFini returns a closure around `DoneanyThing(_)`.
+// anyThingFini returns a closure around `anyThingDone(_)`.
 func anyThingFini() func(inp anyThingChannel) (done <-chan struct{}) {
 
 	return func(inp anyThingChannel) (done <-chan struct{}) {
@@ -208,7 +208,7 @@ func anyThingFini() func(inp anyThingChannel) (done <-chan struct{}) {
 	}
 }
 
-// anyThingFiniSlice returns a closure around `DoneanyThingSlice(_)`.
+// anyThingFiniSlice returns a closure around `anyThingDoneSlice(_)`.
 func anyThingFiniSlice() func(inp anyThingChannel) (done <-chan []anyThing) {
 
 	return func(inp anyThingChannel) (done <-chan []anyThing) {
@@ -216,7 +216,7 @@ func anyThingFiniSlice() func(inp anyThingChannel) (done <-chan []anyThing) {
 	}
 }
 
-// anyThingFiniFunc returns a closure around `DoneanyThingFunc(_, act)`.
+// anyThingFiniFunc returns a closure around `anyThingDoneFunc(_, act)`.
 func anyThingFiniFunc(act func(a anyThing)) func(inp anyThingChannel) (done <-chan struct{}) {
 
 	return func(inp anyThingChannel) (done <-chan struct{}) {

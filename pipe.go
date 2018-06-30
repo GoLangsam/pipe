@@ -560,28 +560,28 @@ func AnyFiniLeave(wg AnyWaiter) func(inp <-chan Any) (done <-chan struct{}) {
 
 // AnyDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func AnyDoneWait(inp chan<- Any, wg AnyWaiter) (done <-chan struct{}) {
+func AnyDoneWait(out chan<- Any, wg AnyWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go doneAnyWait(cha, inp, wg)
+	go doneAnyWait(cha, out, wg)
 	return cha
 }
 
-func doneAnyWait(done chan<- struct{}, inp chan<- Any, wg AnyWaiter) {
+func doneAnyWait(done chan<- struct{}, out chan<- Any, wg AnyWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// AnyFiniWait returns a closure around `DoneAnyWait(_, wg)`.
-func AnyFiniWait(wg AnyWaiter) func(inp chan<- Any) (done <-chan struct{}) {
+// AnyFiniWait returns a closure around `AnyDoneWait(_, wg)`.
+func AnyFiniWait(wg AnyWaiter) func(out chan<- Any) (done <-chan struct{}) {
 
-	return func(inp chan<- Any) (done <-chan struct{}) {
-		return AnyDoneWait(inp, wg)
+	return func(out chan<- Any) (done <-chan struct{}) {
+		return AnyDoneWait(out, wg)
 	}
 }
 
@@ -755,6 +755,55 @@ func plugAnyAfter(out chan<- Any, done chan<- struct{}, inp <-chan Any, after <-
 }
 
 // End of AnyPlugAfter - graceful terminator
+// ===========================================================================
+
+// ===========================================================================
+// Beg of AnySema - limited parallel execution
+
+// AnyPipeFuncMany returns a channel to receive
+// every result of action `act` applied to `inp`
+// by `many` parallel processing goroutines
+// before close.
+//
+//  ref: database/sql/sql_test.go
+//  ref: cmd/compile/internal/gc/noder.go
+//
+func AnyPipeFuncMany(inp <-chan Any, act func(a Any) Any, many int) (out <-chan Any) {
+	cha := make(chan Any)
+
+	if act == nil { // Make `nil` value useful
+		act = func(a Any) Any { return a }
+	}
+
+	if many < 1 {
+		many = 1
+	}
+
+	go pipeAnyFuncMany(cha, inp, act, many)
+	return cha
+}
+
+func pipeAnyFuncMany(out chan<- Any, inp <-chan Any, act func(a Any) Any, many int) {
+	defer close(out)
+
+	sem := make(chan struct{}, many)
+	var wg sync.WaitGroup
+
+	for i := range inp {
+		sem <- struct{}{}
+		wg.Add(1)
+		go func(i Any) {
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
+			out <- act(i) // apply action
+		}(i)
+	}
+	wg.Wait()
+}
+
+// End of AnySema - limited parallel execution
 // ===========================================================================
 
 // Note: pipeAnyAdjust imports "container/ring" for the expanding buffer.
@@ -1189,51 +1238,51 @@ func fanin1Any(out chan<- Any, inpS ...<-chan Any) {
 // Beg of AnyFan2 easy fan-in's
 
 // AnyFan2 returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func AnyFan2(ori <-chan Any, inp ...Any) (out <-chan Any) {
-	return AnyFanIn2(ori, AnyChan(inp...))
+func AnyFan2(inp <-chan Any, inps ...Any) (out <-chan Any) {
+	return AnyFanIn2(inp, AnyChan(inps...))
 }
 
 // AnyFan2Slice returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func AnyFan2Slice(ori <-chan Any, inp ...[]Any) (out <-chan Any) {
-	return AnyFanIn2(ori, AnyChanSlice(inp...))
+func AnyFan2Slice(inp <-chan Any, inps ...[]Any) (out <-chan Any) {
+	return AnyFanIn2(inp, AnyChanSlice(inps...))
 }
 
 // AnyFan2Chan returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
-// from the the input channel `inp`
+// everything from `inp2`
 // before close.
 // Note: AnyFan2Chan is nothing but AnyFanIn2
-func AnyFan2Chan(ori <-chan Any, inp <-chan Any) (out <-chan Any) {
-	return AnyFanIn2(ori, inp)
+func AnyFan2Chan(inp <-chan Any, inp2 <-chan Any) (out <-chan Any) {
+	return AnyFanIn2(inp, inp2)
 }
 
 // AnyFan2FuncNok returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func AnyFan2FuncNok(ori <-chan Any, gen func() (Any, bool)) (out <-chan Any) {
-	return AnyFanIn2(ori, AnyChanFuncNok(gen))
+func AnyFan2FuncNok(inp <-chan Any, gen func() (Any, bool)) (out <-chan Any) {
+	return AnyFanIn2(inp, AnyChanFuncNok(gen))
 }
 
 // AnyFan2FuncErr returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func AnyFan2FuncErr(ori <-chan Any, gen func() (Any, error)) (out <-chan Any) {
-	return AnyFanIn2(ori, AnyChanFuncErr(gen))
+func AnyFan2FuncErr(inp <-chan Any, gen func() (Any, error)) (out <-chan Any) {
+	return AnyFanIn2(inp, AnyChanFuncErr(gen))
 }
 
 // End of AnyFan2 easy fan-in's
