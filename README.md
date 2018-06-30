@@ -18,9 +18,11 @@ A pipers bag - generic functions to gain concurrency - batteries included :-)
 - Encounter dangerous [pitfalls and easy-to-do mistakes](readme/pitfalls.md) along the way.
 - Improve Your use of vaccines and protective habits.
 - Ascend to implementations of [some](any/) higher-level concepts such as 'load balancer', 'circular crawler' ...
-- Eventually encounter the little-known land of concurrent *lazy* evaluation.
+- Eventually encounter the little-known land of concurrent **lazy** evaluation.
 
 That's where we aim to go here - using [go](https.//golang.org/ "golang.org"), common sense and playful discipline.
+
+`pipe/s` aims to complement Your existing types and functions seamlessly - intentionally it is **not** a framework.
 
 Are You ready for this?
 
@@ -29,7 +31,6 @@ Are You ready for this?
 ```
 
 Still in doubt? Have a peek at the [short prolog](readme/prolog.md).
-
 And the [overview](readme/overview.md) is a good place to start...
 
 May what You find here in this repo be a trustworthy and helpful companion along Your journey. Enjoy!

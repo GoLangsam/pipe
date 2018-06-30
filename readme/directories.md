@@ -1,7 +1,5 @@
 # Directories - Where is what? - What is where?
 
-## Overview
-
 - an [evolution](evolve.md):
 	- [`ssss`](../ssss.none/) a first 'theoretical' approach - does not get You anywhere
 	- [`sss`](../sss.naive/) a naive approach - as seen in popular slides, talks and blogs
@@ -13,10 +11,10 @@
 	- [l](../l/) *lazy* evolution - soon to come
 
 - toys and tests
-	- [expamples](../expamples/)
+	- [examples](../examples/)
 
 - notes and explanations
-	- [readme](../readme/) - various information: essays, references ...
+	- [readme](../readme/) - various information: essays, references ... You're looking at it right now.
 
 - internals
 	- [internal](../internal/) hides [bundledotgo](../internal/cmd/bundledotgo), a quick&dirty patch of bundle

@@ -13,7 +13,7 @@
 - [Seen in the wild](in-the-wild.md) - slides from a master - too short & too simple
 - [Pitfalls](pitfalls.md) and popular easy-to-do mistakes - vaccines and protective habits
 
-- [Generic](generic.md)	TODO
+- [Generic](generic.md)
 - [Closures](closures.md)
 
 - [Other related works](others.md)

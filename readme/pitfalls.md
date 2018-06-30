@@ -2,24 +2,6 @@
 
 Note: As of now this collection is in it's infancy. Your kind understanding is appreciated.
 
-## Prolog
-
-[Go](https.//golang.org/ "golang.org") provides primitives which enable concurreny.
-And praises them as _free_, _cheap_, _easy_ and _simple_.
-
-And - as usual for almost anything being advertised as _free_, _cheap_, _easy_ and/or _simple_ - strings are attached.
-
-Caveat!
-
-Some of these stings are really hard to see - even to a trained eye.
-
-And some of these stings may make You feel severe pain when You encounter or experience them.
-
-Caveat! There are [pitfalls](pitfalls.md) out there!
-
-So, we might ponder: "Only the very brave may use concurrency in go?"
-
-
 
 ## Ownership and sharing
 
@@ -27,6 +9,7 @@ Go does not do too much to enforce a discipline of ownership.
 
 This opens a can of worms - and go leaves it to the skill and discipline of the programmer to avoid worms to becoming nasty bugs.
 
+### `go vet -copylocks`
 Yes, `go vet -copylocks` can detect disallowed copying of values who implement `Lock()`,
 such as the mutexes of the std `sync` package.
 
@@ -101,7 +84,4 @@ We’ll do it more from now on."
 [Squashing a Schroedinbug with strong typing](https://www.cockroachlabs.com/blog/squashing-a-schroedinbug-with-strong-typing/ "Cockroach Labs")
 
 ---
-
-
----
-Think deep - code happy - be simple - see clear :-)
+[Back to overview](overview.md)

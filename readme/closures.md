@@ -2,9 +2,9 @@
 
 Functions are first citizens in go.
 
-A Function returning a function is a powerful idiom. 
+A function returning a function is a powerful idiom. 
 
-Closures takes this on a higher level.
+Closures take this on a higher level.
 
 These concepts are orthogonal to concurrency.
 
@@ -48,11 +48,14 @@ Functions and closures are used a lot throughout this repo.
 	}
 ```
 
+```
 Result: 20 
 - = 5 * 4
 - = _`(len("hello"))`_ * 4 )
 - = _`(len("hello") * x )`_(4)
 - = _`(len(name)`("hello")` * x )`_(4)
+```
+
 
 "Look at `outer2`. Its local variable `total` was modified when `myClosure` was passed to `helper` and called from there.
 There’s no reference to `total` in `helper`, but using a closure allowed it to be modified.
@@ -116,5 +119,3 @@ This state provides the solution to our problem."
 
 ---
 [Back to overview](overview.md)
-
-

@@ -1,3 +1,6 @@
+# ToDo
+
+all kinds of notes and scribblings
 
 General: 
 
@@ -21,39 +24,6 @@ Partition: github.com\tobyhede\go-underscore\
 ?PipeTrue: func(item Any) bool => chan - filter function
 ?ForkBool: func(item Any) bool => chan & chan aka true & fail - discriminator function
 
----todo: ????
-Note: len(inpS) may be zero! - If > 1 ... ??? / Or nil / one channel?
-type Component?	func(inpS ...<-chan anyThing) (outS []<-chan interface{})
-type Processor?	func(inpS ...<-chan anyThing) (done <-chan struct{})
-
----todo: Whirl
-aka Rake: Whirl / spin(no) / reel(no)
-
-type WhirlPool? func() // represents the circular network
-
-type Whirl interface {
-	Proc(WhirlPool func()) done     // receives the processing network / returns the done channel
-./.	Done() <-chan struct{}
-Rake =>	Todo(func (item anyThing))	// NO - this is part of the network - after init, before first non-empty Feed(...)
-<=	Feed(items ...anyThing)         // for initial food and (via Todo) for feedback
-<=	Gone(items ...anyThing)
-}
-
-
-w := New() *Whirl, feed, gone
-use feed (&done) to build:
-- Your Todo(feed) - feedback, e.g. store it in Your struct
-- Your Proc(done) - network
-<-w.Proc(proc).Todo(todo).Feed(1,2,3).Done()
-
-Feed:		panic iff todo == nil || proc == nil
-Todo & Proc:	panic iff called after non-empty Feed(...)
-
-????: return 3 args, or a struct with .Feed() & .Gone() & Done() ???
-Lesson learned: Not a struct with methods! The pointer in the embedding struct (which may be used in proc's feedback) arrives too late.
-The problem is feed - the struct may have Gone() & Done() as we do lazy init upon first feed
-
-The network rule: Any Feed(item) *MUST* go either go to Todo(item) or to Gone() 
 ---
 
 ### 0. Fork:
@@ -159,3 +129,40 @@ Syn: trickle
   - detector func(a) (a, bool)
   - incoming stop signal
 
+---
+---todo: ????
+Note: len(inpS) may be zero! - If > 1 ... ??? / Or nil / one channel?
+type Component?	func(inpS ...<-chan anyThing) (outS []<-chan interface{})
+type Processor?	func(inpS ...<-chan anyThing) (done <-chan struct{})
+
+---todo: Whirl
+aka Rake: Whirl / spin(no) / reel(no)
+
+type WhirlPool? func() // represents the circular network
+
+type Whirl interface {
+	Proc(WhirlPool func()) done     // receives the processing network / returns the done channel
+./.	Done() <-chan struct{}
+Rake =>	Todo(func (item anyThing))	// NO - this is part of the network - after init, before first non-empty Feed(...)
+<=	Feed(items ...anyThing)         // for initial food and (via Todo) for feedback
+<=	Gone(items ...anyThing)
+}
+
+
+w := New() *Whirl, feed, gone
+use feed (&done) to build:
+- Your Todo(feed) - feedback, e.g. store it in Your struct
+- Your Proc(done) - network
+<-w.Proc(proc).Todo(todo).Feed(1,2,3).Done()
+
+Feed:		panic iff todo == nil || proc == nil
+Todo & Proc:	panic iff called after non-empty Feed(...)
+
+????: return 3 args, or a struct with .Feed() & .Gone() & Done() ???
+Lesson learned: Not a struct with methods! The pointer in the embedding struct (which may be used in proc's feedback) arrives too late.
+The problem is feed - the struct may have Gone() & Done() as we do lazy init upon first feed
+
+The network rule: Any Feed(item) *MUST* go either go to Todo(item) or to Gone() 
+
+---
+[Back to overview](overview.md)

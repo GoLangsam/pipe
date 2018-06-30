@@ -25,21 +25,27 @@ For the project at hand - the most suitable choice is the middle way.
 For the project at hand - what is important?
 
 - Real code:
+
   Real code can be compiled & tested right away.
   The efficiency thus gained is considered more important than irrelevant 'bells and whistles',
 
   Tools which embed the code in templates, typewriters, strings-in-code or wherever are avoided.
 
-- Documentation: Names & ID's must be adjusted in comments as well.
+- Documentation:
+
+  Names & ID's must be adjusted in comments as well.
   (Some 'proof-of-conept' implementations fail do do so.)
 
 - Ease of use!
+
   (We're lazy, are we not?)
 
 - AST-based transformation:
+
   appreciated, but not mandatory.
 
 - Popularity and a good userbase:
+
   favourable.
 
 Thus: [genny](https://github.com/cheekybits/genny) became chosen.
@@ -60,7 +66,7 @@ Uses simple {{.Name}} & {{.Type}} templates (no multi-types). Leaves 'import' to
 
 - [gen](http://clipperhouse.github.io/gen/) uses typewriters ...
 
-- [genny](https://github.com/cheekybits/genny) uses generic.Type in master sample
+- [genny](https://github.com/cheekybits/genny) uses `generic.Type`
 
 - [gengen](https://github.com/joeshaw/gengen)
 
@@ -75,6 +81,7 @@ is a code generator for Go's text/template and html/template packages.
 - [Experience Reports - Generics](https://github.com/golang/go/wiki/ExperienceReports#generics)
 
 - [The problem with interfaces](https://deedlefake.com/2017/07/the-problem-with-interfaces/)
+
   "Generics, specifically type parameters, are the standard solution to these issues.
   Though it may not be the best solution, examples of the need for a solution are so rampant that they can even be found throughout the standard library, and particularly in the various `container` subpackages, and most recently in the form of `sync.Map`.
   Just the fact that there are so few packages under `container` could be considered an example of these problems."
