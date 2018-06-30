@@ -12,51 +12,51 @@ package pipe
 // Beg of intFan2 easy fan-in's
 
 // intFan2 returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func intFan2(ori <-chan int, inp ...int) (out <-chan int) {
-	return intFanIn2(ori, intChan(inp...))
+func intFan2(inp <-chan int, inps ...int) (out <-chan int) {
+	return intFanIn2(inp, intChan(inps...))
 }
 
 // intFan2Slice returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all inputs
 // before close.
-func intFan2Slice(ori <-chan int, inp ...[]int) (out <-chan int) {
-	return intFanIn2(ori, intChanSlice(inp...))
+func intFan2Slice(inp <-chan int, inps ...[]int) (out <-chan int) {
+	return intFanIn2(inp, intChanSlice(inps...))
 }
 
 // intFan2Chan returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
-// from the the input channel `inp`
+// everything from `inp2`
 // before close.
 // Note: intFan2Chan is nothing but intFanIn2
-func intFan2Chan(ori <-chan int, inp <-chan int) (out <-chan int) {
-	return intFanIn2(ori, inp)
+func intFan2Chan(inp <-chan int, inp2 <-chan int) (out <-chan int) {
+	return intFanIn2(inp, inp2)
 }
 
 // intFan2FuncNok returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func intFan2FuncNok(ori <-chan int, gen func() (int, bool)) (out <-chan int) {
-	return intFanIn2(ori, intChanFuncNok(gen))
+func intFan2FuncNok(inp <-chan int, gen func() (int, bool)) (out <-chan int) {
+	return intFanIn2(inp, intChanFuncNok(gen))
 }
 
 // intFan2FuncErr returns a channel to receive
-// everything from the given original channel `ori`
+// everything from `inp`
 // as well as
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func intFan2FuncErr(ori <-chan int, gen func() (int, error)) (out <-chan int) {
-	return intFanIn2(ori, intChanFuncErr(gen))
+func intFan2FuncErr(inp <-chan int, gen func() (int, error)) (out <-chan int) {
+	return intFanIn2(inp, intChanFuncErr(gen))
 }
 
 // End of intFan2 easy fan-in's

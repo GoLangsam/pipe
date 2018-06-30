@@ -130,28 +130,28 @@ func intFiniLeave(wg intWaiter) func(inp <-chan int) (done <-chan struct{}) {
 
 // intDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func intDoneWait(inp chan<- int, wg intWaiter) (done <-chan struct{}) {
+func intDoneWait(out chan<- int, wg intWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go doneintWait(cha, inp, wg)
+	go doneintWait(cha, out, wg)
 	return cha
 }
 
-func doneintWait(done chan<- struct{}, inp chan<- int, wg intWaiter) {
+func doneintWait(done chan<- struct{}, out chan<- int, wg intWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// intFiniWait returns a closure around `DoneintWait(_, wg)`.
-func intFiniWait(wg intWaiter) func(inp chan<- int) (done <-chan struct{}) {
+// intFiniWait returns a closure around `intDoneWait(_, wg)`.
+func intFiniWait(wg intWaiter) func(out chan<- int) (done <-chan struct{}) {
 
-	return func(inp chan<- int) (done <-chan struct{}) {
-		return intDoneWait(inp, wg)
+	return func(out chan<- int) (done <-chan struct{}) {
+		return intDoneWait(out, wg)
 	}
 }
 
