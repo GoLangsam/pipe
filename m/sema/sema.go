@@ -59,5 +59,5 @@ func (inp anyThingFrom) pipeanyThingFuncMany(out anyThingInto, act func(a anyThi
 	wg.Wait()
 }
 
-// End of anyThingSame comparator
+// End of anyThingSema - limited parallel execution
 // ===========================================================================

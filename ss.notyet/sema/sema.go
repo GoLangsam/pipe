@@ -68,5 +68,5 @@ func pipeanyThingFuncMany(out chan<- anyThing, inp <-chan anyThing, act func(a a
 	wg.Wait()
 }
 
-// End of anyThingSame comparator
+// End of anyThingSema - limited parallel execution
 // ===========================================================================

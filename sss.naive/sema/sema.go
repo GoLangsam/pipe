@@ -60,5 +60,5 @@ func pipeanyThingFuncMany(out chan<- anyThing, inp <-chan anyThing, act func(a a
 	}
 }
 
-// End of anyThingSame comparator
+// End of anyThingSema - limited parallel execution
 // ===========================================================================

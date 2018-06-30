@@ -11,12 +11,13 @@
 
 package pipe
 
-// Note: pipeanyThingAdjust imports "container/ring" for the expanding buffer.
 import (
 	"container/ring"
 
 	"github.com/cheekybits/genny/generic"
 )
+
+// Note: pipeanyThingAdjust imports "container/ring" for the expanding buffer.
 
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
