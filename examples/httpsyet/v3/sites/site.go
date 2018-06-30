@@ -26,7 +26,7 @@ func (s Site) Attr() interface{} {
 	return s.URL.String()
 }
 
-// print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
+// Print may be used via e.g. PipeSiteFunc(sites, site.print) for tracing
 func (s Site) Print() Site {
 	fmt.Println(s)
 	return s
