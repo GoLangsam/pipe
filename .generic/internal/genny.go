@@ -22,6 +22,7 @@
 //go:generate genny	-in ../../s/plugafter/plugafter.go	-out 2-plugafter.go	-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/same/same.go		-out 7-same.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/seen/seen.go		-out 5-seen.go		-pkg pipe gen "anyThing=Thing"
+//go:generate genny	-in ../../s/sema/sema.go		-out 2-sema.go		-pkg pipe gen "anyThing=Thing"
 //go:generate genny	-in ../../s/strew/strew.go		-out 4-strew.go		-pkg pipe gen "anyThing=Thing"
 
 package pipe
