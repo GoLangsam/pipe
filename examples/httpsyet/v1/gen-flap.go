@@ -130,28 +130,28 @@ func siteFiniLeave(wg siteWaiter) func(inp <-chan site) (done <-chan struct{}) {
 
 // siteDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func siteDoneWait(inp chan<- site, wg siteWaiter) (done <-chan struct{}) {
+func siteDoneWait(out chan<- site, wg siteWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go donesiteWait(cha, inp, wg)
+	go donesiteWait(cha, out, wg)
 	return cha
 }
 
-func donesiteWait(done chan<- struct{}, inp chan<- site, wg siteWaiter) {
+func donesiteWait(done chan<- struct{}, out chan<- site, wg siteWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// siteFiniWait returns a closure around `DonesiteWait(_, wg)`.
-func siteFiniWait(wg siteWaiter) func(inp chan<- site) (done <-chan struct{}) {
+// siteFiniWait returns a closure around `siteDoneWait(_, wg)`.
+func siteFiniWait(wg siteWaiter) func(out chan<- site) (done <-chan struct{}) {
 
-	return func(inp chan<- site) (done <-chan struct{}) {
-		return siteDoneWait(inp, wg)
+	return func(out chan<- site) (done <-chan struct{}) {
+		return siteDoneWait(out, wg)
 	}
 }
 
