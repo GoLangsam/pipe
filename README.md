@@ -22,7 +22,7 @@ A pipers bag - generic functions to gain concurrency - batteries included :-)
 
 That's where we aim to go here - using [go](https.//golang.org/ "golang.org"), common sense and playful discipline.
 
-`pipe/s` aims to complement Your existing types and functions seamlessly - intentionally it is **not** a framework.
+Note: `pipe/s` complements Your existing types and functions - intentionally it is **not** a framework.
 
 Are You ready for this?
 
@@ -30,10 +30,10 @@ Are You ready for this?
     go get -u github.com/GoLangsam/pipe
 ```
 
-Still in doubt? Have a peek at the [short prolog](readme/prolog.md).
+Still in doubt? Have a peek at the short [prolog](readme/prolog.md).
 And the [overview](readme/overview.md) is a good place to start...
 
-May what You find here in this repo be a trustworthy and helpful companion along Your journey. Enjoy!
+May, what You find here in this repo, be a trustworthy and helpful companion along Your journey. Enjoy!
 
 Please feel free and encouraged to suggest, improve, comment or ask - You'll be welcome!
 

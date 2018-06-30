@@ -1,23 +1,28 @@
-# ToDo
-
-all kinds of notes and scribblings
+# ToDo - all kinds of notes and scribblings
 
 General: 
+
+--- pipe/m/strew/strew.go
+Line 52: warning: receiver name static should be consistent with previous receiver name inp for anyThingFrom (golint)
+Ignore it?
 
 --- pipe/m/adjust 
 -- func anyThingSendProxy(out anyThingInto, sizes ...int) (send anyThingInto) {
 => func (out anyThingInto)anyThingSendProxy(sizes ...int) (send anyThingInto) {
 
 - rename sizes
-- sendanyThingProxySizes => static method!?! - use ?Into - it's more rare ;-)
+- sendanyThingProxySizes
+  - => 'static' method!?!
+  - use ?Into - it's more rare ;-)
+  - golint will complain :-(
 
 => methods? How?
-func ThingDaisyChaiN(inp chan Thing, somany int, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
-func ThingDaisyChain(inp chan Thing, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
+- func ThingDaisyChaiN(inp chan Thing, somany int, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
+- func ThingDaisyChain(inp chan Thing, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
 
----todo: s/proc
+---todo: finish `s/proc`
 
----todo: s/bool & s/true
+---todo: finish `s/bool` & `s/true`
 
 Partition: github.com\tobyhede\go-underscore\
 
@@ -25,49 +30,6 @@ Partition: github.com\tobyhede\go-underscore\
 ?ForkBool: func(item Any) bool => chan & chan aka true & fail - discriminator function
 
 ---
-
-### 0. Fork:
-
-### 1. Get a local clone your fork:
-
-    git clone git@github.com:YOUR-USERNAME/YOUR-FORKED-REPO.git
-
-### 2. Add the remote original repository as `upstream` to your forked repository: 
-
-    cd into/cloned/fork-repo
-    git remote add upstream git://github.com/ORIGINAL-DEV-USERNAME/REPO-YOU-FORKED-FROM.git
-
-### 3. Obtain latest changes from `upstream`
-    git fetch upstream
-
-### 4. Update your local clone of the fork from original `upstream` repo to keep up with their changes:
-
-    git pull upstream master
-
-### 5. Update your fork:
-
-    git push	
-
-- https://help.github.com/articles/configuring-a-remote-for-a-fork/
-- https://help.github.com/articles/syncing-a-fork/
-
----
-
-$ go test -bench=.
-
-$ go test -bench=. -cpuprofile cpu.prof
-$ go tool pprof -svg cpu.prof > cpu.svg
-
-$ go test -bench=. -trace trace.out
-$ go tool trace trace.out
-
-$ go test -race
-PASS
-
-$ git gc --aggressive
-
----
-
 golang.org\x\build\internal\lru\cache.go - a concurrency-safe lru cache
 
 ---
@@ -75,33 +37,18 @@ golang.org\x\build\internal\lru\cache.go - a concurrency-safe lru cache
 rfc1925.txt
 - (10)  One size never fits all.
 
----
-fan-in:  also *Done
-fan-in1: also *Done
-has-nil: also *Done
+--- add `Done`
+- FanIn2
+- fan-in
+- fan-in1
+- has-nil
 
 ---
 ## Nomenklatura
 
-- ?Make*
-
-- ?Chan*		TODO => ?Fill* or ?Pour*
-  pour
-  - gush fill
-
-- ?Pipe*
-  - ?Tube*
-- ?Done*
-  - ?Fini*
-
-- ?Fork*
-- ?Pair*
-- ?Fan2*
----
-
-- Join*		added *FunkNok & *FunkErr
-
----
+- `?Chan`
+  - pour
+    - gush fill
 
 ### => Terminology
 

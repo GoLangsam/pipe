@@ -13,7 +13,7 @@ And - as usual for almost anything being advertised as _free_, _cheap_, _easy_ a
 
 Caveat! There are [pitfalls](pitfalls.md) out there! Good understanding and proper care helps a lot to avoid them. 
 
-May what You find here in this repo be a trustworthy and helpful companion along Your journey. Enjoy!
+May, what You find here in this repo, be a trustworthy and helpful companion along Your journey. Enjoy!
 
 ---
 [Back to overview](overview.md)

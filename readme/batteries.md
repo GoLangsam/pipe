@@ -3,39 +3,39 @@
 ## Overview
 
 - Special terminators
-	- [freq](freq#)			- ???
-
-- Parallel processing
-	- [sema](#sema)			- ???
+  - [freq](freq#)		- ???
 
 - Special purpose pipe-tubes
-	- [pipedone](#pipedone)		- be signalled when flow subsides here
-		 [plug](#plug)			- pull the plug
-		 [plugafter](#plugafter)	- pull the plug after some time
-		 [flap](#flap)			- keep track how many enter and leave
-		 [buffered](#buffered)		- insert a buffered channel
+  - [pipedone](#pipedone)	- be signalled when flow subsides here
+  - [plug](#plug)		- pull the plug
+  - [plugafter](#plugafter)	- pull the plug after some time
+  - [flap](#flap)		- keep track how many enter and leave
+  - [buffered](#buffered)	- insert a buffered channel
 
-		 [adjust](#adjust)		- insert an adjusting buffer 
+  - [adjust](#adjust)		- insert an adjusting buffer 
+
+  - [seen](#seen)		- an "I've seen this before" filter / forker
+
+- Parallel processing
+  - [sema](#sema)		- ???
 
 - One to Many
-	- [strew](#strew)		- send each to one receiver available
-		 [fan-out](#fan-out)		- send each to all receivers (lock-step)
-
-		 [seen](#seen)			- an "I've seen this before" filter / forker
+  - [strew](#strew)		- send each to one receiver available
+  - [fan-out](#fan-out)		- send each to all receivers (lock-step)
 
 - Many to One
-	- [fan2](#fan2)			- feed some inputs into your channel
-		 [fan-in](#fan-in)		- gather all inputs into one output
-		 [fan-in1](#fan-in1)		- same - just using only one goroutine
+  - [fan2](#fan2)		- feed some inputs into your channel
+  - [fan-in](#fan-in)		- gather all inputs into one output
+  - [fan-in1](#fan-in1)		- same - just using only one goroutine
 
-		 [merge](#merge)		- gather sorted streams into one
-		 [same](#same)			- compare two (or more) streams
+  - [merge](#merge)		- gather sorted streams into one
+  - [same](#same)		- compare two (or more) streams
 
 - Circular Feedback
-	- [join](#join)			- join stuff into the flow
+  - [join](#join)		- join stuff into the flow
 
 - Daisy Chain
-	- [daisy](#daisy)		- daisy chain tubes
+  - [daisy](#daisy)		- daisy chain tubes
 
 ---
 ## in alphabethical order
