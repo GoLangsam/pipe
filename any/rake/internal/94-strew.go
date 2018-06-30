@@ -15,44 +15,43 @@ import "time"
 
 // itemStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (my *Rake) itemStrew(inp <-chan item, size int) (outS [](<-chan item)) {
-	chaS := make([]chan item, size)
+func (inp itemFrom) itemStrew(size int) (outS []itemFrom) {
+	chaS := make(map[chan item]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan item)
+		chaS[make(chan item)] = struct{}{}
 	}
 
-	go my.strewitem(inp, chaS...)
+	go inp.strewitem(chaS)
 
-	outS = make([]<-chan item, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	outS = make([]itemFrom, size)
+	i := 0
+	for c := range chaS {
+		outS[i] = (itemFrom)(c) // convert `chan item` to itemFrom
+		i++
 	}
 
 	return outS
 }
 
-// c strewitem(inp <-chan item, outS ...chan<- item) {
-// Note: go does not convert the passed slice `[]chan item` to `[]chan<- item` automatically.
-// So, we do neither here, as we are lazy (we just call an internal helper function).
-func (my *Rake) strewitem(inp <-chan item, outS ...chan item) {
+func (inp itemFrom) strewitem(outS map[chan item]struct{}) {
 
 	for i := range inp {
-		for !my.trySenditem(i, outS...) {
+		for !inp.trySenditem(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func (my *Rake) trySenditem(inp item, outS ...chan item) bool {
+func (static itemFrom) trySenditem(inp item, outS map[chan item]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying

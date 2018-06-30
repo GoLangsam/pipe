@@ -27,10 +27,14 @@ type item = Any
 // A Rake may be used e.g. as a crawling Crawler
 // where every link shall be visited only once.
 type Rake struct {
-	items chan item       // to be processed
-	wg    *sync.WaitGroup // monitor SiteEnter & SiteLeave
-	done  chan struct{}   // to signal termination due to traffic having subsided
-	once  *sync.Once      // to close Done only once - lauched from first feed
+	items chan item                // to be processed
+	wg    *sync.WaitGroup          // monitor SiteEnter & SiteLeave
+	done  chan struct{}            // to signal termination due to traffic having subsided
+	once  *sync.Once               // to close Done only once - lauched from first feed
+	rake  func(a item)             // function to be applied
+	attr  func(a item) interface{} // attribute to discriminate seen
+	runs  bool                     // am I running?
+	many  int                      // # of parallel raking endpoints of the Rake
 }
 
 // New returns a (pointer to a) new operational Rake.
@@ -60,21 +64,78 @@ func New(
 		new(sync.WaitGroup),
 		make(chan struct{}),
 		new(sync.Once),
+		rake,
+		attr,
+		false,
+		somany,
 	}
 
+	return my
+}
+
+// init builds the network
+func (my *Rake) init() *Rake {
 	proc := func(a item) { // wrap rake:
-		rake(a)      // apply original rake
+		my.rake(a)   // apply original rake
 		my.wg.Done() // have this item leave
 	}
 
 	// build the concurrent pipe network
-	items, seen := my.itemForkSeenAttr(my.items, attr)
-	_ = my.itemDoneLeave(seen, my.wg) // `seen` leave without further processing
+	items, seen := (itemFrom)(my.items).itemForkSeenAttr(my.attr)
+	_ = seen.itemDoneLeave(my.wg) // `seen` leave without further processing
 
-	for _, items := range my.itemStrew(my.itemPipeAdjust(items), somany) {
-		_ = my.itemDoneFunc(items, proc) // strewed `items` leave in wrapped `crawl`
+	for _, items := range items.itemPipeAdjust().itemStrew(my.many) {
+		_ = items.itemDoneFunc(proc) // strewed `items` leave in wrapped `crawl`
 	}
 
+	return my
+}
+
+// start builds the network and spawns the closer
+func (my *Rake) start() {
+	my = my.init()
+	my.runs = true
+	go my.closer()
+}
+
+func (my *Rake) closer() *Rake {
+	my.done <- <-(itemInto)(my.items).itemDoneWait(my.wg)
+	close(my.done)
+	return my
+}
+
+// checkRuns for paranoids
+func (my *Rake) checkRuns() *Rake {
+	if my.runs {
+		panic("Rake is running already")
+	}
+	return my
+}
+
+// Rake sets the rake function to be applied (in parallel).
+//
+// `rake` is the operation to be executed in parallel on any item
+// which has not been seen before.
+//
+// You may provide `nil` here and call `Rake(..)` later to provide it.
+// Or have it use `myrake.Feed(items...)` in order to provide feed-back.
+//
+// Rake panics iff called after first nonempty `Feed(...)`
+func (my *Rake) Rake(rake func(a item)) *Rake {
+	my.checkRuns()
+	my.rake = rake
+	return my
+}
+
+// Attr sets the (optional) attribute to discriminate 'seen'.
+//
+// `attr` allows to specify an attribute for the 'seen' filter.
+// If not set 'seen' will discriminate any item by itself.
+//
+// Seen panics iff called after first nonempty `Feed(...)`
+func (my *Rake) Attr(attr func(a item) interface{}) *Rake {
+	my.checkRuns()
+	my.attr = attr
 	return my
 }
 
@@ -89,27 +150,28 @@ func (my *Rake) Done() (done <-chan struct{}) {
 func (my *Rake) Feed(items ...item) *Rake {
 
 	if len(items) == 0 {
-		return my
+		return my // nothing to do
 	}
 
-	my.wg.Add(len(items))
+	my.wg.Add(len(items)) // items enter
+
+	my.once.Do(my.start) // lazy init: build & start the network
+
 	for _, i := range items {
 		my.items <- i
 	}
 
-	my.once.Do(func() {
-		go func(t *Rake) {
-			my.done <- <-my.itemDoneWait(my.items, my.wg)
-			close(my.done)
-		}(my)
-	})
-
 	return my
-
 }
 
 // End of Rake
 // ===========================================================================
+
+// itemFrom is a receive-only item channel
+type itemFrom <-chan item
+
+// itemInto is a send-only item channel
+type itemInto chan<- item
 
 // ===========================================================================
 // Beg of itemMake creators
@@ -133,7 +195,7 @@ close(myitemPipelineStartsHere)
 //
 // Note: as always (except for itemPipeBuffer) the channel is unbuffered.
 //
-func (my *Rake) itemMakeChan() (out chan item) {
+func itemMakeChan() (out chan item) {
 	return make(chan item)
 }
 
@@ -146,13 +208,13 @@ func (my *Rake) itemMakeChan() (out chan item) {
 // itemChan returns a channel to receive
 // all inputs
 // before close.
-func (my *Rake) itemChan(inp ...item) (out <-chan item) {
+func itemChan(inp ...item) (out itemFrom) {
 	cha := make(chan item)
-	go my.chanitem(cha, inp...)
+	go chanitem(cha, inp...)
 	return cha
 }
 
-func (my *Rake) chanitem(out chan<- item, inp ...item) {
+func chanitem(out itemInto, inp ...item) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -162,13 +224,13 @@ func (my *Rake) chanitem(out chan<- item, inp ...item) {
 // itemChanSlice returns a channel to receive
 // all inputs
 // before close.
-func (my *Rake) itemChanSlice(inp ...[]item) (out <-chan item) {
+func itemChanSlice(inp ...[]item) (out itemFrom) {
 	cha := make(chan item)
-	go my.chanitemSlice(cha, inp...)
+	go chanitemSlice(cha, inp...)
 	return cha
 }
 
-func (my *Rake) chanitemSlice(out chan<- item, inp ...[]item) {
+func chanitemSlice(out itemInto, inp ...[]item) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -181,13 +243,13 @@ func (my *Rake) chanitemSlice(out chan<- item, inp ...[]item) {
 // all results of generator `gen`
 // until `!ok`
 // before close.
-func (my *Rake) itemChanFuncNok(gen func() (item, bool)) (out <-chan item) {
+func itemChanFuncNok(gen func() (item, bool)) (out itemFrom) {
 	cha := make(chan item)
-	go my.chanitemFuncNok(cha, gen)
+	go chanitemFuncNok(cha, gen)
 	return cha
 }
 
-func (my *Rake) chanitemFuncNok(out chan<- item, gen func() (item, bool)) {
+func chanitemFuncNok(out itemInto, gen func() (item, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -202,13 +264,13 @@ func (my *Rake) chanitemFuncNok(out chan<- item, gen func() (item, bool)) {
 // all results of generator `gen`
 // until `err != nil`
 // before close.
-func (my *Rake) itemChanFuncErr(gen func() (item, error)) (out <-chan item) {
+func itemChanFuncErr(gen func() (item, error)) (out itemFrom) {
 	cha := make(chan item)
-	go my.chanitemFuncErr(cha, gen)
+	go chanitemFuncErr(cha, gen)
 	return cha
 }
 
-func (my *Rake) chanitemFuncErr(out chan<- item, gen func() (item, error)) {
+func chanitemFuncErr(out itemInto, gen func() (item, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -228,18 +290,18 @@ func (my *Rake) chanitemFuncErr(out chan<- item, gen func() (item, error)) {
 // itemPipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be PipeItemMap for functional people,
+// Note: it 'could' be itemPipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (my *Rake) itemPipeFunc(inp <-chan item, act func(a item) item) (out <-chan item) {
+func (inp itemFrom) itemPipeFunc(act func(a item) item) (out itemFrom) {
 	cha := make(chan item)
 	if act == nil { // Make `nil` value useful
 		act = func(a item) item { return a }
 	}
-	go my.pipeitemFunc(cha, inp, act)
+	go inp.pipeitemFunc(cha, act)
 	return cha
 }
 
-func (my *Rake) pipeitemFunc(out chan<- item, inp <-chan item, act func(a item) item) {
+func (inp itemFrom) pipeitemFunc(out itemInto, act func(a item) item) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action
@@ -253,10 +315,10 @@ func (my *Rake) pipeitemFunc(out chan<- item, inp <-chan item, act func(a item) 
 // Beg of itemTube closures around itemPipe
 
 // itemTubeFunc returns a closure around PipeItemFunc (_, act).
-func (my *Rake) itemTubeFunc(act func(a item) item) (tube func(inp <-chan item) (out <-chan item)) {
+func itemTubeFunc(act func(a item) item) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeFunc(inp, act)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeFunc(act)
 	}
 }
 
@@ -267,14 +329,16 @@ func (my *Rake) itemTubeFunc(act func(a item) item) (tube func(inp <-chan item) 
 // Beg of itemDone terminators
 
 // itemDone returns a channel to receive
-// one signal before close after `inp` has been drained.
-func (my *Rake) itemDone(inp <-chan item) (done <-chan struct{}) {
+// one signal
+// upon close
+// and after `inp` has been drained.
+func (inp itemFrom) itemDone() (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneitem(sig, inp)
+	go inp.doneitem(sig)
 	return sig
 }
 
-func (my *Rake) doneitem(done chan<- struct{}, inp <-chan item) {
+func (inp itemFrom) doneitem(done chan<- struct{}) {
 	defer close(done)
 	for i := range inp {
 		_ = i // Drain inp
@@ -284,16 +348,16 @@ func (my *Rake) doneitem(done chan<- struct{}, inp <-chan item) {
 
 // itemDoneSlice returns a channel to receive
 // a slice with every item received on `inp`
-// before close.
+// upon close.
 //
-// Note: Unlike itemDone, DoneItemSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (my *Rake) itemDoneSlice(inp <-chan item) (done <-chan []item) {
+// Note: Unlike itemDone, itemDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func (inp itemFrom) itemDoneSlice() (done <-chan []item) {
 	sig := make(chan []item)
-	go my.doneitemSlice(sig, inp)
+	go inp.doneitemSlice(sig)
 	return sig
 }
 
-func (my *Rake) doneitemSlice(done chan<- []item, inp <-chan item) {
+func (inp itemFrom) doneitemSlice(done chan<- []item) {
 	defer close(done)
 	slice := []item{}
 	for i := range inp {
@@ -302,19 +366,21 @@ func (my *Rake) doneitemSlice(done chan<- []item, inp <-chan item) {
 	done <- slice
 }
 
-// itemDoneFunc returns a channel to receive
-// one signal after `act` has been applied to every `inp`
-// before close.
-func (my *Rake) itemDoneFunc(inp <-chan item, act func(a item)) (done <-chan struct{}) {
+// itemDoneFunc
+// will apply `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func (inp itemFrom) itemDoneFunc(act func(a item)) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	if act == nil {
 		act = func(a item) { return }
 	}
-	go my.doneitemFunc(sig, inp, act)
+	go inp.doneitemFunc(sig, act)
 	return sig
 }
 
-func (my *Rake) doneitemFunc(done chan<- struct{}, inp <-chan item, act func(a item)) {
+func (inp itemFrom) doneitemFunc(done chan<- struct{}, act func(a item)) {
 	defer close(done)
 	for i := range inp {
 		act(i) // apply action
@@ -328,27 +394,27 @@ func (my *Rake) doneitemFunc(done chan<- struct{}, inp <-chan item, act func(a i
 // ===========================================================================
 // Beg of itemFini closures
 
-// itemFini returns a closure around `itemDone(_)`.
-func (my *Rake) itemFini() func(inp <-chan item) (done <-chan struct{}) {
+// itemFini returns a closure around `itemDone()`.
+func (inp itemFrom) itemFini() func(inp itemFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan item) (done <-chan struct{}) {
-		return my.itemDone(inp)
+	return func(inp itemFrom) (done <-chan struct{}) {
+		return inp.itemDone()
 	}
 }
 
-// itemFiniSlice returns a closure around `itemDoneSlice(_)`.
-func (my *Rake) itemFiniSlice() func(inp <-chan item) (done <-chan []item) {
+// itemFiniSlice returns a closure around `itemDoneSlice()`.
+func (inp itemFrom) itemFiniSlice() func(inp itemFrom) (done <-chan []item) {
 
-	return func(inp <-chan item) (done <-chan []item) {
-		return my.itemDoneSlice(inp)
+	return func(inp itemFrom) (done <-chan []item) {
+		return inp.itemDoneSlice()
 	}
 }
 
-// itemFiniFunc returns a closure around `itemDoneFunc(_, act)`.
-func (my *Rake) itemFiniFunc(act func(a item)) func(inp <-chan item) (done <-chan struct{}) {
+// itemFiniFunc returns a closure around `itemDoneFunc(act)`.
+func (inp itemFrom) itemFiniFunc(act func(a item)) func(inp itemFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan item) (done <-chan struct{}) {
-		return my.itemDoneFunc(inp, act)
+	return func(inp itemFrom) (done <-chan struct{}) {
+		return inp.itemDoneFunc(act)
 	}
 }
 
@@ -360,15 +426,15 @@ func (my *Rake) itemFiniFunc(act func(a item)) func(inp <-chan item) (done <-cha
 
 // itemPair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (my *Rake) itemPair(inp <-chan item) (out1, out2 <-chan item) {
+func (inp itemFrom) itemPair() (out1, out2 itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go my.pairitem(cha1, cha2, inp)
+	go inp.pairitem(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my *Rake) pairitem(out1, out2 chan<- item, inp <-chan item) {
+func (inp itemFrom) pairitem(out1, out2 itemInto, inp itemFrom) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -377,7 +443,7 @@ func (my *Rake) pairitem(out1, out2 chan<- item, inp <-chan item) {
 	}
 } */
 
-func (my *Rake) pairitem(out1, out2 chan<- item, inp <-chan item) {
+func (inp itemFrom) pairitem(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -400,15 +466,15 @@ func (my *Rake) pairitem(out1, out2 chan<- item, inp <-chan item) {
 // either of which is to receive
 // every result of inp
 // before close.
-func (my *Rake) itemFork(inp <-chan item) (out1, out2 <-chan item) {
+func (inp itemFrom) itemFork() (out1, out2 itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go my.forkitem(cha1, cha2, inp)
+	go inp.forkitem(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (my *Rake) forkitem(out1, out2 chan<- item, inp <-chan item) {
+func (inp itemFrom) forkitem(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -417,7 +483,7 @@ func (my *Rake) forkitem(out1, out2 chan<- item, inp <-chan item) {
 	}
 } */
 
-func (my *Rake) forkitem(out1, out2 chan<- item, inp <-chan item) {
+func (inp itemFrom) forkitem(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -436,19 +502,21 @@ func (my *Rake) forkitem(out1, out2 chan<- item, inp <-chan item) {
 // ===========================================================================
 // Beg of itemFanIn2 simple binary Fan-In
 
-// itemFanIn2 returns a channel to receive all to receive all from both `inp1` and `inp2` before close.
-func (my *Rake) itemFanIn2(inp1, inp2 <-chan item) (out <-chan item) {
+// itemFanIn2 returns a channel to receive
+// all from both `inp` and `inp2`
+// before close.
+func (inp itemFrom) itemFanIn2(inp2 itemFrom) (out itemFrom) {
 	cha := make(chan item)
-	go my.fanIn2item(cha, inp1, inp2)
+	go inp.fanIn2item(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (my *Rake) fanin2item as seen in Go Concurrency Patterns
-func fanin2item(out chan<- item, inp1, inp2 <-chan item) {
+// (inp itemFrom) fanin2item as seen in Go Concurrency Patterns
+func fanin2item(out itemInto, inp, inp2 itemFrom) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -456,7 +524,7 @@ func fanin2item(out chan<- item, inp1, inp2 <-chan item) {
 	}
 } */
 
-func (my *Rake) fanIn2item(out chan<- item, inp1, inp2 <-chan item) {
+func (inp itemFrom) fanIn2item(out itemInto, inp2 itemFrom) {
 	defer close(out)
 
 	var (
@@ -467,11 +535,11 @@ func (my *Rake) fanIn2item(out chan<- item, inp1, inp2 <-chan item) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -483,8 +551,8 @@ func (my *Rake) fanIn2item(out chan<- item, inp1, inp2 <-chan item) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }
@@ -501,18 +569,18 @@ func (my *Rake) fanIn2item(out chan<- item, inp1, inp2 <-chan item) {
 // all `inp`
 // buffered by a itemSendProxy process
 // before close.
-func (my *Rake) itemPipeAdjust(inp <-chan item, sizes ...int) (out <-chan item) {
-	cap, que := my.senditemProxySizes(sizes...)
+func (inp itemFrom) itemPipeAdjust(sizes ...int) (out itemFrom) {
+	cap, que := senditemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go my.pipeitemAdjust(cha, inp, que)
+	go inp.pipeitemAdjust(cha, que)
 	return cha
 }
 
 // itemTubeAdjust returns a closure around itemPipeAdjust (_, sizes ...int).
-func (my *Rake) itemTubeAdjust(sizes ...int) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeAdjust(sizes ...int) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeAdjust(inp, sizes...)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeAdjust(sizes...)
 	}
 }
 
@@ -522,7 +590,7 @@ func (my *Rake) itemTubeAdjust(sizes ...int) (tube func(inp <-chan item) (out <-
 // ===========================================================================
 // Beg of senditemProxy
 
-func (my *Rake) senditemProxySizes(sizes ...int) (cap, que int) {
+func senditemProxySizes(sizes ...int) (cap, que int) {
 
 	// CAP is the minimum capacity of the buffered proxy channel in `itemSendProxy`
 	const CAP = 10
@@ -556,10 +624,10 @@ func (my *Rake) senditemProxySizes(sizes ...int) (cap, que int) {
 // Note: itemSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
 // even so it does not fit the pipe tube pattern as itemPipeAdjust does.
-func (my *Rake) itemSendProxy(out chan<- item, sizes ...int) chan<- item {
-	cap, que := my.senditemProxySizes(sizes...)
+func itemSendProxy(out itemInto, sizes ...int) (send itemInto) {
+	cap, que := senditemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go my.pipeitemAdjust(out, cha, que)
+	go (itemFrom)(cha).pipeitemAdjust(out, que)
 	return cha
 }
 
@@ -567,12 +635,12 @@ func (my *Rake) itemSendProxy(out chan<- item, sizes ...int) chan<- item {
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (my *Rake) pipeitemAdjust(out chan<- item, inp <-chan item, QUE int) {
+func (inp itemFrom) pipeitemAdjust(out itemInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
 	last := first
-	var c chan<- item
+	var c itemInto
 	var e item
 	ok := true
 	for ok {
@@ -637,9 +705,9 @@ type itemWaiter interface {
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func (my *Rake) itemPipeEnter(inp <-chan item, wg itemWaiter) (out <-chan item) {
+func (inp itemFrom) itemPipeEnter(wg itemWaiter) (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemEnter(cha, wg, inp)
+	go inp.pipeitemEnter(cha, wg)
 	return cha
 }
 
@@ -649,9 +717,9 @@ func (my *Rake) itemPipeEnter(inp <-chan item, wg itemWaiter) (out <-chan item) 
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func (my *Rake) itemPipeLeave(inp <-chan item, wg itemWaiter) (out <-chan item) {
+func (inp itemFrom) itemPipeLeave(wg itemWaiter) (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemLeave(cha, wg, inp)
+	go inp.pipeitemLeave(cha, wg)
 	return cha
 }
 
@@ -662,13 +730,13 @@ func (my *Rake) itemPipeLeave(inp <-chan item, wg itemWaiter) (out <-chan item) 
 // as departure
 // on the given `sync.WaitGroup`
 // before close.
-func (my *Rake) itemDoneLeave(inp <-chan item, wg itemWaiter) (done <-chan struct{}) {
+func (inp itemFrom) itemDoneLeave(wg itemWaiter) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneitemLeave(sig, wg, inp)
+	go inp.doneitemLeave(sig, wg)
 	return sig
 }
 
-func (my *Rake) pipeitemEnter(out chan<- item, wg itemWaiter, inp <-chan item) {
+func (inp itemFrom) pipeitemEnter(out itemInto, wg itemWaiter) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -676,7 +744,7 @@ func (my *Rake) pipeitemEnter(out chan<- item, wg itemWaiter, inp <-chan item) {
 	}
 }
 
-func (my *Rake) pipeitemLeave(out chan<- item, wg itemWaiter, inp <-chan item) {
+func (inp itemFrom) pipeitemLeave(out itemInto, wg itemWaiter) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -684,7 +752,7 @@ func (my *Rake) pipeitemLeave(out chan<- item, wg itemWaiter, inp <-chan item) {
 	}
 }
 
-func (my *Rake) doneitemLeave(done chan<- struct{}, wg itemWaiter, inp <-chan item) {
+func (inp itemFrom) doneitemLeave(done chan<- struct{}, wg itemWaiter) {
 	defer close(done)
 	for i := range inp {
 		_ = i // discard
@@ -693,63 +761,63 @@ func (my *Rake) doneitemLeave(done chan<- struct{}, wg itemWaiter, inp <-chan it
 	done <- struct{}{}
 }
 
-// itemTubeEnter returns a closure around itemPipeEnter (_, wg)
+// itemTubeEnter returns a closure around itemPipeEnter (wg)
 // registering throughput
 // as arrival
 // on the given `sync.WaitGroup`.
-func (my *Rake) itemTubeEnter(wg itemWaiter) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeEnter(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeEnter(inp, wg)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeEnter(wg)
 	}
 }
 
-// itemTubeLeave returns a closure around itemPipeLeave (_, wg)
+// itemTubeLeave returns a closure around itemPipeLeave (wg)
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (my *Rake) itemTubeLeave(wg itemWaiter) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeLeave(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeLeave(inp, wg)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeLeave(wg)
 	}
 }
 
-// itemFiniLeave returns a closure around `itemDoneLeave(_, wg)`
+// itemFiniLeave returns a closure around `itemDoneLeave(wg)`
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (my *Rake) itemFiniLeave(wg itemWaiter) func(inp <-chan item) (done <-chan struct{}) {
+func (inp itemFrom) itemFiniLeave(wg itemWaiter) func(inp itemFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan item) (done <-chan struct{}) {
-		return my.itemDoneLeave(inp, wg)
+	return func(inp itemFrom) (done <-chan struct{}) {
+		return inp.itemDoneLeave(wg)
 	}
 }
 
 // itemDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func (my *Rake) itemDoneWait(inp chan<- item, wg itemWaiter) (done <-chan struct{}) {
+func (out itemInto) itemDoneWait(wg itemWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go my.doneitemWait(cha, inp, wg)
+	go out.doneitemWait(cha, wg)
 	return cha
 }
 
-func (my *Rake) doneitemWait(done chan<- struct{}, inp chan<- item, wg itemWaiter) {
+func (out itemInto) doneitemWait(done chan<- struct{}, wg itemWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// itemFiniWait returns a closure around `DoneitemWait(_, wg)`.
-func (my *Rake) itemFiniWait(wg itemWaiter) func(inp chan<- item) (done <-chan struct{}) {
+// itemFiniWait returns a closure around `itemDoneWait(wg)`.
+func (out itemInto) itemFiniWait(wg itemWaiter) func(out itemInto) (done <-chan struct{}) {
 
-	return func(inp chan<- item) (done <-chan struct{}) {
-		return my.itemDoneWait(inp, wg)
+	return func(out itemInto) (done <-chan struct{}) {
+		return out.itemDoneWait(wg)
 	}
 }
 
@@ -761,44 +829,43 @@ func (my *Rake) itemFiniWait(wg itemWaiter) func(inp chan<- item) (done <-chan s
 
 // itemStrew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (my *Rake) itemStrew(inp <-chan item, size int) (outS [](<-chan item)) {
-	chaS := make([]chan item, size)
+func (inp itemFrom) itemStrew(size int) (outS []itemFrom) {
+	chaS := make(map[chan item]struct{}, size)
 	for i := 0; i < size; i++ {
-		chaS[i] = make(chan item)
+		chaS[make(chan item)] = struct{}{}
 	}
 
-	go my.strewitem(inp, chaS...)
+	go inp.strewitem(chaS)
 
-	outS = make([]<-chan item, size)
-	for i := 0; i < size; i++ {
-		outS[i] = chaS[i] // convert `chan` to `<-chan`
+	outS = make([]itemFrom, size)
+	i := 0
+	for c := range chaS {
+		outS[i] = (itemFrom)(c) // convert `chan item` to itemFrom
+		i++
 	}
 
 	return outS
 }
 
-// c strewitem(inp <-chan item, outS ...chan<- item) {
-// Note: go does not convert the passed slice `[]chan item` to `[]chan<- item` automatically.
-// So, we do neither here, as we are lazy (we just call an internal helper function).
-func (my *Rake) strewitem(inp <-chan item, outS ...chan item) {
+func (inp itemFrom) strewitem(outS map[chan item]struct{}) {
 
 	for i := range inp {
-		for !my.trySenditem(i, outS...) {
+		for !inp.trySenditem(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
 
 	for o := range outS {
-		close(outS[o])
+		close(o)
 	}
 }
 
-func (my *Rake) trySenditem(inp item, outS ...chan item) bool {
+func (static itemFrom) trySenditem(inp item, outS map[chan item]struct{}) bool {
 
 	for o := range outS {
 
 		select { // try to send
-		case outS[o] <- inp:
+		case o <- inp:
 			return true
 		default:
 			// keep trying
@@ -821,9 +888,9 @@ func (my *Rake) trySenditem(inp item, outS ...chan item) bool {
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 // Note: itemPipeFilterNotSeenYet might be a better name, but is fairly long.
-func (my *Rake) itemPipeSeen(inp <-chan item) (out <-chan item) {
+func (inp itemFrom) itemPipeSeen() (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemSeenAttr(cha, inp, nil)
+	go inp.pipeitemSeenAttr(cha, nil)
 	return cha
 }
 
@@ -835,9 +902,9 @@ func (my *Rake) itemPipeSeen(inp <-chan item) (out <-chan item) {
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 // Note: itemPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (my *Rake) itemPipeSeenAttr(inp <-chan item, attr func(a item) interface{}) (out <-chan item) {
+func (inp itemFrom) itemPipeSeenAttr(attr func(a item) interface{}) (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemSeenAttr(cha, inp, attr)
+	go inp.pipeitemSeenAttr(cha, attr)
 	return cha
 }
 
@@ -850,10 +917,10 @@ func (my *Rake) itemPipeSeenAttr(inp <-chan item, attr func(a item) interface{})
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my *Rake) itemForkSeen(inp <-chan item) (new, old <-chan item) {
+func (inp itemFrom) itemForkSeen() (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go my.forkitemSeenAttr(cha1, cha2, inp, nil)
+	go inp.forkitemSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
@@ -867,14 +934,14 @@ func (my *Rake) itemForkSeen(inp <-chan item) (new, old <-chan item) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my *Rake) itemForkSeenAttr(inp <-chan item, attr func(a item) interface{}) (new, old <-chan item) {
+func (inp itemFrom) itemForkSeenAttr(attr func(a item) interface{}) (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go my.forkitemSeenAttr(cha1, cha2, inp, attr)
+	go inp.forkitemSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (my *Rake) pipeitemSeenAttr(out chan<- item, inp <-chan item, attr func(a item) interface{}) {
+func (inp itemFrom) pipeitemSeenAttr(out itemInto, attr func(a item) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -891,7 +958,7 @@ func (my *Rake) pipeitemSeenAttr(out chan<- item, inp <-chan item, attr func(a i
 	}
 }
 
-func (my *Rake) forkitemSeenAttr(new, old chan<- item, inp <-chan item, attr func(a item) interface{}) {
+func (inp itemFrom) forkitemSeenAttr(new, old itemInto, attr func(a item) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -911,21 +978,21 @@ func (my *Rake) forkitemSeenAttr(new, old chan<- item, inp <-chan item, attr fun
 
 // itemTubeSeen returns a closure around itemPipeSeen()
 // (silently dropping every item seen before).
-func (my *Rake) itemTubeSeen() (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeSeen() (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeSeen(inp)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeSeen()
 	}
 }
 
-// itemTubeSeenAttr returns a closure around itemPipeSeenAttr()
+// itemTubeSeenAttr returns a closure around itemPipeSeenAttr(attr)
 // (silently dropping every item
 // whose attribute `attr` was
 // seen before).
-func (my *Rake) itemTubeSeenAttr(attr func(a item) interface{}) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeSeenAttr(attr func(a item) interface{}) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeSeenAttr(inp, attr)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeSeenAttr(attr)
 	}
 }
 

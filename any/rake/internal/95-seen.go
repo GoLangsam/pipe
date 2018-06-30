@@ -20,9 +20,9 @@ import "sync"
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 // Note: itemPipeFilterNotSeenYet might be a better name, but is fairly long.
-func (my *Rake) itemPipeSeen(inp <-chan item) (out <-chan item) {
+func (inp itemFrom) itemPipeSeen() (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemSeenAttr(cha, inp, nil)
+	go inp.pipeitemSeenAttr(cha, nil)
 	return cha
 }
 
@@ -34,9 +34,9 @@ func (my *Rake) itemPipeSeen(inp <-chan item) (out <-chan item) {
 // (internally growing a `sync.Map` to discriminate)
 // until close.
 // Note: itemPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (my *Rake) itemPipeSeenAttr(inp <-chan item, attr func(a item) interface{}) (out <-chan item) {
+func (inp itemFrom) itemPipeSeenAttr(attr func(a item) interface{}) (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemSeenAttr(cha, inp, attr)
+	go inp.pipeitemSeenAttr(cha, attr)
 	return cha
 }
 
@@ -49,10 +49,10 @@ func (my *Rake) itemPipeSeenAttr(inp <-chan item, attr func(a item) interface{})
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my *Rake) itemForkSeen(inp <-chan item) (new, old <-chan item) {
+func (inp itemFrom) itemForkSeen() (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go my.forkitemSeenAttr(cha1, cha2, inp, nil)
+	go inp.forkitemSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
@@ -66,14 +66,14 @@ func (my *Rake) itemForkSeen(inp <-chan item) (new, old <-chan item) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (my *Rake) itemForkSeenAttr(inp <-chan item, attr func(a item) interface{}) (new, old <-chan item) {
+func (inp itemFrom) itemForkSeenAttr(attr func(a item) interface{}) (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go my.forkitemSeenAttr(cha1, cha2, inp, attr)
+	go inp.forkitemSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (my *Rake) pipeitemSeenAttr(out chan<- item, inp <-chan item, attr func(a item) interface{}) {
+func (inp itemFrom) pipeitemSeenAttr(out itemInto, attr func(a item) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -90,7 +90,7 @@ func (my *Rake) pipeitemSeenAttr(out chan<- item, inp <-chan item, attr func(a i
 	}
 }
 
-func (my *Rake) forkitemSeenAttr(new, old chan<- item, inp <-chan item, attr func(a item) interface{}) {
+func (inp itemFrom) forkitemSeenAttr(new, old itemInto, attr func(a item) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -110,21 +110,21 @@ func (my *Rake) forkitemSeenAttr(new, old chan<- item, inp <-chan item, attr fun
 
 // itemTubeSeen returns a closure around itemPipeSeen()
 // (silently dropping every item seen before).
-func (my *Rake) itemTubeSeen() (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeSeen() (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeSeen(inp)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeSeen()
 	}
 }
 
-// itemTubeSeenAttr returns a closure around itemPipeSeenAttr()
+// itemTubeSeenAttr returns a closure around itemPipeSeenAttr(attr)
 // (silently dropping every item
 // whose attribute `attr` was
 // seen before).
-func (my *Rake) itemTubeSeenAttr(attr func(a item) interface{}) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeSeenAttr(attr func(a item) interface{}) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeSeenAttr(inp, attr)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeSeenAttr(attr)
 	}
 }
 

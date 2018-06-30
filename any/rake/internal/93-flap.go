@@ -39,9 +39,9 @@ type itemWaiter interface {
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func (my *Rake) itemPipeEnter(inp <-chan item, wg itemWaiter) (out <-chan item) {
+func (inp itemFrom) itemPipeEnter(wg itemWaiter) (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemEnter(cha, wg, inp)
+	go inp.pipeitemEnter(cha, wg)
 	return cha
 }
 
@@ -51,9 +51,9 @@ func (my *Rake) itemPipeEnter(inp <-chan item, wg itemWaiter) (out <-chan item) 
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func (my *Rake) itemPipeLeave(inp <-chan item, wg itemWaiter) (out <-chan item) {
+func (inp itemFrom) itemPipeLeave(wg itemWaiter) (out itemFrom) {
 	cha := make(chan item)
-	go my.pipeitemLeave(cha, wg, inp)
+	go inp.pipeitemLeave(cha, wg)
 	return cha
 }
 
@@ -64,13 +64,13 @@ func (my *Rake) itemPipeLeave(inp <-chan item, wg itemWaiter) (out <-chan item) 
 // as departure
 // on the given `sync.WaitGroup`
 // before close.
-func (my *Rake) itemDoneLeave(inp <-chan item, wg itemWaiter) (done <-chan struct{}) {
+func (inp itemFrom) itemDoneLeave(wg itemWaiter) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go my.doneitemLeave(sig, wg, inp)
+	go inp.doneitemLeave(sig, wg)
 	return sig
 }
 
-func (my *Rake) pipeitemEnter(out chan<- item, wg itemWaiter, inp <-chan item) {
+func (inp itemFrom) pipeitemEnter(out itemInto, wg itemWaiter) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -78,7 +78,7 @@ func (my *Rake) pipeitemEnter(out chan<- item, wg itemWaiter, inp <-chan item) {
 	}
 }
 
-func (my *Rake) pipeitemLeave(out chan<- item, wg itemWaiter, inp <-chan item) {
+func (inp itemFrom) pipeitemLeave(out itemInto, wg itemWaiter) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -86,7 +86,7 @@ func (my *Rake) pipeitemLeave(out chan<- item, wg itemWaiter, inp <-chan item) {
 	}
 }
 
-func (my *Rake) doneitemLeave(done chan<- struct{}, wg itemWaiter, inp <-chan item) {
+func (inp itemFrom) doneitemLeave(done chan<- struct{}, wg itemWaiter) {
 	defer close(done)
 	for i := range inp {
 		_ = i // discard
@@ -95,63 +95,63 @@ func (my *Rake) doneitemLeave(done chan<- struct{}, wg itemWaiter, inp <-chan it
 	done <- struct{}{}
 }
 
-// itemTubeEnter returns a closure around itemPipeEnter (_, wg)
+// itemTubeEnter returns a closure around itemPipeEnter (wg)
 // registering throughput
 // as arrival
 // on the given `sync.WaitGroup`.
-func (my *Rake) itemTubeEnter(wg itemWaiter) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeEnter(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeEnter(inp, wg)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeEnter(wg)
 	}
 }
 
-// itemTubeLeave returns a closure around itemPipeLeave (_, wg)
+// itemTubeLeave returns a closure around itemPipeLeave (wg)
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (my *Rake) itemTubeLeave(wg itemWaiter) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeLeave(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeLeave(inp, wg)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeLeave(wg)
 	}
 }
 
-// itemFiniLeave returns a closure around `itemDoneLeave(_, wg)`
+// itemFiniLeave returns a closure around `itemDoneLeave(wg)`
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (my *Rake) itemFiniLeave(wg itemWaiter) func(inp <-chan item) (done <-chan struct{}) {
+func (inp itemFrom) itemFiniLeave(wg itemWaiter) func(inp itemFrom) (done <-chan struct{}) {
 
-	return func(inp <-chan item) (done <-chan struct{}) {
-		return my.itemDoneLeave(inp, wg)
+	return func(inp itemFrom) (done <-chan struct{}) {
+		return inp.itemDoneLeave(wg)
 	}
 }
 
 // itemDoneWait returns a channel to receive
 // one signal
-// after wg.Wait() has returned and inp has been closed
+// after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func (my *Rake) itemDoneWait(inp chan<- item, wg itemWaiter) (done <-chan struct{}) {
+func (out itemInto) itemDoneWait(wg itemWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go my.doneitemWait(cha, inp, wg)
+	go out.doneitemWait(cha, wg)
 	return cha
 }
 
-func (my *Rake) doneitemWait(done chan<- struct{}, inp chan<- item, wg itemWaiter) {
+func (out itemInto) doneitemWait(done chan<- struct{}, wg itemWaiter) {
 	defer close(done)
 	wg.Wait()
-	close(inp)
+	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// itemFiniWait returns a closure around `DoneitemWait(_, wg)`.
-func (my *Rake) itemFiniWait(wg itemWaiter) func(inp chan<- item) (done <-chan struct{}) {
+// itemFiniWait returns a closure around `itemDoneWait(wg)`.
+func (out itemInto) itemFiniWait(wg itemWaiter) func(out itemInto) (done <-chan struct{}) {
 
-	return func(inp chan<- item) (done <-chan struct{}) {
-		return my.itemDoneWait(inp, wg)
+	return func(out itemInto) (done <-chan struct{}) {
+		return out.itemDoneWait(wg)
 	}
 }
 

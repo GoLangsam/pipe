@@ -26,18 +26,18 @@ import "container/ring"
 // all `inp`
 // buffered by a itemSendProxy process
 // before close.
-func (my *Rake) itemPipeAdjust(inp <-chan item, sizes ...int) (out <-chan item) {
-	cap, que := my.senditemProxySizes(sizes...)
+func (inp itemFrom) itemPipeAdjust(sizes ...int) (out itemFrom) {
+	cap, que := senditemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go my.pipeitemAdjust(cha, inp, que)
+	go inp.pipeitemAdjust(cha, que)
 	return cha
 }
 
 // itemTubeAdjust returns a closure around itemPipeAdjust (_, sizes ...int).
-func (my *Rake) itemTubeAdjust(sizes ...int) (tube func(inp <-chan item) (out <-chan item)) {
+func (inp itemFrom) itemTubeAdjust(sizes ...int) (tube func(inp itemFrom) (out itemFrom)) {
 
-	return func(inp <-chan item) (out <-chan item) {
-		return my.itemPipeAdjust(inp, sizes...)
+	return func(inp itemFrom) (out itemFrom) {
+		return inp.itemPipeAdjust(sizes...)
 	}
 }
 
@@ -47,7 +47,7 @@ func (my *Rake) itemTubeAdjust(sizes ...int) (tube func(inp <-chan item) (out <-
 // ===========================================================================
 // Beg of senditemProxy
 
-func (my *Rake) senditemProxySizes(sizes ...int) (cap, que int) {
+func senditemProxySizes(sizes ...int) (cap, que int) {
 
 	// CAP is the minimum capacity of the buffered proxy channel in `itemSendProxy`
 	const CAP = 10
@@ -81,10 +81,10 @@ func (my *Rake) senditemProxySizes(sizes ...int) (cap, que int) {
 // Note: itemSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
 // even so it does not fit the pipe tube pattern as itemPipeAdjust does.
-func (my *Rake) itemSendProxy(out chan<- item, sizes ...int) chan<- item {
-	cap, que := my.senditemProxySizes(sizes...)
+func itemSendProxy(out itemInto, sizes ...int) (send itemInto) {
+	cap, que := senditemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go my.pipeitemAdjust(out, cha, que)
+	go (itemFrom)(cha).pipeitemAdjust(out, que)
 	return cha
 }
 
@@ -92,12 +92,12 @@ func (my *Rake) itemSendProxy(out chan<- item, sizes ...int) chan<- item {
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (my *Rake) pipeitemAdjust(out chan<- item, inp <-chan item, QUE int) {
+func (inp itemFrom) pipeitemAdjust(out itemInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
 	last := first
-	var c chan<- item
+	var c itemInto
 	var e item
 	ok := true
 	for ok {
