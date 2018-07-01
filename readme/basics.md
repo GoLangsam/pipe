@@ -5,9 +5,9 @@ _"Function returning channel" is an important idiom._ Rob Pike
 ---
 ## Overview:
 
-What comes with a basic "package pipe"?
+What comes with a basic "package pipe" (in some file named `pipe.go`)?
 
-Which convention is used to name the functions (resp. methods).
+Which convention is used to name the functions (resp. methods)?
 
 Note: `?` represents the name of the (generic) type.
 
@@ -32,7 +32,7 @@ Functions and their names as they come with any basic "package pipe".
 
 Note: All the following functions (except `?MakeChan`) spawn a process.
 
-Note: For brevity functions output is not mentioned. It's a channel.
+Note: For brevity functions output is not mentioned. It's a `?` channel.
 
 ### Creator
 
@@ -41,12 +41,16 @@ create a channel and write a generator
 
 - `?MakeChan()` - aka `make(chan ?)` - returns a channel of `?`.
 
+Note: No process is spawned here, of course.
+
 ### Generator
+
+- `?Chan...` is the prefix common for generators.
 
 Use some items,
 or some slices of items.
 
-- `?Chan(item ...?)`
+- `?Chan(     item ...?)`
 - `?ChanSlice(itemS ...[]?)`
 
 Use some function 
@@ -61,17 +65,28 @@ Typical candidates for such functions are
 
 ### Pipe tube
 
-Use a function which returns an item for an item.
+- `?Pipe...` is the prefix common for pipe tubes.
 
-- `?PipeFunc(func(item ?) ? ` 
+Please remember: These return one receive-only channel (named `out`).
+
+- `?Pipe(     func(item ?)   ...)` - apply operations (such as print/log)
+- `?PipeFunc( func(item ?) ? ...)` - chain actions which return an item for an item
+
+Mind You: [Batteries](batteries.md) are included
+with many special purpose pipe-tubes.
 
 ### Finaliser
 
-Please remember: These return a `done` channel, not a `?` channel.
+- `?Done...` is the prefix common for finalisers.
 
-- `?Done()` - just drain input 'till close
-- `?DoneFunc(func(item ?)` - apply an action (such as print/log) as well
+Please remember: These return a signal channel (named `done`), not a `?` channel.
+
+- `?Done(     func(item ?)   ...)` - apply operations (such as print/log) 'till close
+- `?DoneFunc( func(item ?) ? ...)` - chain actions 'till close
 - `?DoneSlice()` - returns a slice of all items received
+
+Mind You: [Batteries](batteries.md) are included 
+with special purpose finalisers such as `freq`.
 
 ### One to Two
 
@@ -110,10 +125,8 @@ And there is more, such as `?Merge` or `?Same`.
 ---
 ## [Closures](closures.md)
 
-
-- ?Tube* - closures around ?Pipe*
-- ?Fini* - closures around ?Done*
-
+- `?Tube...` - closures around ?Pipe*
+- `?Fini...` - closures around ?Done*
 
 ---
 [Back to overview](overview.md)
