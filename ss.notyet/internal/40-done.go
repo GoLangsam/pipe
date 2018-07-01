@@ -7,19 +7,45 @@ package pipe
 // ===========================================================================
 // Beg of anyThingDone terminators
 
-// anyThingDone returns a channel to receive
+// anyThingDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func anyThingDone(inp <-chan anyThing) (done <-chan struct{}) {
+// upon close.
+func anyThingDone(inp <-chan anyThing, ops ...func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go func(done chan<- struct{}, inp <-chan anyThing) {
+	go func(done chan<- struct{}, inp <-chan anyThing, ops ...func(a anyThing)) {
 		defer close(done)
 		for i := range inp {
-			_ = i // drain inp
+			for _, op := range ops {
+				if op != nil {
+					op(i) // apply operation
+				}
+			}
 		}
 		done <- struct{}{}
-	}(sig, inp)
+	}(sig, inp, ops...)
+	return sig
+}
+
+// anyThingDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func anyThingDoneFunc(inp <-chan anyThing, acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go func(done chan<- struct{}, inp <-chan anyThing, actt ...func(a anyThing)) {
+		defer close(done)
+		for i := range inp {
+			for _, act := range acts {
+				if act != nil {
+					i = act(i) // chain action
+				}
+			}
+		}
+		done <- struct{}{}
+	}(sig, inp, acts...)
 	return sig
 }
 
@@ -38,26 +64,6 @@ func anyThingDoneSlice(inp <-chan anyThing) (done <-chan []anyThing) {
 		}
 		done <- slice
 	}(sig, inp)
-	return sig
-}
-
-// anyThingDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func anyThingDoneFunc(inp <-chan anyThing, act func(a anyThing)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a anyThing) { return }
-	}
-	go func(done chan<- struct{}, inp <-chan anyThing, act func(a anyThing)) {
-		defer close(done)
-		for i := range inp {
-			act(i) // apply action
-		}
-		done <- struct{}{}
-	}(sig, inp, act)
 	return sig
 }
 

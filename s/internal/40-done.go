@@ -7,20 +7,48 @@ package pipe
 // ===========================================================================
 // Beg of anyThingDone terminators
 
-// anyThingDone returns a channel to receive
+// anyThingDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func anyThingDone(inp <-chan anyThing) (done <-chan struct{}) {
+// upon close.
+func anyThingDone(inp <-chan anyThing, ops ...func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doneanyThing(sig, inp)
+	go doneanyThing(sig, inp, ops...)
 	return sig
 }
 
-func doneanyThing(done chan<- struct{}, inp <-chan anyThing) {
+func doneanyThing(done chan<- struct{}, inp <-chan anyThing, ops ...func(a anyThing)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// anyThingDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func anyThingDoneFunc(inp <-chan anyThing, acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneanyThingFunc(sig, inp, acts...)
+	return sig
+}
+
+func doneanyThingFunc(done chan<- struct{}, inp <-chan anyThing, acts ...func(a anyThing) anyThing) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -43,28 +71,6 @@ func doneanyThingSlice(done chan<- []anyThing, inp <-chan anyThing) {
 		slice = append(slice, i)
 	}
 	done <- slice
-}
-
-// anyThingDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func anyThingDoneFunc(inp <-chan anyThing, act func(a anyThing)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a anyThing) { return }
-	}
-	go doneanyThingFunc(sig, inp, act)
-	return sig
-}
-
-func doneanyThingFunc(done chan<- struct{}, inp <-chan anyThing, act func(a anyThing)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
 }
 
 // End of anyThingDone terminators

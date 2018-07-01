@@ -7,15 +7,40 @@ package pipe
 // ===========================================================================
 // Beg of anyThingDone terminators
 
-// anyThingDone returns a channel to receive
+// anyThingDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func anyThingDone(inp chan anyThing) chan struct{} {
+// upon close.
+func anyThingDone(inp chan anyThing, ops ...func(a anyThing)) chan struct{} {
 	done := make(chan struct{})
 	go func() {
 		for i := range inp {
-			_ = i // drain inp
+			for _, op := range ops {
+				if op != nil {
+					op(i) // apply operation
+				}
+			}
+		}
+		done <- struct{}{}
+	}()
+	return done
+}
+
+// anyThingDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func anyThingDoneFunc(inp chan anyThing, acts ...func(a anyThing) anyThing) chan struct{} {
+	done := make(chan struct{})
+	go func() {
+		for i := range inp {
+			for _, act := range acts {
+				if act != nil {
+					i = act(i) // chain action
+				}
+			}
 		}
 		done <- struct{}{}
 	}()
@@ -35,22 +60,6 @@ func anyThingDoneSlice(inp chan anyThing) chan []anyThing {
 			slice = append(slice, i)
 		}
 		done <- slice
-	}()
-	return done
-}
-
-// anyThingDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func anyThingDoneFunc(inp chan anyThing, act func(a anyThing)) chan struct{} {
-	done := make(chan struct{})
-	go func() {
-		for i := range inp {
-			act(i) // apply action
-		}
-		done <- struct{}{}
 	}()
 	return done
 }

@@ -7,20 +7,48 @@ package pipe
 // ===========================================================================
 // Beg of anyThingDone terminators
 
-// anyThingDone returns a channel to receive
+// anyThingDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func anyThingDone(inp anymode) (done <-chan struct{}) {
+// upon close.
+func anyThingDone(inp anymode, ops ...func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doitanyThing(sig, inp)
+	go doneanyThing(sig, inp, ops...)
 	return sig
 }
 
-func doitanyThing(done chan<- struct{}, inp anymode) {
+func doneanyThing(done chan<- struct{}, inp anymode, ops ...func(a anyThing)) {
 	defer close(done)
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// anyThingDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func anyThingDoneFunc(inp anymode, acts ... func(a anyThing) anyThing) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneanyThingFunc(sig, inp, acts...)
+	return sig
+}
+
+func doneanyThingFunc(done chan<- struct{}, inp anymode, acts ... func(a anyThing) anyThing) {
+	defer close(done)
+	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -32,39 +60,17 @@ func doitanyThing(done chan<- struct{}, inp anymode) {
 //  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func anyThingDoneSlice(inp anymode) (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
-	go doitanyThingSlice(sig, inp)
+	go doneanyThingSlice(sig, inp)
 	return sig
 }
 
-func doitanyThingSlice(done chan<- []anyThing, inp anymode) {
+func doneanyThingSlice(done chan<- []anyThing, inp anymode) {
 	defer close(done)
 	slice := []anyThing{}
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		slice = append(slice, i)
 	}
 	done <- slice
-}
-
-// anyThingDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func anyThingDoneFunc(inp anymode, act func(a anyThing)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a anyThing) { return }
-	}
-	go doitanyThingFunc(sig, inp, act)
-	return sig
-}
-
-func doitanyThingFunc(done chan<- struct{}, inp anymode, act func(a anyThing)) {
-	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
-		act(i) // apply action
-	}
-	done <- struct{}{}
 }
 
 // End of anyThingDone terminators
