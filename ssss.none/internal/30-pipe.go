@@ -7,16 +7,45 @@ package pipe
 // ===========================================================================
 // Beg of anyThingPipe functions
 
-// anyThingPipeFunc returns a channel to receive
-// every result of action `act` applied to `inp`
+// anyThingPipe
+// will apply every `op` to every `inp` and
+// returns a channel to receive
+// each `inp`
 // before close.
-// Note: it 'could' be anyThingPipeMap for functional people,
-// but 'map' has a very different meaning in go lang.
-func anyThingPipeFunc(inp chan anyThing, act func(a anyThing) anyThing) chan anyThing {
+//
+// Note: For functional people,
+// this 'could' be named `anyThingMap`.
+// Just: 'map' has a very different meaning in go lang.
+func anyThingPipe(inp chan anyThing, ops ...func(a anyThing)) chan anyThing {
 	out := make(chan anyThing)
 	go func() {
 		for i := range inp {
-			out <- act(i) // apply action
+			for _, op := range ops {
+				if op != nil {
+					op(i) // chain action
+				}
+			}
+			out <- i // send it
+		}
+	}()
+	return out
+}
+
+// anyThingPipeFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// each result
+// before close.
+func anyThingPipeFunc(inp chan anyThing, acts ...func(a anyThing) anyThing) chan anyThing {
+	out := make(chan anyThing)
+	go func() {
+		for i := range inp {
+			for _, act := range acts {
+				if act != nil {
+					i = act(i) // chain action
+				}
+			}
+			out <- i // send result
 		}
 	}()
 	return out

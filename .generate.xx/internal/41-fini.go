@@ -16,7 +16,7 @@ func anyThingFini(ops ...func(a anyThing)) func(inp anymode) (done <-chan struct
 }
 
 // anyThingFiniFunc returns a closure around `anyThingDoneFunc(_, acts...)`.
-func anyThingFiniFunc(acts ...func(a anyThing)anyThing) func(inp anymode) (done <-chan struct{}) {
+func anyThingFiniFunc(acts ...func(a anyThing) anyThing) func(inp anymode) (done <-chan struct{}) {
 
 	return func(inp anymode) (done <-chan struct{}) {
 		return anyThingDoneFunc(inp, acts...)

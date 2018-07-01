@@ -35,7 +35,7 @@ func anyThingDone(inp <-chan anyThing, ops ...func(a anyThing)) (done <-chan str
 // upon close.
 func anyThingDoneFunc(inp <-chan anyThing, acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go func(done chan<- struct{}, inp <-chan anyThing, actt ...func(a anyThing)) {
+	go func(done chan<- struct{}, inp <-chan anyThing, acts ...func(a anyThing) anyThing) {
 		defer close(done)
 		for i := range inp {
 			for _, act := range acts {

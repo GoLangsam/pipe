@@ -35,13 +35,13 @@ func doneanyThing(done chan<- struct{}, inp anymode, ops ...func(a anyThing)) {
 // returns a channel to receive
 // one signal
 // upon close.
-func anyThingDoneFunc(inp anymode, acts ... func(a anyThing) anyThing) (done <-chan struct{}) {
+func anyThingDoneFunc(inp anymode, acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
 	go doneanyThingFunc(sig, inp, acts...)
 	return sig
 }
 
-func doneanyThingFunc(done chan<- struct{}, inp anymode, acts ... func(a anyThing) anyThing) {
+func doneanyThingFunc(done chan<- struct{}, inp anymode, acts ...func(a anyThing) anyThing) {
 	defer close(done)
 	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
 		for _, act := range acts {

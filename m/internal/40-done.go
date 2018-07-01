@@ -12,13 +12,13 @@ package pipe
 // returns a channel to receive
 // one signal
 // upon close.
-func (inp anyThingFrom) anyThingDone() (done <-chan struct{}) {
+func (inp anyThingFrom) anyThingDone(ops ...func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneanyThing(sig)
+	go inp.doneanyThing(sig, ops...)
 	return sig
 }
 
-func (inp anyThingFrom) doneanyThing(done chan<- struct{}) {
+func (inp anyThingFrom) doneanyThing(done chan<- struct{}, ops ...func(a anyThing)) {
 	defer close(done)
 	for i := range inp {
 		for _, op := range ops {
@@ -35,13 +35,13 @@ func (inp anyThingFrom) doneanyThing(done chan<- struct{}) {
 // returns a channel to receive
 // one signal
 // upon close.
-func (inp anyThingFrom) anyThingDoneFunc(act func(a anyThing)) (done <-chan struct{}) {
+func (inp anyThingFrom) anyThingDoneFunc(acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneanyThingFunc(sig, act)
+	go inp.doneanyThingFunc(sig, acts...)
 	return sig
 }
 
-func (inp anyThingFrom) doneanyThingFunc(done chan<- struct{}, act func(a anyThing)) {
+func (inp anyThingFrom) doneanyThingFunc(done chan<- struct{}, acts ...func(a anyThing) anyThing) {
 	defer close(done)
 	for i := range inp {
 		for _, act := range acts {

@@ -7,11 +7,19 @@ package pipe
 // ===========================================================================
 // Beg of anyThingTube closures around anyThingPipe
 
-// anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp chan anyThing) (out chan anyThing)) {
+// anyThingTube returns a closure around PipeanyThing (_, ops...).
+func anyThingTube(ops ...func(a anyThing)) (tube func(inp chan anyThing) chan anyThing) {
 
-	return func(inp chan anyThing) (out chan anyThing) {
-		return anyThingPipeFunc(inp, act)
+	return func(inp chan anyThing) chan anyThing {
+		return anyThingPipe(inp, ops...)
+	}
+}
+
+// anyThingTubeFunc returns a closure around PipeanyThingFunc (_, acts...).
+func anyThingTubeFunc(acts ...func(a anyThing) anyThing) (tube func(inp chan anyThing) chan anyThing) {
+
+	return func(inp chan anyThing) chan anyThing {
+		return anyThingPipeFunc(inp, acts...)
 	}
 }
 
