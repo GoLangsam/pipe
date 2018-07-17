@@ -12,17 +12,17 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingPipeDone
+// Beg of PipeDone
 
-// anyThingPipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
-func (inp anyThingFrom) anyThingPipeDone() (out anyThingFrom, done <-chan struct{}) {
+// PipeDone returns a channel to receive every `inp` before close and a channel to signal this closing.
+func (inp anyThingFrom) PipeDone() (out anyThingFrom, done <-chan struct{}) {
 	cha := make(chan anyThing)
 	doit := make(chan struct{})
-	go inp.pipeanyThingDone(cha, doit)
+	go inp.pipeDone(cha, doit)
 	return cha, doit
 }
 
-func (inp anyThingFrom) pipeanyThingDone(out anyThingInto, done chan<- struct{}) {
+func (inp anyThingFrom) pipeDone(out anyThingInto, done chan<- struct{}) {
 	defer close(out)
 	defer close(done)
 	for i := range inp {
@@ -31,5 +31,5 @@ func (inp anyThingFrom) pipeanyThingDone(out anyThingInto, done chan<- struct{})
 	done <- struct{}{}
 }
 
-// End of anyThingPipeDone
+// End of PipeDone
 // ===========================================================================

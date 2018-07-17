@@ -14,17 +14,17 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingStrew - scatter them
+// Beg of Strew - scatter them
 
-// anyThingStrew returns a slice (of size = size) of channels
+// Strew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (inp anyThingFrom) anyThingStrew(size int) (outS []anyThingFrom) {
+func (inp anyThingFrom) Strew(size int) (outS []anyThingFrom) {
 	chaS := make(map[chan anyThing]struct{}, size)
 	for i := 0; i < size; i++ {
 		chaS[make(chan anyThing)] = struct{}{}
 	}
 
-	go inp.strewanyThing(chaS)
+	go inp.strew(chaS)
 
 	outS = make([]anyThingFrom, size)
 	i := 0
@@ -36,10 +36,10 @@ func (inp anyThingFrom) anyThingStrew(size int) (outS []anyThingFrom) {
 	return outS
 }
 
-func (inp anyThingFrom) strewanyThing(outS map[chan anyThing]struct{}) {
+func (inp anyThingFrom) strew(outS map[chan anyThing]struct{}) {
 
 	for i := range inp {
-		for !inp.trySendanyThing(i, outS) {
+		for !inp.trySend(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -49,7 +49,7 @@ func (inp anyThingFrom) strewanyThing(outS map[chan anyThing]struct{}) {
 	}
 }
 
-func (static anyThingFrom) trySendanyThing(inp anyThing, outS map[chan anyThing]struct{}) bool {
+func (static anyThingFrom) trySend(inp anyThing, outS map[chan anyThing]struct{}) bool {
 
 	for o := range outS {
 
@@ -64,5 +64,5 @@ func (static anyThingFrom) trySendanyThing(inp anyThing, outS map[chan anyThing]
 	return false
 }
 
-// End of anyThingStrew - scatter them
+// End of Strew - scatter them
 // ===========================================================================

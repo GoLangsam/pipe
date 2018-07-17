@@ -14,9 +14,9 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingFanIn1 - fan-in using only one go routine
+// Beg of FanIn1 - fan-in using only one go routine
 
-// anyThingFanIn1 returns a channel to receive all inputs arriving
+// FanIn1 returns a channel to receive all inputs arriving
 // on variadic inps
 // before close.
 //
@@ -24,14 +24,14 @@ type anyThing generic.Type
 //  which keeps trying open inputs in round-robin fashion
 //  until all inputs are closed.
 //
-// See anyThingFanIn in `fan-in` for another implementation.
-func (inp anyThingFrom) anyThingFanIn1(inpS ...anyThingFrom) (out anyThingFrom) {
+// See FanIn in `fan-in` for another implementation.
+func (inp anyThingFrom) FanIn1(inpS ...anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go fanin1anyThing(cha, append(inpS, inp)...)
+	go fanin1(cha, append(inpS, inp)...)
 	return cha
 }
 
-func fanin1anyThing(out anyThingInto, inpS ...anyThingFrom) {
+func fanin1(out anyThingInto, inpS ...anyThingFrom) {
 	defer close(out)
 
 	open := len(inpS)                 // assume: all are open
@@ -64,5 +64,5 @@ func fanin1anyThing(out anyThingInto, inpS ...anyThingFrom) {
 	} // open
 }
 
-// End of anyThingFanIn1 - fan-in using only one go routine
+// End of FanIn1 - fan-in using only one go routine
 // ===========================================================================

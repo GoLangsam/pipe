@@ -5,20 +5,20 @@
 package pipe
 
 // ===========================================================================
-// Beg of anyThingFanIn2 simple binary Fan-In
+// Beg of FanIn2 simple binary Fan-In
 
-// anyThingFanIn2 returns a channel to receive
+// FanIn2 returns a channel to receive
 // all from both `inp` and `inp2`
 // before close.
-func (inp anyThingFrom) anyThingFanIn2(inp2 anyThingFrom) (out anyThingFrom) {
+func (inp anyThingFrom) FanIn2(inp2 anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go inp.fanIn2anyThing(cha, inp2)
+	go inp.fanIn2(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (inp anyThingFrom) fanin2anyThing as seen in Go Concurrency Patterns
-func fanin2anyThing(out anyThingInto, inp, inp2 anyThingFrom) {
+// (inp anyThingFrom) fanin2 as seen in Go Concurrency Patterns
+func fanin2(out anyThingInto, inp, inp2 anyThingFrom) {
 	for {
 		select {
 		case e := <-inp:
@@ -29,7 +29,7 @@ func fanin2anyThing(out anyThingInto, inp, inp2 anyThingFrom) {
 	}
 } */
 
-func (inp anyThingFrom) fanIn2anyThing(out anyThingInto, inp2 anyThingFrom) {
+func (inp anyThingFrom) fanIn2(out anyThingInto, inp2 anyThingFrom) {
 	defer close(out)
 
 	var (
@@ -62,5 +62,5 @@ func (inp anyThingFrom) fanIn2anyThing(out anyThingInto, inp2 anyThingFrom) {
 	}
 }
 
-// End of anyThingFanIn2 simple binary Fan-In
+// End of FanIn2 simple binary Fan-In
 // ===========================================================================

@@ -14,9 +14,9 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingSema - limited parallel execution
+// Beg of Sema - limited parallel execution
 
-// anyThingPipeFuncMany returns a channel to receive
+// PipeFuncMany returns a channel to receive
 // every result of action `act` applied to `inp`
 // by `many` parallel processing goroutines
 // before close.
@@ -24,7 +24,7 @@ type anyThing generic.Type
 //  ref: database/sql/sql_test.go
 //  ref: cmd/compile/internal/gc/noder.go
 //
-func (inp anyThingFrom) anyThingPipeFuncMany(act func(a anyThing) anyThing, many int) (out anyThingFrom) {
+func (inp anyThingFrom) PipeFuncMany(act func(a anyThing) anyThing, many int) (out anyThingFrom) {
 	cha := make(chan anyThing)
 
 	if act == nil { // Make `nil` value useful
@@ -35,11 +35,11 @@ func (inp anyThingFrom) anyThingPipeFuncMany(act func(a anyThing) anyThing, many
 		many = 1
 	}
 
-	go inp.pipeanyThingFuncMany(cha, act, many)
+	go inp.pipeFuncMany(cha, act, many)
 	return cha
 }
 
-func (inp anyThingFrom) pipeanyThingFuncMany(out anyThingInto, act func(a anyThing) anyThing, many int) {
+func (inp anyThingFrom) pipeFuncMany(out anyThingInto, act func(a anyThing) anyThing, many int) {
 	defer close(out)
 
 	sem := make(chan struct{}, many)
@@ -59,5 +59,5 @@ func (inp anyThingFrom) pipeanyThingFuncMany(out anyThingInto, act func(a anyThi
 	wg.Wait()
 }
 
-// End of anyThingSema - limited parallel execution
+// End of Sema - limited parallel execution
 // ===========================================================================

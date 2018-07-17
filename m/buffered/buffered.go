@@ -12,31 +12,31 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingPipeBuffered - a buffered channel with capacity `cap` to receive
+// Beg of PipeBuffered - a buffered channel with capacity `cap` to receive
 
-// anyThingPipeBuffered returns a buffered channel with capacity `cap` to receive
+// PipeBuffered returns a buffered channel with capacity `cap` to receive
 // all `inp`
 // before close.
-func (inp anyThingFrom) anyThingPipeBuffered(cap int) (out anyThingFrom) {
+func (inp anyThingFrom) PipeBuffered(cap int) (out anyThingFrom) {
 	cha := make(chan anyThing, cap)
-	go inp.pipeanyThingBuffered(cha)
+	go inp.pipeBuffered(cha)
 	return cha
 }
 
-func (inp anyThingFrom) pipeanyThingBuffered(out anyThingInto) {
+func (inp anyThingFrom) pipeBuffered(out anyThingInto) {
 	defer close(out)
 	for i := range inp {
 		out <- i
 	}
 }
 
-// anyThingTubeBuffered returns a closure around PipeanyThingBuffer (cap).
-func (inp anyThingFrom) anyThingTubeBuffered(cap int) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+// TubeBuffered returns a closure around PipeBuffer (cap).
+func (inp anyThingFrom) TubeBuffered(cap int) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeBuffered(cap)
+		return inp.PipeBuffered(cap)
 	}
 }
 
-// End of anyThingPipeBuffered - a buffered channel with capacity `cap` to receive
+// End of PipeBuffered - a buffered channel with capacity `cap` to receive
 // ===========================================================================

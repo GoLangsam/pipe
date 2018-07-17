@@ -12,21 +12,21 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingSame comparator
+// Beg of Same comparator
 
 // inspired by go/doc/play/tree.go
 
-// anyThingSame reads values from two channels in lockstep
+// Same reads values from two channels in lockstep
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func (inp anyThingFrom) anyThingSame(same func(a, b anyThing) bool, inp2 anyThingFrom) (out <-chan bool) {
+func (inp anyThingFrom) Same(same func(a, b anyThing) bool, inp2 anyThingFrom) (out <-chan bool) {
 	cha := make(chan bool)
-	go inp.sameanyThing(cha, same, inp2)
+	go inp.same(cha, same, inp2)
 	return cha
 }
 
-func (inp anyThingFrom) sameanyThing(out chan<- bool, same func(a, b anyThing) bool, inp2 anyThingFrom) {
+func (inp anyThingFrom) same(out chan<- bool, same func(a, b anyThing) bool, inp2 anyThingFrom) {
 	defer close(out)
 	for {
 		v1, ok1 := <-inp
@@ -43,5 +43,5 @@ func (inp anyThingFrom) sameanyThing(out chan<- bool, same func(a, b anyThing) b
 	}
 }
 
-// End of anyThingSame comparator
+// End of Same comparator
 // ===========================================================================

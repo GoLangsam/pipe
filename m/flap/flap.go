@@ -12,18 +12,18 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingPipeEnter/Leave - Flapdoors observed by a Waiter
+// Beg of PipeEnter/Leave - Flapdoors observed by a Waiter
 
 // anyThingWaiter - as implemented by `*sync.WaitGroup` -
 // attends Flapdoors and keeps counting
 // who enters and who leaves.
 //
-// Use anyThingDoneWait to learn about
+// Use DoneWait to learn about
 // when the facilities are closed.
 //
 // Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
-// Just: anyThingDoneWait is more convenient
+// Just: DoneWait is more convenient
 // as it also closes the primary channel for You.
 //
 // Just make sure to have _all_ entrances and exits attended,
@@ -36,44 +36,44 @@ type anyThingWaiter interface {
 
 // Note: The name is intentionally generic in order to avoid eventual multiple-declaration clashes.
 
-// anyThingPipeEnter returns a channel to receive
+// PipeEnter returns a channel to receive
 // all `inp`
 // and registers throughput
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func (inp anyThingFrom) anyThingPipeEnter(wg anyThingWaiter) (out anyThingFrom) {
+func (inp anyThingFrom) PipeEnter(wg anyThingWaiter) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go inp.pipeanyThingEnter(cha, wg)
+	go inp.pipeEnter(cha, wg)
 	return cha
 }
 
-// anyThingPipeLeave returns a channel to receive
+// PipeLeave returns a channel to receive
 // all `inp`
 // and registers throughput
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func (inp anyThingFrom) anyThingPipeLeave(wg anyThingWaiter) (out anyThingFrom) {
+func (inp anyThingFrom) PipeLeave(wg anyThingWaiter) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go inp.pipeanyThingLeave(cha, wg)
+	go inp.pipeLeave(cha, wg)
 	return cha
 }
 
-// anyThingDoneLeave returns a channel to receive
+// DoneLeave returns a channel to receive
 // one signal after
 // all throughput on `inp`
 // has been registered
 // as departure
 // on the given `sync.WaitGroup`
 // before close.
-func (inp anyThingFrom) anyThingDoneLeave(wg anyThingWaiter) (done <-chan struct{}) {
+func (inp anyThingFrom) DoneLeave(wg anyThingWaiter) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneanyThingLeave(sig, wg)
+	go inp.doneLeave(sig, wg)
 	return sig
 }
 
-func (inp anyThingFrom) pipeanyThingEnter(out anyThingInto, wg anyThingWaiter) {
+func (inp anyThingFrom) pipeEnter(out anyThingInto, wg anyThingWaiter) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -81,7 +81,7 @@ func (inp anyThingFrom) pipeanyThingEnter(out anyThingInto, wg anyThingWaiter) {
 	}
 }
 
-func (inp anyThingFrom) pipeanyThingLeave(out anyThingInto, wg anyThingWaiter) {
+func (inp anyThingFrom) pipeLeave(out anyThingInto, wg anyThingWaiter) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -89,7 +89,7 @@ func (inp anyThingFrom) pipeanyThingLeave(out anyThingInto, wg anyThingWaiter) {
 	}
 }
 
-func (inp anyThingFrom) doneanyThingLeave(done chan<- struct{}, wg anyThingWaiter) {
+func (inp anyThingFrom) doneLeave(done chan<- struct{}, wg anyThingWaiter) {
 	defer close(done)
 	for i := range inp {
 		_ = i // discard
@@ -98,65 +98,65 @@ func (inp anyThingFrom) doneanyThingLeave(done chan<- struct{}, wg anyThingWaite
 	done <- struct{}{}
 }
 
-// anyThingTubeEnter returns a closure around anyThingPipeEnter (wg)
+// TubeEnter returns a closure around PipeEnter (wg)
 // registering throughput
 // as arrival
 // on the given `sync.WaitGroup`.
-func (inp anyThingFrom) anyThingTubeEnter(wg anyThingWaiter) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+func (inp anyThingFrom) TubeEnter(wg anyThingWaiter) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeEnter(wg)
+		return inp.PipeEnter(wg)
 	}
 }
 
-// anyThingTubeLeave returns a closure around anyThingPipeLeave (wg)
+// TubeLeave returns a closure around PipeLeave (wg)
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (inp anyThingFrom) anyThingTubeLeave(wg anyThingWaiter) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+func (inp anyThingFrom) TubeLeave(wg anyThingWaiter) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeLeave(wg)
+		return inp.PipeLeave(wg)
 	}
 }
 
-// anyThingFiniLeave returns a closure around `anyThingDoneLeave(wg)`
+// FiniLeave returns a closure around `DoneLeave(wg)`
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (inp anyThingFrom) anyThingFiniLeave(wg anyThingWaiter) func(inp anyThingFrom) (done <-chan struct{}) {
+func (inp anyThingFrom) FiniLeave(wg anyThingWaiter) func(inp anyThingFrom) (done <-chan struct{}) {
 
 	return func(inp anyThingFrom) (done <-chan struct{}) {
-		return inp.anyThingDoneLeave(wg)
+		return inp.DoneLeave(wg)
 	}
 }
 
-// anyThingDoneWait returns a channel to receive
+// DoneWait returns a channel to receive
 // one signal
 // after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func (out anyThingInto) anyThingDoneWait(wg anyThingWaiter) (done <-chan struct{}) {
+func (out anyThingInto) DoneWait(wg anyThingWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go out.doneanyThingWait(cha, wg)
+	go out.doneWait(cha, wg)
 	return cha
 }
 
-func (out anyThingInto) doneanyThingWait(done chan<- struct{}, wg anyThingWaiter) {
+func (out anyThingInto) doneWait(done chan<- struct{}, wg anyThingWaiter) {
 	defer close(done)
 	wg.Wait()
 	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// anyThingFiniWait returns a closure around `anyThingDoneWait(wg)`.
-func (out anyThingInto) anyThingFiniWait(wg anyThingWaiter) func(out anyThingInto) (done <-chan struct{}) {
+// FiniWait returns a closure around `DoneWait(wg)`.
+func (out anyThingInto) FiniWait(wg anyThingWaiter) func(out anyThingInto) (done <-chan struct{}) {
 
 	return func(out anyThingInto) (done <-chan struct{}) {
-		return out.anyThingDoneWait(wg)
+		return out.DoneWait(wg)
 	}
 }
 
-// End of anyThingPipeEnter/Leave - Flapdoors observed by a Waiter
+// End of PipeEnter/Leave - Flapdoors observed by a Waiter
 // ===========================================================================

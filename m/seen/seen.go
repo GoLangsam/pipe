@@ -14,36 +14,36 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingPipeSeen/anyThingForkSeen - an "I've seen this anyThing before" filter / forker
+// Beg of PipeSeen/ForkSeen - an "I've seen this anyThing before" filter / forker
 
-// anyThingPipeSeen returns a channel to receive
+// PipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-//  Note: anyThingPipeFilterNotSeenYet might be a better name, but is fairly long.
-func (inp anyThingFrom) anyThingPipeSeen() (out anyThingFrom) {
+//  Note: PipeFilterNotSeenYet might be a better name, but is fairly long.
+func (inp anyThingFrom) PipeSeen() (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go inp.pipeanyThingSeenAttr(cha, nil)
+	go inp.pipeSeenAttr(cha, nil)
 	return cha
 }
 
-// anyThingPipeSeenAttr returns a channel to receive
+// PipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-//  Note: anyThingPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (inp anyThingFrom) anyThingPipeSeenAttr(attr func(a anyThing) interface{}) (out anyThingFrom) {
+//  Note: PipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func (inp anyThingFrom) PipeSeenAttr(attr func(a anyThing) interface{}) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go inp.pipeanyThingSeenAttr(cha, attr)
+	go inp.pipeSeenAttr(cha, attr)
 	return cha
 }
 
-// anyThingForkSeen returns two channels, `new` and `old`,
+// ForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -52,14 +52,14 @@ func (inp anyThingFrom) anyThingPipeSeenAttr(attr func(a anyThing) interface{}) 
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp anyThingFrom) anyThingForkSeen() (new, old anyThingFrom) {
+func (inp anyThingFrom) ForkSeen() (new, old anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go inp.forkanyThingSeenAttr(cha1, cha2, nil)
+	go inp.forkSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
-// anyThingForkSeenAttr returns two channels, `new` and `old`,
+// ForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -69,14 +69,14 @@ func (inp anyThingFrom) anyThingForkSeen() (new, old anyThingFrom) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp anyThingFrom) anyThingForkSeenAttr(attr func(a anyThing) interface{}) (new, old anyThingFrom) {
+func (inp anyThingFrom) ForkSeenAttr(attr func(a anyThing) interface{}) (new, old anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go inp.forkanyThingSeenAttr(cha1, cha2, attr)
+	go inp.forkSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (inp anyThingFrom) pipeanyThingSeenAttr(out anyThingInto, attr func(a anyThing) interface{}) {
+func (inp anyThingFrom) pipeSeenAttr(out anyThingInto, attr func(a anyThing) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -93,7 +93,7 @@ func (inp anyThingFrom) pipeanyThingSeenAttr(out anyThingInto, attr func(a anyTh
 	}
 }
 
-func (inp anyThingFrom) forkanyThingSeenAttr(new, old anyThingInto, attr func(a anyThing) interface{}) {
+func (inp anyThingFrom) forkSeenAttr(new, old anyThingInto, attr func(a anyThing) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -111,25 +111,25 @@ func (inp anyThingFrom) forkanyThingSeenAttr(new, old anyThingInto, attr func(a 
 	}
 }
 
-// anyThingTubeSeen returns a closure around anyThingPipeSeen()
+// TubeSeen returns a closure around PipeSeen()
 // (silently dropping every anyThing seen before).
-func (inp anyThingFrom) anyThingTubeSeen() (tube func(inp anyThingFrom) (out anyThingFrom)) {
+func (inp anyThingFrom) TubeSeen() (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeSeen()
+		return inp.PipeSeen()
 	}
 }
 
-// anyThingTubeSeenAttr returns a closure around anyThingPipeSeenAttr(attr)
+// TubeSeenAttr returns a closure around PipeSeenAttr(attr)
 // (silently dropping every anyThing
 // whose attribute `attr` was
 // seen before).
-func (inp anyThingFrom) anyThingTubeSeenAttr(attr func(a anyThing) interface{}) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+func (inp anyThingFrom) TubeSeenAttr(attr func(a anyThing) interface{}) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeSeenAttr(attr)
+		return inp.PipeSeenAttr(attr)
 	}
 }
 
-// End of anyThingPipeSeen/anyThingForkSeen - an "I've seen this anyThing before" filter / forker
+// End of PipeSeen/ForkSeen - an "I've seen this anyThing before" filter / forker
 // ===========================================================================

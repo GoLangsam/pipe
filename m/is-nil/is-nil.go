@@ -17,17 +17,17 @@ type anyThing generic.Type
 // Functions suitable only for types which can be == nil.
 // Thus, do not use for basic built-in's such as int, string, ...
 
-// anyThingChanFuncNil returns a channel to receive
+// ChanFuncNil returns a channel to receive
 // all results of generator `gen`
 // until nil
 // before close.
-func anyThingChanFuncNil(gen func() anyThing) (out anyThingFrom) {
+func ChanFuncNil(gen func() anyThing) (out anyThingFrom) {
 	cha := make(chan anyThing)
-	go chananyThingFuncNil(cha, gen)
+	go chanFuncNil(cha, gen)
 	return cha
 }
 
-func chananyThingFuncNil(out anyThingInto, gen func() anyThing) {
+func chanFuncNil(out anyThingInto, gen func() anyThing) {
 	defer close(out)
 	for {
 		res := gen() // generate

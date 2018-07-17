@@ -12,30 +12,30 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingDoneFreq - receive a frequency histogram
+// Beg of DoneFreq - receive a frequency histogram
 
-// anyThingDoneFreq returns a channel to receive
+// DoneFreq returns a channel to receive
 // a frequency histogram (as a `map[anyThing]int64`)
 // upon close.
-func (inp anyThingFrom) anyThingDoneFreq() (freq <-chan map[anyThing]int64) {
+func (inp anyThingFrom) DoneFreq() (freq <-chan map[anyThing]int64) {
 	cha := make(chan map[anyThing]int64)
-	go inp.doneanyThingFreq(cha)
+	go inp.doneFreq(cha)
 	return cha
 }
 
-// anyThingDoneFreqAttr returns a channel to receive
+// DoneFreqAttr returns a channel to receive
 // a frequency histogram (as a `map[interface{}]int64`)
 // upon close.
 //
 // `attr` provides the key to the frequency map.
 // If `nil` is passed as `attr` then anyThing is used as key.
-func (inp anyThingFrom) anyThingDoneFreqAttr(attr func(a anyThing) interface{}) (freq <-chan map[interface{}]int64) {
+func (inp anyThingFrom) DoneFreqAttr(attr func(a anyThing) interface{}) (freq <-chan map[interface{}]int64) {
 	cha := make(chan map[interface{}]int64)
-	go inp.doneanyThingFreqAttr(cha, attr)
+	go inp.doneFreqAttr(cha, attr)
 	return cha
 }
 
-func (inp anyThingFrom) doneanyThingFreq(out chan<- map[anyThing]int64) {
+func (inp anyThingFrom) doneFreq(out chan<- map[anyThing]int64) {
 	defer close(out)
 	freq := make(map[anyThing]int64)
 
@@ -45,7 +45,7 @@ func (inp anyThingFrom) doneanyThingFreq(out chan<- map[anyThing]int64) {
 	out <- freq
 }
 
-func (inp anyThingFrom) doneanyThingFreqAttr(out chan<- map[interface{}]int64, attr func(a anyThing) interface{}) {
+func (inp anyThingFrom) doneFreqAttr(out chan<- map[interface{}]int64, attr func(a anyThing) interface{}) {
 	defer close(out)
 	freq := make(map[interface{}]int64)
 
@@ -59,5 +59,5 @@ func (inp anyThingFrom) doneanyThingFreqAttr(out chan<- map[interface{}]int64, a
 	out <- freq
 }
 
-// End of anyThingDoneFreq - receive a frequency histogram
+// End of DoneFreq - receive a frequency histogram
 // ===========================================================================

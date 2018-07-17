@@ -5,31 +5,31 @@
 package pipe
 
 // ===========================================================================
-// Beg of anyThingFini closures
+// Beg of Fini closures
 
-// anyThingFini returns a closure around `anyThingDone(ops...)`.
-func (inp anyThingFrom) anyThingFini(ops ...func(a anyThing)) func(inp anyThingFrom) (done <-chan struct{}) {
+// Fini returns a closure around `Done(ops...)`.
+func (inp anyThingFrom) Fini(ops ...func(a anyThing)) func(inp anyThingFrom) (done <-chan struct{}) {
 
 	return func(inp anyThingFrom) (done <-chan struct{}) {
-		return inp.anyThingDone(ops...)
+		return inp.Done(ops...)
 	}
 }
 
-// anyThingFiniFunc returns a closure around `anyThingDoneFunc(acts...)`.
-func (inp anyThingFrom) anyThingFiniFunc(acts ...func(a anyThing) anyThing) func(inp anyThingFrom) (done <-chan struct{}) {
+// FiniFunc returns a closure around `DoneFunc(acts...)`.
+func (inp anyThingFrom) FiniFunc(acts ...func(a anyThing) anyThing) func(inp anyThingFrom) (done <-chan struct{}) {
 
 	return func(inp anyThingFrom) (done <-chan struct{}) {
-		return inp.anyThingDoneFunc(acts...)
+		return inp.DoneFunc(acts...)
 	}
 }
 
-// anyThingFiniSlice returns a closure around `anyThingDoneSlice()`.
-func (inp anyThingFrom) anyThingFiniSlice() func(inp anyThingFrom) (done <-chan []anyThing) {
+// FiniSlice returns a closure around `DoneSlice()`.
+func (inp anyThingFrom) FiniSlice() func(inp anyThingFrom) (done <-chan []anyThing) {
 
 	return func(inp anyThingFrom) (done <-chan []anyThing) {
-		return inp.anyThingDoneSlice()
+		return inp.DoneSlice()
 	}
 }
 
-// End of anyThingFini closures
+// End of Fini closures
 // ===========================================================================

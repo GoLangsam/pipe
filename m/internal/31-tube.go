@@ -5,15 +5,15 @@
 package pipe
 
 // ===========================================================================
-// Beg of anyThingTube closures around anyThingPipe
+// Beg of Tube closures around Pipe
 
-// anyThingTubeFunc returns a closure around PipeanyThingFunc (_, act).
-func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+// TubeFunc returns a closure around PipeFunc (_, act).
+func TubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeFunc(act)
+		return inp.PipeFunc(act)
 	}
 }
 
-// End of anyThingTube closures around anyThingPipe
+// End of Tube closures around anyThingPipe
 // ===========================================================================

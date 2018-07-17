@@ -5,20 +5,20 @@
 package pipe
 
 // ===========================================================================
-// Beg of anyThingDone terminators
+// Beg of Done terminators
 
-// anyThingDone
+// Done
 // will apply every `op` to every `inp` and
 // returns a channel to receive
 // one signal
 // upon close.
-func (inp anyThingFrom) anyThingDone(ops ...func(a anyThing)) (done <-chan struct{}) {
+func (inp anyThingFrom) Done(ops ...func(a anyThing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneanyThing(sig, ops...)
+	go inp.done(sig, ops...)
 	return sig
 }
 
-func (inp anyThingFrom) doneanyThing(done chan<- struct{}, ops ...func(a anyThing)) {
+func (inp anyThingFrom) done(done chan<- struct{}, ops ...func(a anyThing)) {
 	defer close(done)
 	for i := range inp {
 		for _, op := range ops {
@@ -30,18 +30,18 @@ func (inp anyThingFrom) doneanyThing(done chan<- struct{}, ops ...func(a anyThin
 	done <- struct{}{}
 }
 
-// anyThingDoneFunc
+// DoneFunc
 // will chain every `act` to every `inp` and
 // returns a channel to receive
 // one signal
 // upon close.
-func (inp anyThingFrom) anyThingDoneFunc(acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
+func (inp anyThingFrom) DoneFunc(acts ...func(a anyThing) anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneanyThingFunc(sig, acts...)
+	go inp.doneFunc(sig, acts...)
 	return sig
 }
 
-func (inp anyThingFrom) doneanyThingFunc(done chan<- struct{}, acts ...func(a anyThing) anyThing) {
+func (inp anyThingFrom) doneFunc(done chan<- struct{}, acts ...func(a anyThing) anyThing) {
 	defer close(done)
 	for i := range inp {
 		for _, act := range acts {
@@ -53,18 +53,18 @@ func (inp anyThingFrom) doneanyThingFunc(done chan<- struct{}, acts ...func(a an
 	done <- struct{}{}
 }
 
-// anyThingDoneSlice returns a channel to receive
+// DoneSlice returns a channel to receive
 // a slice with every anyThing received on `inp`
 // upon close.
 //
-//  Note: Unlike anyThingDone, anyThingDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (inp anyThingFrom) anyThingDoneSlice() (done <-chan []anyThing) {
+//  Note: Unlike Done, DoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func (inp anyThingFrom) DoneSlice() (done <-chan []anyThing) {
 	sig := make(chan []anyThing)
-	go inp.doneanyThingSlice(sig)
+	go inp.doneSlice(sig)
 	return sig
 }
 
-func (inp anyThingFrom) doneanyThingSlice(done chan<- []anyThing) {
+func (inp anyThingFrom) doneSlice(done chan<- []anyThing) {
 	defer close(done)
 	slice := []anyThing{}
 	for i := range inp {
@@ -73,5 +73,5 @@ func (inp anyThingFrom) doneanyThingSlice(done chan<- []anyThing) {
 	done <- slice
 }
 
-// End of anyThingDone terminators
+// End of Done terminators
 // ===========================================================================

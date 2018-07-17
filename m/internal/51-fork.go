@@ -5,21 +5,21 @@
 package pipe
 
 // ===========================================================================
-// Beg of anyThingFork functions
+// Beg of Fork functions
 
-// anyThingFork returns two channels
+// Fork returns two channels
 // either of which is to receive
 // every result of inp
 // before close.
-func (inp anyThingFrom) anyThingFork() (out1, out2 anyThingFrom) {
+func (inp anyThingFrom) Fork() (out1, out2 anyThingFrom) {
 	cha1 := make(chan anyThing)
 	cha2 := make(chan anyThing)
-	go inp.forkanyThing(cha1, cha2)
+	go inp.fork(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
+func (inp anyThingFrom) fork(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -28,7 +28,7 @@ func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
 	}
 } */
 
-func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
+func (inp anyThingFrom) fork(out1, out2 anyThingInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -41,5 +41,5 @@ func (inp anyThingFrom) forkanyThing(out1, out2 anyThingInto) {
 	}
 }
 
-// End of anyThingFork functions
+// End of Fork functions
 // ===========================================================================

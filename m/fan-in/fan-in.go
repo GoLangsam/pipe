@@ -14,45 +14,45 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingFanIn
+// Beg of FanIn
 
-// anyThingFanIn returns a channel to receive all inputs arriving
+// FanIn returns a channel to receive all inputs arriving
 // on variadic inps
 // before close.
 //
 //  Note: For each input one go routine is spawned to forward arrivals.
 //
-// See anyThingFanIn1 in `fan-in1` for another implementation.
+// See FanIn1 in `fan-in1` for another implementation.
 //
 //  Ref: https://blog.golang.org/pipelines
 //  Ref: https://github.com/QuentinPerez/go-stuff/channel/Fan-out-Fan-in/main.go
-func (inp anyThingFrom) anyThingFanIn(inps ...anyThingFrom) (out anyThingFrom) {
+func (inp anyThingFrom) FanIn(inps ...anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps) + 1)
 
-	go inp.fanInanyThingWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
+	go inp.fanInWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
-	go inp.fanInanyThing(cha, wg)
+	go inp.fanIn(cha, wg)
 	for i := range inps {
-		go inps[i].fanInanyThing(cha, wg) // Spawn "output(c)"s
+		go inps[i].fanIn(cha, wg) // Spawn "output(c)"s
 	}
 
 	return cha
 }
 
-func (inp anyThingFrom) fanInanyThing(out anyThingInto, wg *sync.WaitGroup) {
+func (inp anyThingFrom) fanIn(out anyThingInto, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for i := range inp {
 		out <- i
 	}
 }
 
-func (inp anyThingFrom) fanInanyThingWaitAndClose(out anyThingInto, wg *sync.WaitGroup) {
+func (inp anyThingFrom) fanInWaitAndClose(out anyThingInto, wg *sync.WaitGroup) {
 	wg.Wait()
 	close(out)
 }
 
-// End of anyThingFanIn
+// End of FanIn
 // ===========================================================================

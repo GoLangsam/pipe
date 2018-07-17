@@ -12,16 +12,16 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingJoin feedback back-feeders for circular networks
+// Beg of Join feedback back-feeders for circular networks
 
-// anyThingJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func (out anyThingInto) anyThingJoin(inp ...anyThing) (done <-chan struct{}) {
+// Join sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func (out anyThingInto) Join(inp ...anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go out.joinanyThing(sig, inp...)
+	go out.join(sig, inp...)
 	return sig
 }
 
-func (out anyThingInto) joinanyThing(done chan<- struct{}, inp ...anyThing) {
+func (out anyThingInto) join(done chan<- struct{}, inp ...anyThing) {
 	defer close(done)
 	for i := range inp {
 		out <- inp[i]
@@ -29,14 +29,14 @@ func (out anyThingInto) joinanyThing(done chan<- struct{}, inp ...anyThing) {
 	done <- struct{}{}
 }
 
-// anyThingJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func (out anyThingInto) anyThingJoinSlice(inp ...[]anyThing) (done <-chan struct{}) {
+// JoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func (out anyThingInto) JoinSlice(inp ...[]anyThing) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go out.joinanyThingSlice(sig, inp...)
+	go out.joinSlice(sig, inp...)
 	return sig
 }
 
-func (out anyThingInto) joinanyThingSlice(done chan<- struct{}, inp ...[]anyThing) {
+func (out anyThingInto) joinSlice(done chan<- struct{}, inp ...[]anyThing) {
 	defer close(done)
 	for i := range inp {
 		for j := range inp[i] {
@@ -46,14 +46,14 @@ func (out anyThingInto) joinanyThingSlice(done chan<- struct{}, inp ...[]anyThin
 	done <- struct{}{}
 }
 
-// anyThingJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
-func (out anyThingInto) anyThingJoinChan(inp anyThingFrom) (done <-chan struct{}) {
+// JoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
+func (out anyThingInto) JoinChan(inp anyThingFrom) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go out.joinanyThingChan(sig, inp)
+	go out.joinChan(sig, inp)
 	return sig
 }
 
-func (out anyThingInto) joinanyThingChan(done chan<- struct{}, inp anyThingFrom) {
+func (out anyThingInto) joinChan(done chan<- struct{}, inp anyThingFrom) {
 	defer close(done)
 	for i := range inp {
 		out <- i
@@ -61,5 +61,5 @@ func (out anyThingInto) joinanyThingChan(done chan<- struct{}, inp anyThingFrom)
 	done <- struct{}{}
 }
 
-// End of anyThingJoin feedback back-feeders for circular networks
+// End of Join feedback back-feeders for circular networks
 // ===========================================================================

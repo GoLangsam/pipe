@@ -17,34 +17,34 @@ import (
 	"github.com/cheekybits/genny/generic"
 )
 
-// Note: pipeanyThingAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeAdjust imports "container/ring" for the expanding buffer.
 
 // anyThing is the generic type flowing thru the pipe network.
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingPipeAdjust
+// Beg of PipeAdjust
 
-// anyThingPipeAdjust returns a channel to receive
+// PipeAdjust returns a channel to receive
 // all `inp`
 // buffered by a anyThingSendProxy process
 // before close.
-func (inp anyThingFrom) anyThingPipeAdjust(sizes ...int) (out anyThingFrom) {
+func (inp anyThingFrom) PipeAdjust(sizes ...int) (out anyThingFrom) {
 	cap, que := sendanyThingProxySizes(sizes...)
 	cha := make(chan anyThing, cap)
-	go inp.pipeanyThingAdjust(cha, que)
+	go inp.pipeAdjust(cha, que)
 	return cha
 }
 
-// anyThingTubeAdjust returns a closure around anyThingPipeAdjust (_, sizes ...int).
-func (inp anyThingFrom) anyThingTubeAdjust(sizes ...int) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+// TubeAdjust returns a closure around PipeAdjust (_, sizes ...int).
+func (inp anyThingFrom) TubeAdjust(sizes ...int) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
-		return inp.anyThingPipeAdjust(sizes...)
+		return inp.PipeAdjust(sizes...)
 	}
 }
 
-// End of anyThingPipeAdjust
+// End of PipeAdjust
 // ===========================================================================
 
 // ===========================================================================
@@ -83,19 +83,19 @@ func sendanyThingProxySizes(sizes ...int) (cap, que int) {
 //
 // Note: anyThingSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
-// even so it does not fit the pipe tube pattern as anyThingPipeAdjust does.
+// even so it does not fit the pipe tube pattern as PipeAdjust does.
 func anyThingSendProxy(out anyThingInto, sizes ...int) (send anyThingInto) {
 	cap, que := sendanyThingProxySizes(sizes...)
 	cha := make(chan anyThing, cap)
-	go (anyThingFrom)(cha).pipeanyThingAdjust(out, que)
+	go (anyThingFrom)(cha).pipeAdjust(out, que)
 	return cha
 }
 
-// pipeanyThingAdjust uses an adjusting buffer to receive from 'inp'
+// pipeAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (inp anyThingFrom) pipeanyThingAdjust(out anyThingInto, QUE int) {
+func (inp anyThingFrom) pipeAdjust(out anyThingInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)

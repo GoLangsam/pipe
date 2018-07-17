@@ -12,17 +12,17 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingFanOut
+// Beg of FanOut
 
-// anyThingFanOut returns a slice (of size = size) of channels
+// FanOut returns a slice (of size = size) of channels
 // each of which shall receive any inp before close.
-func (inp anyThingFrom) anyThingFanOut(size int) (outS [](anyThingFrom)) {
+func (inp anyThingFrom) FanOut(size int) (outS [](anyThingFrom)) {
 	chaS := make([]chan anyThing, size)
 	for i := 0; i < size; i++ {
 		chaS[i] = make(chan anyThing)
 	}
 
-	go inp.fananyThingOut(chaS...)
+	go inp.fanOut(chaS...)
 
 	outS = make([]anyThingFrom, size)
 	for i := 0; i < size; i++ {
@@ -32,8 +32,8 @@ func (inp anyThingFrom) anyThingFanOut(size int) (outS [](anyThingFrom)) {
 	return outS
 }
 
-// c (inp anyThingFrom) fananyThingOut(outs ...anyThingInto) {
-func (inp anyThingFrom) fananyThingOut(outs ...chan anyThing) {
+// c (inp anyThingFrom) fanOut(outs ...anyThingInto) {
+func (inp anyThingFrom) fanOut(outs ...chan anyThing) {
 
 	for i := range inp {
 		for o := range outs {
@@ -47,5 +47,5 @@ func (inp anyThingFrom) fananyThingOut(outs ...chan anyThing) {
 
 }
 
-// End of anyThingFanOut
+// End of FanOut
 // ===========================================================================

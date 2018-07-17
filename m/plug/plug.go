@@ -12,21 +12,21 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingPlug - graceful terminator
+// Beg of Plug - graceful terminator
 
-// anyThingPlug returns a channel to receive every `inp` before close and a channel to signal this closing.
+// Plug returns a channel to receive every `inp` before close and a channel to signal this closing.
 // Upon receipt of a stop signal,
 // output is immediately closed,
 // and for graceful termination
 // any remaining input is drained before done is signalled.
-func (inp anyThingFrom) anyThingPlug(stop <-chan struct{}) (out anyThingFrom, done <-chan struct{}) {
+func (inp anyThingFrom) Plug(stop <-chan struct{}) (out anyThingFrom, done <-chan struct{}) {
 	cha := make(chan anyThing)
 	doit := make(chan struct{})
-	go inp.pluganyThing(cha, doit, stop)
+	go inp.plug(cha, doit, stop)
 	return cha, doit
 }
 
-func (inp anyThingFrom) pluganyThing(out anyThingInto, done chan<- struct{}, stop <-chan struct{}) {
+func (inp anyThingFrom) plug(out anyThingInto, done chan<- struct{}, stop <-chan struct{}) {
 	defer close(done)
 
 	var end bool   // shall we end?
@@ -55,5 +55,5 @@ func (inp anyThingFrom) pluganyThing(out anyThingInto, done chan<- struct{}, sto
 	done <- struct{}{}
 }
 
-// End of anyThingPlug - graceful terminator
+// End of Plug - graceful terminator
 // ===========================================================================

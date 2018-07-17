@@ -12,13 +12,13 @@ import (
 type anyThing generic.Type
 
 // ===========================================================================
-// Beg of anyThingMerge
+// Beg of Merge
 
-// anyThingMerge returns a channel to receive all inputs sorted and free of duplicates.
+// Merge returns a channel to receive all inputs sorted and free of duplicates.
 // Each input channel needs to be sorted ascending and free of duplicates.
 // The passed binary boolean function `less` defines the applicable order.
 //  Note: If no inputs are given, a closed channel is returned.
-func (inp anyThingFrom) anyThingMerge(less func(i, j anyThing) bool, inps ...anyThingFrom) (out anyThingFrom) {
+func (inp anyThingFrom) Merge(less func(i, j anyThing) bool, inps ...anyThingFrom) (out anyThingFrom) {
 	var inpS []anyThingFrom
 	if inp == nil {
 		inpS = inps
@@ -33,14 +33,14 @@ func (inp anyThingFrom) anyThingMerge(less func(i, j anyThing) bool, inps ...any
 	} else if len(inpS) < 2 { // just one: return it
 		return inpS[0]
 	} else { // tail recurse
-		return inpS[0].mergeanyThing(less, inpS[1].anyThingMerge(less, inpS[2:]...))
+		return inpS[0].merge(less, inpS[1].Merge(less, inpS[2:]...))
 	}
 }
 
-// mergeanyThing takes two (eager) channels of comparable types,
+// merge takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func (inp anyThingFrom) mergeanyThing(less func(i, j anyThing) bool, inp2 anyThingFrom) (out anyThingFrom) {
+func (inp anyThingFrom) merge(less func(i, j anyThing) bool, inp2 anyThingFrom) (out anyThingFrom) {
 	cha := make(chan anyThing)
 	go func(out anyThingInto, inp, inp2 anyThingFrom) {
 		defer close(out)
@@ -92,10 +92,10 @@ func (inp anyThingFrom) mergeanyThing(less func(i, j anyThing) bool, inp2 anyThi
 	return cha
 }
 
-// Note: mergeanyThing is not my own.
+// Note: merge is not my own.
 // Just: I forgot where found the original merge2 - please accept my apologies.
 // I'd love to learn about it's origin/author, so I can give credit.
 // Thus: Your hint, dear reader, is highly appreciated!
 
-// End of anyThingMerge
+// End of Merge
 // ===========================================================================
