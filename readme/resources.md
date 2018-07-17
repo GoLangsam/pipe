@@ -3,6 +3,8 @@ Some links to related informations.
 
 ## Books
 - [Communicating Sequential Processes (CSP)](http://www.usingcsp.com/cspbook.pdf) **The** CSPbook
+    * Author: C.A.R Hoare
+    * Publication Date: May 18, 2015 - first published in 1985
 
 - **The Go Programming Language** *(Addison-Wesley Professional Computing Series)*
     * Author: Alan A.A. Donovan and Brian Kernighan
