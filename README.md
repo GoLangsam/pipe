@@ -35,7 +35,8 @@ And the [overview](readme/overview.md) is a good place to start...
 
 May, what You find here in this repo, be a trustworthy and helpful companion along Your journey. Enjoy!
 
-Please feel free and encouraged to suggest, improve, comment or ask - You'll be welcome!
+---
+Your suggestions, remarks, questions and/or contributions are welcome ;-)
 
 ---
 ## Think deep - code happy - be simple - see clear :-)
