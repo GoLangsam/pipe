@@ -10,17 +10,17 @@ package pipe
 // anySupply is a
 // supply channel
 type anySupply struct {
-	dat chan anyThing
+	ch chan anyThing
 	//  chan struct{}
 }
 
 // anySupplyMakeChan returns
 // a (pointer to a) fresh
 // unbuffered
-// supply channel
+// supply channel.
 func anySupplyMakeChan() *anySupply {
 	d := anySupply{
-		dat: make(chan anyThing),
+		ch: make(chan anyThing),
 		// : make(chan struct{}),
 	}
 	return &d
@@ -29,50 +29,54 @@ func anySupplyMakeChan() *anySupply {
 // anySupplyMakeBuff returns
 // a (pointer to a) fresh
 // buffered (with capacity=`cap`)
-// supply channel
+// supply channel.
 func anySupplyMakeBuff(cap int) *anySupply {
 	d := anySupply{
-		dat: make(chan anyThing, cap),
+		ch: make(chan anyThing, cap),
 		// : make(chan struct{}),
 	}
 	return &d
 }
 
-// Provide is the send method
-// - aka "myAnyChan <- myAny"
-func (c *anySupply) Provide(dat anyThing) {
-	// .req
-	c.dat <- dat
+// ---------------------------------------------------------------------------
+
+// Get is the comma-ok multi-valued form to receive from the channel and
+// reports whether a received value was sent before the channel was closed.
+//
+// Get blocks until the request is accepted and value `val` has been received from `from`.
+func (from *anySupply) Get() (val anyThing, open bool) {
+	// m.req <- struct{}{}
+	val, open = <-from.ch
+	return
 }
 
-// Receive is the receive operator as method
-// - aka "myAny := <-myAnyChan"
-func (c *anySupply) Receive() (dat anyThing) {
-	// eq <- struct{}{}
-	return <-c.dat
+// ---------------------------------------------------------------------------
+
+// Put is the send-upon-request method
+// - aka "myAnyChan <- myAny".
+//
+// Put blocks until requsted to send value `val` into `into`.
+func (into *anySupply) Put(val anyThing) {
+	// nto.req
+	into.ch <- val
 }
 
-// Request is the comma-ok multi-valued form of Receive and
-// reports whether a received value was sent before the anyThing channel was closed
-func (c *anySupply) Request() (dat anyThing, open bool) {
-	// eq <- struct{}{}
-	dat, open = <-c.dat
-	return dat, open
+// Close is to be called by a producer when finished sending.
+// The value channel is closed in order to broadcast this.
+func (into *anySupply) Close() {
+	close(into.ch)
 }
 
-// Close closes the underlying anyThing channel
-func (c *anySupply) Close() {
-	close(c.dat)
-}
+// ---------------------------------------------------------------------------
 
-// Cap reports the capacity of the underlying anyThing channel
+// Cap reports the capacity of the underlying value channel.
 func (c *anySupply) Cap() int {
-	return cap(c.dat)
+	return cap(c.ch)
 }
 
-// Len reports the length of the underlying anyThing channel
+// Len reports the length of the underlying value channel.
 func (c *anySupply) Len() int {
-	return len(c.dat)
+	return len(c.ch)
 }
 
 // End of anySupply channel object

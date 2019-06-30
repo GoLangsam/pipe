@@ -23,7 +23,7 @@ func anyThingChan(inp ...anyThing) (out anyThingChannel) {
 func chananyThing(out anyThingChannel, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
-		out.Provide(inp[i])
+		out.Put(inp[i])
 	}
 }
 
@@ -40,7 +40,7 @@ func chananyThingSlice(out anyThingChannel, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
-			out.Provide(inp[i][j])
+			out.Put(inp[i][j])
 		}
 	}
 }
@@ -62,7 +62,7 @@ func chananyThingFuncNok(out anyThingChannel, gen func() (anyThing, bool)) {
 		if !ok {
 			return
 		}
-		out.Provide(res)
+		out.Put(res)
 	}
 }
 
@@ -83,7 +83,7 @@ func chananyThingFuncErr(out anyThingChannel, gen func() (anyThing, error)) {
 		if err != nil {
 			return
 		}
-		out.Provide(res)
+		out.Put(res)
 	}
 }
 
@@ -110,13 +110,13 @@ func anyThingPipe(inp anyThingChannel, ops ...func(a anyThing)) (out anyThingCha
 
 func pipeanyThing(out anyThingChannel, inp anyThingChannel, ops ...func(a anyThing)) {
 	defer out.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, op := range ops {
 			if op != nil {
 				op(i) // chain action
 			}
 		}
-		out.Provide(i) // send it
+		out.Put(i) // send it
 	}
 }
 
@@ -133,13 +133,13 @@ func anyThingPipeFunc(inp anyThingChannel, acts ...func(a anyThing) anyThing) (o
 
 func pipeanyThingFunc(out anyThingChannel, inp anyThingChannel, acts ...func(a anyThing) anyThing) {
 	defer out.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, act := range acts {
 			if act != nil {
 				i = act(i) // chain action
 			}
 		}
-		out.Provide(i) // send result
+		out.Put(i) // send result
 	}
 }
 
@@ -184,7 +184,7 @@ func anyThingDone(inp anyThingChannel, ops ...func(a anyThing)) (done <-chan str
 
 func doneanyThing(done chan<- struct{}, inp anyThingChannel, ops ...func(a anyThing)) {
 	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, op := range ops {
 			if op != nil {
 				op(i) // apply operation
@@ -207,7 +207,7 @@ func anyThingDoneFunc(inp anyThingChannel, acts ...func(a anyThing) anyThing) (d
 
 func doneanyThingFunc(done chan<- struct{}, inp anyThingChannel, acts ...func(a anyThing) anyThing) {
 	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, act := range acts {
 			if act != nil {
 				i = act(i) // chain action
@@ -231,7 +231,7 @@ func anyThingDoneSlice(inp anyThingChannel) (done <-chan []anyThing) {
 func doneanyThingSlice(done chan<- []anyThing, inp anyThingChannel) {
 	defer close(done)
 	slice := []anyThing{}
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		slice = append(slice, i)
 	}
 	done <- slice
@@ -285,9 +285,9 @@ func anyThingPair(inp anyThingChannel) (out1, out2 anyThingChannel) {
 func pairanyThing(out1, out2 anyThingChannel, inp anyThingChannel) {
 	defer out1.Close()
 	defer out2.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
-		out1.Provide(i)
-		out2.Provide(i)
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
+		out1.Put(i)
+		out2.Put(i)
 	}
 }
 

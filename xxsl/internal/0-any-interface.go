@@ -12,11 +12,11 @@ package pipe
 // channel of anyThing elements
 type anyThingChannel interface {
 	AnyChanCore // close, len & cap
-	receiverAny // Receive / Request
-	providerAny // Provide
+	receiverAny // Receive / Get
+	providerAny // Put
 }
 
-// Note: Embedding AnyReceiver and AnyProvider directly would result in error: duplicate method Len Cap Close
+// Note: Embedding AnyReceiver and AnyPutr directly would result in error: duplicate method Len Cap Close
 
 // AnyReceiver represents a
 // receive-only
@@ -24,25 +24,24 @@ type anyThingChannel interface {
 // - aka `<-chan`
 type AnyReceiver interface {
 	AnyChanCore // close, len & cap
-	receiverAny // Receive / Request
+	receiverAny // Receive / Get
 }
 
 type receiverAny interface {
-	Receive() (data anyThing)              // the receive operator as method - aka `MyAny := <-myreceiverAny`
-	Request() (data anyThing, isOpen bool) // the multi-valued comma-ok receive - aka `MyAny, ok := <-myreceiverAny`
+	Get() (data anyThing, isOpen bool) // the multi-valued comma-ok receive - aka `MyAny, ok := <-myreceiverAny`
 }
 
-// AnyProvider represents a
+// AnyPutr represents a
 // send-enabled
 // channel of anyThing elements
 // - aka `chan<-`
-type AnyProvider interface {
+type AnyPutr interface {
 	AnyChanCore // close, len & cap
-	providerAny // Provide
+	providerAny // Put
 }
 
 type providerAny interface {
-	Provide(data anyThing) // the send method - aka `MyAnyproviderAny <- MyAny`
+	Put(data anyThing) // the send method - aka `MyAnyproviderAny <- MyAny`
 }
 
 // AnyChanCore represents basic methods common to every
