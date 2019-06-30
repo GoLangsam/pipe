@@ -20,16 +20,16 @@ type anyThing generic.Type
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func anyThingSame(same func(a, b anyThing) bool, inp1, inp2 <-chan anyThing) (out <-chan bool) {
+func anyThingSame(same func(a, b anyThing) bool, inp, inp2 <-chan anyThing) (out <-chan bool) {
 	cha := make(chan bool)
-	go sameanyThing(cha, same, inp1, inp2)
+	go sameanyThing(cha, same, inp, inp2)
 	return cha
 }
 
-func sameanyThing(out chan<- bool, same func(a, b anyThing) bool, inp1, inp2 <-chan anyThing) {
+func sameanyThing(out chan<- bool, same func(a, b anyThing) bool, inp, inp2 <-chan anyThing) {
 	defer close(out)
 	for {
-		v1, ok1 := <-inp1
+		v1, ok1 := <-inp
 		v2, ok2 := <-inp2
 
 		if !ok1 || !ok2 {

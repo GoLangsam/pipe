@@ -20,7 +20,7 @@ type anySupply struct {
 // supply channel.
 func anySupplyMakeChan() *anySupply {
 	d := anySupply{
-		ch:  make(chan anyThing),
+		ch: make(chan anyThing),
 		// : make(chan struct{}),
 	}
 	return &d
@@ -32,7 +32,7 @@ func anySupplyMakeChan() *anySupply {
 // supply channel.
 func anySupplyMakeBuff(cap int) *anySupply {
 	d := anySupply{
-		ch:  make(chan anyThing, cap),
+		ch: make(chan anyThing, cap),
 		// : make(chan struct{}),
 	}
 	return &d

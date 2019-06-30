@@ -18,22 +18,23 @@ type anyThing generic.Type
 
 // anyThingMakeChan returns a new open channel
 // (simply a 'chan anyThing' that is).
-//  Note: No 'anyThing-producer' is launched here yet! (as is in all the other functions).
-//  This is useful to easily create corresponding variables such as:
-/*
-   var myanyThingPipelineStartsHere := anyThingMakeChan()
-   // ... lot's of code to design and build Your favourite "myanyThingWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-       myanyThingPipelineStartsHere <- drop
-   }
-   close(myanyThingPipelineStartsHere)
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
-//  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
+// Note: No 'anyThing-producer' is launched here yet! (as is in all the other functions).
+//  This is useful to easily create corresponding variables such as:
+//
+// 	var myanyThingPipelineStartsHere := anyThingMakeChan()
+// 	// ... lot's of code to design and build Your favourite "myanyThingWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// 	    myanyThingPipelineStartsHere <- drop
+// 	}
+// 	close(myanyThingPipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
 func anyThingMakeChan() (out chan anyThing) {
 	return make(chan anyThing)
@@ -386,20 +387,20 @@ func forkanyThing(out1, out2 chan<- anyThing, inp <-chan anyThing) {
 // Beg of anyThingFanIn2 simple binary Fan-In
 
 // anyThingFanIn2 returns a channel to receive
-// all from both `inp1` and `inp2`
+// all from both `inp` and `inp2`
 // before close.
-func anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
+func anyThingFanIn2(inp, inp2 <-chan anyThing) (out <-chan anyThing) {
 	cha := make(chan anyThing)
-	go fanIn2anyThing(cha, inp1, inp2)
+	go fanIn2anyThing(cha, inp, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
 // fanin2anyThing as seen in Go Concurrency Patterns
-func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+func fanin2anyThing(out chan<- anyThing, inp, inp2 <-chan anyThing) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -407,7 +408,7 @@ func fanin2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 	}
 } */
 
-func fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+func fanIn2anyThing(out chan<- anyThing, inp, inp2 <-chan anyThing) {
 	defer close(out)
 
 	var (
@@ -418,11 +419,11 @@ func fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -434,8 +435,8 @@ func fanIn2anyThing(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

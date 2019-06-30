@@ -10,7 +10,7 @@ package pipe
 // anyDemand is a
 // demand channel
 type anyDemand struct {
-	ch chan anyThing
+	ch  chan anyThing
 	req chan struct{}
 }
 

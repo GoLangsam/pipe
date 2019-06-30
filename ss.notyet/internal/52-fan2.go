@@ -13,18 +13,18 @@ package pipe
 // it hangs forever upon close of both inputs.
 // Thus: it leaks it's goroutine!
 // (And never closes it's output)
-func anyThingFanIn2(inp1, inp2 <-chan anyThing) (out <-chan anyThing) {
+func anyThingFanIn2(inp, inp2 <-chan anyThing) (out <-chan anyThing) {
 	cha := make(chan anyThing)
-	go func(out chan<- anyThing, inp1, inp2 <-chan anyThing) {
+	go func(out chan<- anyThing, inp, inp2 <-chan anyThing) {
 		for {
 			select {
-			case e := <-inp1:
+			case e := <-inp:
 				out <- e
 			case e := <-inp2:
 				out <- e
 			}
 		}
-	}(cha, inp1, inp2)
+	}(cha, inp, inp2)
 	return cha
 }
 

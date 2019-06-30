@@ -15,20 +15,21 @@ package pipe
 
 // ThingMakeChan returns a new open channel
 // (simply a 'chan Thing' that is).
+//
 // Note: No 'Thing-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
-/*
-var myThingPipelineStartsHere := ThingMakeChan()
-// ... lot's of code to design and build Your favourite "myThingWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-myThingPipelineStartsHere <- drop
-   }
-close(myThingPipelineStartsHere)
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// var myThingPipelineStartsHere := ThingMakeChan()
+// // ... lot's of code to design and build Your favourite "myThingWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// myThingPipelineStartsHere <- drop
+// 	}
+// close(myThingPipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
 // Note: as always (except for ThingPipeBuffer) the channel is unbuffered.
 //
@@ -314,7 +315,7 @@ func ThingPair(inp <-chan Thing) (out1, out2 <-chan Thing) {
 }
 
 /* not used - kept for reference only.
-func pairThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+func pairThing ( out1 , out2 chan <- Thing , inp <- chan Thing ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -354,7 +355,7 @@ func ThingFork(inp <-chan Thing) (out1, out2 <-chan Thing) {
 }
 
 /* not used - kept for reference only.
-func forkThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+func forkThing ( out1 , out2 chan <- Thing , inp <- chan Thing ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -393,7 +394,7 @@ func ThingFanIn2(inp, inp2 <-chan Thing) (out <-chan Thing) {
 
 /* not used - kept for reference only.
 // fanin2Thing as seen in Go Concurrency Patterns
-func fanin2Thing ( out chan<- Thing , inp , inp2 <-chan Thing ) {
+func fanin2Thing ( out chan <- Thing , inp , inp2 <- chan Thing ) {
 	for {
 		select {
 		case e := <-inp:

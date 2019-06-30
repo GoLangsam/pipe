@@ -22,20 +22,21 @@ type Thing generic.Type
 
 // ThingMakeChan returns a new open channel
 // (simply a 'chan Thing' that is).
+//
 // Note: No 'Thing-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
-/*
-var myThingPipelineStartsHere := ThingMakeChan ( ) ;
-// ... lot's of code to design and build Your favourite "myThingWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-myThingPipelineStartsHere <- drop ;
-   }
-close ( myThingPipelineStartsHere ) ;
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// var myThingPipelineStartsHere := ThingMakeChan()
+// // ... lot's of code to design and build Your favourite "myThingWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// myThingPipelineStartsHere <- drop
+// 	}
+// close(myThingPipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
 // Note: as always (except for ThingPipeBuffer) the channel is unbuffered.
 //
@@ -390,20 +391,20 @@ func forkThing(out1, out2 chan<- Thing, inp <-chan Thing) {
 // Beg of ThingFanIn2 simple binary Fan-In
 
 // ThingFanIn2 returns a channel to receive
-// all from both `inp1` and `inp2`
+// all from both `inp` and `inp2`
 // before close.
-func ThingFanIn2(inp1, inp2 <-chan Thing) (out <-chan Thing) {
+func ThingFanIn2(inp, inp2 <-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
-	go fanIn2Thing(cha, inp1, inp2)
+	go fanIn2Thing(cha, inp, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
 // fanin2Thing as seen in Go Concurrency Patterns
-func fanin2Thing ( out chan <- Thing , inp1 , inp2 <- chan Thing ) {
+func fanin2Thing ( out chan <- Thing , inp , inp2 <- chan Thing ) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -411,7 +412,7 @@ func fanin2Thing ( out chan <- Thing , inp1 , inp2 <- chan Thing ) {
 	}
 } */
 
-func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
+func fanIn2Thing(out chan<- Thing, inp, inp2 <-chan Thing) {
 	defer close(out)
 
 	var (
@@ -422,11 +423,11 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -438,8 +439,8 @@ func fanIn2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }
@@ -1419,16 +1420,16 @@ func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thi
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func ThingSame(same func(a, b Thing) bool, inp1, inp2 <-chan Thing) (out <-chan bool) {
+func ThingSame(same func(a, b Thing) bool, inp, inp2 <-chan Thing) (out <-chan bool) {
 	cha := make(chan bool)
-	go sameThing(cha, same, inp1, inp2)
+	go sameThing(cha, same, inp, inp2)
 	return cha
 }
 
-func sameThing(out chan<- bool, same func(a, b Thing) bool, inp1, inp2 <-chan Thing) {
+func sameThing(out chan<- bool, same func(a, b Thing) bool, inp, inp2 <-chan Thing) {
 	defer close(out)
 	for {
-		v1, ok1 := <-inp1
+		v1, ok1 := <-inp
 		v2, ok2 := <-inp2
 
 		if !ok1 || !ok2 {

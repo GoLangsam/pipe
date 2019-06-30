@@ -21,7 +21,7 @@ type anyMode generic.Type
 // anyMode is a
 // mode channel
 type anyMode struct {
-	ch chan anyThing
+	ch  chan anyThing
 	req chan struct{}
 }
 */

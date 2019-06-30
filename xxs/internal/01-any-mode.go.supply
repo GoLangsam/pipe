@@ -17,7 +17,7 @@ type anyThing interface{}
 // anySupply is a
 // supply channel
 type anySupply struct {
-	ch chan anyThing
+	ch  chan anyThing
 	req chan struct{}
 }
 */

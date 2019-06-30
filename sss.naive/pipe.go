@@ -18,22 +18,23 @@ type anyThing generic.Type
 
 // anyThingMakeChan returns a new open channel
 // (simply a 'chan anyThing' that is).
-//  Note: No 'anyThing-producer' is launched here yet! (as is in all the other functions).
-//  This is useful to easily create corresponding variables such as:
-/*
-   var myanyThingPipelineStartsHere := anyThingMakeChan()
-   // ... lot's of code to design and build Your favourite "myanyThingWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-       myanyThingPipelineStartsHere <- drop
-   }
-   close(myanyThingPipelineStartsHere)
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
-//  Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
+// Note: No 'anyThing-producer' is launched here yet! (as is in all the other functions).
+//  This is useful to easily create corresponding variables such as:
+//
+// 	var myanyThingPipelineStartsHere := anyThingMakeChan()
+// 	// ... lot's of code to design and build Your favourite "myanyThingWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// 	    myanyThingPipelineStartsHere <- drop
+// 	}
+// 	close(myanyThingPipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// Note: as always (except for anyThingPipeBuffer) the channel is unbuffered.
 //
 func anyThingMakeChan() chan anyThing {
 	return make(chan anyThing)
@@ -343,12 +344,12 @@ func anyThingFork(inp chan anyThing) (chan anyThing, chan anyThing) {
 // it hangs forever upon close of both inputs.
 // Thus: it leaks it's goroutine!
 // (And never closes it's output)
-func anyThingFanIn2(inp1, inp2 chan anyThing) chan anyThing {
+func anyThingFanIn2(inp, inp2 chan anyThing) chan anyThing {
 	out := make(chan anyThing)
 	go func() {
 		for {
 			select {
-			case e := <-inp1:
+			case e := <-inp:
 				out <- e
 			case e := <-inp2:
 				out <- e
