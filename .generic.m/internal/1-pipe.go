@@ -130,24 +130,53 @@ func chanThingFuncErr(out ThingInto, gen func() (Thing, error)) {
 // ===========================================================================
 // Beg of ThingPipe functions
 
-// ThingPipeFunc returns a channel to receive
-// every result of action `act` applied to `inp`
+// ThingPipe
+// will apply every `op` to every `inp` and
+// returns a channel to receive
+// each `inp`
 // before close.
-// Note: it 'could' be ThingPipeMap for functional people,
-// but 'map' has a very different meaning in go lang.
-func (inp ThingFrom) ThingPipeFunc(act func(a Thing) Thing) (out ThingFrom) {
+//
+// Note: For functional people,
+// this 'could' be named `ThingMap`.
+// Just: 'map' has a very different meaning in go lang.
+func (inp ThingFrom) ThingPipe(ops ...func(a Thing)) (out <-chan Thing) {
 	cha := make(chan Thing)
-	if act == nil { // Make `nil` value useful
-		act = func(a Thing) Thing { return a }
-	}
-	go inp.pipeThingFunc(cha, act)
+	go inp.pipeThing(cha, ops...)
 	return cha
 }
 
-func (inp ThingFrom) pipeThingFunc(out ThingInto, act func(a Thing) Thing) {
+func (inp ThingFrom) pipeThing(out chan<- Thing, ops ...func(a Thing)) {
 	defer close(out)
 	for i := range inp {
-		out <- act(i) // apply action
+		for _, op := range ops {
+			if op != nil {
+				op(i) // chain action
+			}
+		}
+		out <- i // send it
+	}
+}
+
+// ThingPipeFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// each result
+// before close.
+func (inp ThingFrom) ThingPipeFunc(acts ...func(a Thing) Thing) (out ThingFrom) {
+	cha := make(chan Thing)
+	go inp.pipeThingFunc(cha, acts...)
+	return cha
+}
+
+func (inp ThingFrom) pipeThingFunc(out ThingInto, acts ...func(a Thing) Thing) {
+	defer close(out)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+		out <- i // send result
 	}
 }
 
@@ -157,11 +186,19 @@ func (inp ThingFrom) pipeThingFunc(out ThingInto, act func(a Thing) Thing) {
 // ===========================================================================
 // Beg of ThingTube closures around ThingPipe
 
-// ThingTubeFunc returns a closure around PipeThingFunc (_, act).
-func ThingTubeFunc(act func(a Thing) Thing) (tube func(inp ThingFrom) (out ThingFrom)) {
+// ThingTube returns a closure around PipeThing (_, ops...).
+func (inp ThingFrom) ThingTube(ops ...func(a Thing)) (tube func(inp ThingFrom) (out ThingFrom)) {
 
 	return func(inp ThingFrom) (out ThingFrom) {
-		return inp.ThingPipeFunc(act)
+		return inp.ThingPipe(ops...)
+	}
+}
+
+// ThingTubeFunc returns a closure around PipeThingFunc (_, acts...).
+func ThingTubeFunc(acts ...func(a Thing) Thing) (tube func(inp ThingFrom) (out ThingFrom)) {
+
+	return func(inp ThingFrom) (out ThingFrom) {
+		return inp.ThingPipeFunc(acts...)
 	}
 }
 
@@ -171,20 +208,48 @@ func ThingTubeFunc(act func(a Thing) Thing) (tube func(inp ThingFrom) (out Thing
 // ===========================================================================
 // Beg of ThingDone terminators
 
-// ThingDone returns a channel to receive
+// ThingDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func (inp ThingFrom) ThingDone() (done <-chan struct{}) {
+// upon close.
+func (inp ThingFrom) ThingDone(ops ...func(a Thing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneThing(sig)
+	go inp.doneThing(sig, ops...)
 	return sig
 }
 
-func (inp ThingFrom) doneThing(done chan<- struct{}) {
+func (inp ThingFrom) doneThing(done chan<- struct{}, ops ...func(a Thing)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// ThingDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func (inp ThingFrom) ThingDoneFunc(acts ...func(a Thing) Thing) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go inp.doneThingFunc(sig, acts...)
+	return sig
+}
+
+func (inp ThingFrom) doneThingFunc(done chan<- struct{}, acts ...func(a Thing) Thing) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -209,39 +274,25 @@ func (inp ThingFrom) doneThingSlice(done chan<- []Thing) {
 	done <- slice
 }
 
-// ThingDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func (inp ThingFrom) ThingDoneFunc(act func(a Thing)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a Thing) { return }
-	}
-	go inp.doneThingFunc(sig, act)
-	return sig
-}
-
-func (inp ThingFrom) doneThingFunc(done chan<- struct{}, act func(a Thing)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
 // End of ThingDone terminators
 // ===========================================================================
 
 // ===========================================================================
 // Beg of ThingFini closures
 
-// ThingFini returns a closure around `ThingDone()`.
-func (inp ThingFrom) ThingFini() func(inp ThingFrom) (done <-chan struct{}) {
+// ThingFini returns a closure around `ThingDone(ops...)`.
+func (inp ThingFrom) ThingFini(ops ...func(a Thing)) func(inp ThingFrom) (done <-chan struct{}) {
 
 	return func(inp ThingFrom) (done <-chan struct{}) {
-		return inp.ThingDone()
+		return inp.ThingDone(ops...)
+	}
+}
+
+// ThingFiniFunc returns a closure around `ThingDoneFunc(act)`.
+func (inp ThingFrom) ThingFiniFunc(acts ...func(a Thing) Thing) func(inp ThingFrom) (done <-chan struct{}) {
+
+	return func(inp ThingFrom) (done <-chan struct{}) {
+		return inp.ThingDoneFunc(acts...)
 	}
 }
 
@@ -250,14 +301,6 @@ func (inp ThingFrom) ThingFiniSlice() func(inp ThingFrom) (done <-chan []Thing) 
 
 	return func(inp ThingFrom) (done <-chan []Thing) {
 		return inp.ThingDoneSlice()
-	}
-}
-
-// ThingFiniFunc returns a closure around `ThingDoneFunc(act)`.
-func (inp ThingFrom) ThingFiniFunc(act func(a Thing)) func(inp ThingFrom) (done <-chan struct{}) {
-
-	return func(inp ThingFrom) (done <-chan struct{}) {
-		return inp.ThingDoneFunc(act)
 	}
 }
 
@@ -355,7 +398,7 @@ func (inp ThingFrom) ThingFanIn2(inp2 ThingFrom) (out ThingFrom) {
 }
 
 /* not used - kept for reference only.
-// (inp ThingFrom) fanin2Thing as seen in Go Concurrency Patterns
+// fanin2Thing as seen in Go Concurrency Patterns
 func fanin2Thing(out ThingInto, inp, inp2 ThingFrom) {
 	for {
 		select {
