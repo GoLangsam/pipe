@@ -66,7 +66,7 @@ func (t *Traffic) Processor(crawl func(s Site), parallel int) (done <-chan struc
 
 	sites, seen := siteForkSeenAttr(sitePipeEnter(t.sites, t.wg), Site.attr)
 	for _, sites := range siteStrew(sitePipeAdjust(sites), parallel) {
-		siteDoneFunc(sites, proc) // strewed `sites` leave in wrapped `crawl`
+		siteDone(sites, proc) // strewed `sites` leave in wrapped `crawl`
 	}
 	siteDoneLeave(seen, t.wg) // `seen` leave without further processing
 

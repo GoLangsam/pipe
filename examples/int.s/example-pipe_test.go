@@ -30,7 +30,7 @@ func Example_one() {
 
 	t := intChan(1, 2, 3, 4, 5)
 	t = intPipeFunc(t, TimesN(4))
-	<-intDoneFunc(t, p)
+	<-intDone(t, p)
 
 	// Output:
 	// 4
@@ -44,7 +44,7 @@ func Example_two() {
 
 	t := intChan(1, 2, 3, 4, 5)
 	t4 := intTubeFunc(TimesN(4))
-	<-intDoneFunc(t4(t), p)
+	<-intDone(t4(t), p)
 
 	// Output:
 	// 4
@@ -58,7 +58,7 @@ func Example_three() {
 
 	t := intChan(1, 2, 3, 4, 5)
 	t2 := intTubeFunc(TimesN(2))
-	<-intDoneFunc(t2(t2(t)), p)
+	<-intDone(t2(t2(t)), p)
 
 	// Output:
 	// 4
@@ -72,7 +72,7 @@ func Example_daisy() {
 
 	t := intChan(1, 2, 3, 4, 5)
 	t2 := intTubeFunc(TimesN(2))
-	<-intDoneFunc(t2(t2(t)), p)
+	<-intDone(t2(t2(t)), p)
 
 	// Output:
 	// 4

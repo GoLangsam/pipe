@@ -13,5 +13,5 @@ type result = Result // to keep generated functions private
 // one signal after `act` has been applied to every `inp`
 // before close.
 func DoneFunc(inp <-chan Result, act func(a Result)) (done <-chan struct{}) {
-	return resultDoneFunc(inp, act)
+	return resultDone(inp, act)
 }

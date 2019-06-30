@@ -11,17 +11,17 @@ package sites
 import "time"
 
 // ===========================================================================
-// Beg of SiteStrew - scatter them
+// Beg of Strew - scatter them
 
-// SiteStrew returns a slice (of size = size) of channels
+// Strew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (inp SiteFrom) SiteStrew(size int) (outS []SiteFrom) {
+func (inp SiteFrom) Strew(size int) (outS []SiteFrom) {
 	chaS := make(map[chan Site]struct{}, size)
 	for i := 0; i < size; i++ {
 		chaS[make(chan Site)] = struct{}{}
 	}
 
-	go inp.strewSite(chaS)
+	go inp.strew(chaS)
 
 	outS = make([]SiteFrom, size)
 	i := 0
@@ -33,10 +33,10 @@ func (inp SiteFrom) SiteStrew(size int) (outS []SiteFrom) {
 	return outS
 }
 
-func (inp SiteFrom) strewSite(outS map[chan Site]struct{}) {
+func (inp SiteFrom) strew(outS map[chan Site]struct{}) {
 
 	for i := range inp {
-		for !inp.trySendSite(i, outS) {
+		for !inp.trySend(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -46,7 +46,7 @@ func (inp SiteFrom) strewSite(outS map[chan Site]struct{}) {
 	}
 }
 
-func (static SiteFrom) trySendSite(inp Site, outS map[chan Site]struct{}) bool {
+func (static SiteFrom) trySend(inp Site, outS map[chan Site]struct{}) bool {
 
 	for o := range outS {
 
@@ -61,5 +61,5 @@ func (static SiteFrom) trySendSite(inp Site, outS map[chan Site]struct{}) bool {
 	return false
 }
 
-// End of SiteStrew - scatter them
+// End of Strew - scatter them
 // ===========================================================================

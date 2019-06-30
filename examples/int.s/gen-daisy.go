@@ -30,8 +30,8 @@ var _ intProc = func(out chan<- int, inp <-chan int) {
 	}
 }
 
-// daisyint returns a channel to receive all inp after having passed thru process `proc`.
-func daisyint(
+// daisyInt returns a channel to receive all inp after having passed thru process `proc`.
+func daisyInt(
 	inp <-chan int, // a daisy to be chained
 	proc func(into chan<- int, from <-chan int), // a process function
 ) (
@@ -68,10 +68,10 @@ func intDaisyChain(
 				out <- i
 			}
 		}
-		cha = daisyint(cha, samesame)
+		cha = daisyInt(cha, samesame)
 	} else {
 		for _, proc := range procs {
-			cha = daisyint(cha, proc)
+			cha = daisyInt(cha, proc)
 		}
 	}
 	return cha
@@ -106,7 +106,7 @@ func intDaisyChaiN(
 				out <- i
 			}
 		}
-		cha = daisyint(cha, samesame)
+		cha = daisyInt(cha, samesame)
 	} else {
 		for i := 0; i < somany; i++ {
 			cha = intDaisyChain(cha, procs...)

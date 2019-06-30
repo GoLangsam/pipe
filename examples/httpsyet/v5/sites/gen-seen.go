@@ -11,36 +11,36 @@ package sites
 import "sync"
 
 // ===========================================================================
-// Beg of SitePipeSeen/SiteForkSeen - an "I've seen this Site before" filter / forker
+// Beg of PipeSeen/ForkSeen - an "I've seen this Site before" filter / forker
 
-// SitePipeSeen returns a channel to receive
+// PipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: SitePipeFilterNotSeenYet might be a better name, but is fairly long.
-func (inp SiteFrom) SitePipeSeen() (out SiteFrom) {
+//  Note: PipeFilterNotSeenYet might be a better name, but is fairly long.
+func (inp SiteFrom) PipeSeen() (out SiteFrom) {
 	cha := make(chan Site)
-	go inp.pipeSiteSeenAttr(cha, nil)
+	go inp.pipeSeenAttr(cha, nil)
 	return cha
 }
 
-// SitePipeSeenAttr returns a channel to receive
+// PipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: SitePipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (inp SiteFrom) SitePipeSeenAttr(attr func(a Site) interface{}) (out SiteFrom) {
+//  Note: PipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func (inp SiteFrom) PipeSeenAttr(attr func(a Site) interface{}) (out SiteFrom) {
 	cha := make(chan Site)
-	go inp.pipeSiteSeenAttr(cha, attr)
+	go inp.pipeSeenAttr(cha, attr)
 	return cha
 }
 
-// SiteForkSeen returns two channels, `new` and `old`,
+// ForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -49,14 +49,14 @@ func (inp SiteFrom) SitePipeSeenAttr(attr func(a Site) interface{}) (out SiteFro
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp SiteFrom) SiteForkSeen() (new, old SiteFrom) {
+func (inp SiteFrom) ForkSeen() (new, old SiteFrom) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
-	go inp.forkSiteSeenAttr(cha1, cha2, nil)
+	go inp.forkSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
-// SiteForkSeenAttr returns two channels, `new` and `old`,
+// ForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -66,14 +66,14 @@ func (inp SiteFrom) SiteForkSeen() (new, old SiteFrom) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp SiteFrom) SiteForkSeenAttr(attr func(a Site) interface{}) (new, old SiteFrom) {
+func (inp SiteFrom) ForkSeenAttr(attr func(a Site) interface{}) (new, old SiteFrom) {
 	cha1 := make(chan Site)
 	cha2 := make(chan Site)
-	go inp.forkSiteSeenAttr(cha1, cha2, attr)
+	go inp.forkSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (inp SiteFrom) pipeSiteSeenAttr(out SiteInto, attr func(a Site) interface{}) {
+func (inp SiteFrom) pipeSeenAttr(out SiteInto, attr func(a Site) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -90,7 +90,7 @@ func (inp SiteFrom) pipeSiteSeenAttr(out SiteInto, attr func(a Site) interface{}
 	}
 }
 
-func (inp SiteFrom) forkSiteSeenAttr(new, old SiteInto, attr func(a Site) interface{}) {
+func (inp SiteFrom) forkSeenAttr(new, old SiteInto, attr func(a Site) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -108,25 +108,25 @@ func (inp SiteFrom) forkSiteSeenAttr(new, old SiteInto, attr func(a Site) interf
 	}
 }
 
-// SiteTubeSeen returns a closure around SitePipeSeen()
+// TubeSeen returns a closure around PipeSeen()
 // (silently dropping every Site seen before).
-func (inp SiteFrom) SiteTubeSeen() (tube func(inp SiteFrom) (out SiteFrom)) {
+func (inp SiteFrom) TubeSeen() (tube func(inp SiteFrom) (out SiteFrom)) {
 
 	return func(inp SiteFrom) (out SiteFrom) {
-		return inp.SitePipeSeen()
+		return inp.PipeSeen()
 	}
 }
 
-// SiteTubeSeenAttr returns a closure around SitePipeSeenAttr(attr)
+// TubeSeenAttr returns a closure around PipeSeenAttr(attr)
 // (silently dropping every Site
 // whose attribute `attr` was
 // seen before).
-func (inp SiteFrom) SiteTubeSeenAttr(attr func(a Site) interface{}) (tube func(inp SiteFrom) (out SiteFrom)) {
+func (inp SiteFrom) TubeSeenAttr(attr func(a Site) interface{}) (tube func(inp SiteFrom) (out SiteFrom)) {
 
 	return func(inp SiteFrom) (out SiteFrom) {
-		return inp.SitePipeSeenAttr(attr)
+		return inp.PipeSeenAttr(attr)
 	}
 }
 
-// End of SitePipeSeen/SiteForkSeen - an "I've seen this Site before" filter / forker
+// End of PipeSeen/ForkSeen - an "I've seen this Site before" filter / forker
 // ===========================================================================

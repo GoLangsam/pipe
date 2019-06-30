@@ -17,16 +17,16 @@ package pipe
 // and iff they have the same contents then
 // `true` is sent on the returned bool channel
 // before close.
-func intSame(same func(a, b int) bool, inp1, inp2 <-chan int) (out <-chan bool) {
+func intSame(same func(a, b int) bool, inp, inp2 <-chan int) (out <-chan bool) {
 	cha := make(chan bool)
-	go sameint(cha, same, inp1, inp2)
+	go sameInt(cha, same, inp, inp2)
 	return cha
 }
 
-func sameint(out chan<- bool, same func(a, b int) bool, inp1, inp2 <-chan int) {
+func sameInt(out chan<- bool, same func(a, b int) bool, inp, inp2 <-chan int) {
 	defer close(out)
 	for {
-		v1, ok1 := <-inp1
+		v1, ok1 := <-inp
 		v2, ok2 := <-inp2
 
 		if !ok1 || !ok2 {

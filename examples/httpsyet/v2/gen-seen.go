@@ -11,7 +11,7 @@ package httpsyet
 import "sync"
 
 // ===========================================================================
-// Beg of sitePipeSeen/siteForkSeen - an "I've seen this site before" filter / forker
+// Beg of sitePipeSeen/SiteForkSeen - an "I've seen this site before" filter / forker
 
 // sitePipeSeen returns a channel to receive
 // all `inp`
@@ -22,7 +22,7 @@ import "sync"
 // Note: sitePipeFilterNotSeenYet might be a better name, but is fairly long.
 func sitePipeSeen(inp <-chan site) (out <-chan site) {
 	cha := make(chan site)
-	go pipesiteSeenAttr(cha, inp, nil)
+	go pipeSiteSeenAttr(cha, inp, nil)
 	return cha
 }
 
@@ -36,7 +36,7 @@ func sitePipeSeen(inp <-chan site) (out <-chan site) {
 // Note: sitePipeFilterAttrNotSeenYet might be a better name, but is fairly long.
 func sitePipeSeenAttr(inp <-chan site, attr func(a site) interface{}) (out <-chan site) {
 	cha := make(chan site)
-	go pipesiteSeenAttr(cha, inp, attr)
+	go pipeSiteSeenAttr(cha, inp, attr)
 	return cha
 }
 
@@ -52,7 +52,7 @@ func sitePipeSeenAttr(inp <-chan site, attr func(a site) interface{}) (out <-cha
 func siteForkSeen(inp <-chan site) (new, old <-chan site) {
 	cha1 := make(chan site)
 	cha2 := make(chan site)
-	go forksiteSeenAttr(cha1, cha2, inp, nil)
+	go forkSiteSeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
@@ -69,11 +69,11 @@ func siteForkSeen(inp <-chan site) (new, old <-chan site) {
 func siteForkSeenAttr(inp <-chan site, attr func(a site) interface{}) (new, old <-chan site) {
 	cha1 := make(chan site)
 	cha2 := make(chan site)
-	go forksiteSeenAttr(cha1, cha2, inp, attr)
+	go forkSiteSeenAttr(cha1, cha2, inp, attr)
 	return cha1, cha2
 }
 
-func pipesiteSeenAttr(out chan<- site, inp <-chan site, attr func(a site) interface{}) {
+func pipeSiteSeenAttr(out chan<- site, inp <-chan site, attr func(a site) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -90,7 +90,7 @@ func pipesiteSeenAttr(out chan<- site, inp <-chan site, attr func(a site) interf
 	}
 }
 
-func forksiteSeenAttr(new, old chan<- site, inp <-chan site, attr func(a site) interface{}) {
+func forkSiteSeenAttr(new, old chan<- site, inp <-chan site, attr func(a site) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -128,5 +128,5 @@ func siteTubeSeenAttr(attr func(a site) interface{}) (tube func(inp <-chan site)
 	}
 }
 
-// End of sitePipeSeen/siteForkSeen - an "I've seen this site before" filter / forker
+// End of sitePipeSeen/SiteForkSeen - an "I've seen this site before" filter / forker
 // ===========================================================================

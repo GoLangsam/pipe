@@ -15,20 +15,21 @@ package pipe
 
 // intMakeChan returns a new open channel
 // (simply a 'chan int' that is).
-// Note: No 'int-producer' is launched here yet! (as is in all the other functions).
+//
+// Note: No 'Int-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
-/*
-var myintPipelineStartsHere := intMakeChan()
-// ... lot's of code to design and build Your favourite "myintWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-myintPipelineStartsHere <- drop
-   }
-close(myintPipelineStartsHere)
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// var myIntPipelineStartsHere := intMakeChan()
+// // ... lot's of code to design and build Your favourite "myIntWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// myIntPipelineStartsHere <- drop
+// 	}
+// close(myIntPipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
 // Note: as always (except for intPipeBuffer) the channel is unbuffered.
 //
@@ -47,11 +48,11 @@ func intMakeChan() (out chan int) {
 // before close.
 func intChan(inp ...int) (out <-chan int) {
 	cha := make(chan int)
-	go chanint(cha, inp...)
+	go chanInt(cha, inp...)
 	return cha
 }
 
-func chanint(out chan<- int, inp ...int) {
+func chanInt(out chan<- int, inp ...int) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -63,11 +64,11 @@ func chanint(out chan<- int, inp ...int) {
 // before close.
 func intChanSlice(inp ...[]int) (out <-chan int) {
 	cha := make(chan int)
-	go chanintSlice(cha, inp...)
+	go chanIntSlice(cha, inp...)
 	return cha
 }
 
-func chanintSlice(out chan<- int, inp ...[]int) {
+func chanIntSlice(out chan<- int, inp ...[]int) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -82,11 +83,11 @@ func chanintSlice(out chan<- int, inp ...[]int) {
 // before close.
 func intChanFuncNok(gen func() (int, bool)) (out <-chan int) {
 	cha := make(chan int)
-	go chanintFuncNok(cha, gen)
+	go chanIntFuncNok(cha, gen)
 	return cha
 }
 
-func chanintFuncNok(out chan<- int, gen func() (int, bool)) {
+func chanIntFuncNok(out chan<- int, gen func() (int, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -103,11 +104,11 @@ func chanintFuncNok(out chan<- int, gen func() (int, bool)) {
 // before close.
 func intChanFuncErr(gen func() (int, error)) (out <-chan int) {
 	cha := make(chan int)
-	go chanintFuncErr(cha, gen)
+	go chanIntFuncErr(cha, gen)
 	return cha
 }
 
-func chanintFuncErr(out chan<- int, gen func() (int, error)) {
+func chanIntFuncErr(out chan<- int, gen func() (int, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -124,24 +125,53 @@ func chanintFuncErr(out chan<- int, gen func() (int, error)) {
 // ===========================================================================
 // Beg of intPipe functions
 
-// intPipeFunc returns a channel to receive
-// every result of action `act` applied to `inp`
+// intPipe
+// will apply every `op` to every `inp` and
+// returns a channel to receive
+// each `inp`
 // before close.
-// Note: it 'could' be intPipeMap for functional people,
-// but 'map' has a very different meaning in go lang.
-func intPipeFunc(inp <-chan int, act func(a int) int) (out <-chan int) {
+//
+// Note: For functional people,
+// this 'could' be named `IntMap`.
+// Just: 'map' has a very different meaning in go lang.
+func intPipe(inp <-chan int, ops ...func(a int)) (out <-chan int) {
 	cha := make(chan int)
-	if act == nil { // Make `nil` value useful
-		act = func(a int) int { return a }
-	}
-	go pipeintFunc(cha, inp, act)
+	go pipeInt(cha, inp, ops...)
 	return cha
 }
 
-func pipeintFunc(out chan<- int, inp <-chan int, act func(a int) int) {
+func pipeInt(out chan<- int, inp <-chan int, ops ...func(a int)) {
 	defer close(out)
 	for i := range inp {
-		out <- act(i) // apply action
+		for _, op := range ops {
+			if op != nil {
+				op(i) // chain action
+			}
+		}
+		out <- i // send it
+	}
+}
+
+// intPipeFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// each result
+// before close.
+func intPipeFunc(inp <-chan int, acts ...func(a int) int) (out <-chan int) {
+	cha := make(chan int)
+	go pipeIntFunc(cha, inp, acts...)
+	return cha
+}
+
+func pipeIntFunc(out chan<- int, inp <-chan int, acts ...func(a int) int) {
+	defer close(out)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+		out <- i // send result
 	}
 }
 
@@ -151,11 +181,19 @@ func pipeintFunc(out chan<- int, inp <-chan int, act func(a int) int) {
 // ===========================================================================
 // Beg of intTube closures around intPipe
 
-// intTubeFunc returns a closure around PipeIntFunc (_, act).
-func intTubeFunc(act func(a int) int) (tube func(inp <-chan int) (out <-chan int)) {
+// intTube returns a closure around PipeInt (_, ops...).
+func intTube(ops ...func(a int)) (tube func(inp <-chan int) (out <-chan int)) {
 
 	return func(inp <-chan int) (out <-chan int) {
-		return intPipeFunc(inp, act)
+		return intPipe(inp, ops...)
+	}
+}
+
+// intTubeFunc returns a closure around PipeIntFunc (_, acts...).
+func intTubeFunc(acts ...func(a int) int) (tube func(inp <-chan int) (out <-chan int)) {
+
+	return func(inp <-chan int) (out <-chan int) {
+		return intPipeFunc(inp, acts...)
 	}
 }
 
@@ -165,20 +203,48 @@ func intTubeFunc(act func(a int) int) (tube func(inp <-chan int) (out <-chan int
 // ===========================================================================
 // Beg of intDone terminators
 
-// intDone returns a channel to receive
+// intDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func intDone(inp <-chan int) (done <-chan struct{}) {
+// upon close.
+func intDone(inp <-chan int, ops ...func(a int)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doneint(sig, inp)
+	go doneInt(sig, inp, ops...)
 	return sig
 }
 
-func doneint(done chan<- struct{}, inp <-chan int) {
+func doneInt(done chan<- struct{}, inp <-chan int, ops ...func(a int)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// intDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func intDoneFunc(inp <-chan int, acts ...func(a int) int) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneIntFunc(sig, inp, acts...)
+	return sig
+}
+
+func doneIntFunc(done chan<- struct{}, inp <-chan int, acts ...func(a int) int) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -190,11 +256,11 @@ func doneint(done chan<- struct{}, inp <-chan int) {
 // Note: Unlike intDone, intDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
 func intDoneSlice(inp <-chan int) (done <-chan []int) {
 	sig := make(chan []int)
-	go doneintSlice(sig, inp)
+	go doneIntSlice(sig, inp)
 	return sig
 }
 
-func doneintSlice(done chan<- []int, inp <-chan int) {
+func doneIntSlice(done chan<- []int, inp <-chan int) {
 	defer close(done)
 	slice := []int{}
 	for i := range inp {
@@ -203,55 +269,33 @@ func doneintSlice(done chan<- []int, inp <-chan int) {
 	done <- slice
 }
 
-// intDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func intDoneFunc(inp <-chan int, act func(a int)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a int) { return }
-	}
-	go doneintFunc(sig, inp, act)
-	return sig
-}
-
-func doneintFunc(done chan<- struct{}, inp <-chan int, act func(a int)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
 // End of intDone terminators
 // ===========================================================================
 
 // ===========================================================================
 // Beg of intFini closures
 
-// intFini returns a closure around `intDone(_)`.
-func intFini() func(inp <-chan int) (done <-chan struct{}) {
+// intFini returns a closure around `IntDone(_, ops...)`.
+func intFini(ops ...func(a int)) func(inp <-chan int) (done <-chan struct{}) {
 
 	return func(inp <-chan int) (done <-chan struct{}) {
-		return intDone(inp)
+		return intDone(inp, ops...)
 	}
 }
 
-// intFiniSlice returns a closure around `intDoneSlice(_)`.
+// intFiniFunc returns a closure around `IntDoneFunc(_, acts...)`.
+func intFiniFunc(acts ...func(a int) int) func(inp <-chan int) (done <-chan struct{}) {
+
+	return func(inp <-chan int) (done <-chan struct{}) {
+		return intDoneFunc(inp, acts...)
+	}
+}
+
+// intFiniSlice returns a closure around `IntDoneSlice(_)`.
 func intFiniSlice() func(inp <-chan int) (done <-chan []int) {
 
 	return func(inp <-chan int) (done <-chan []int) {
 		return intDoneSlice(inp)
-	}
-}
-
-// intFiniFunc returns a closure around `intDoneFunc(_, act)`.
-func intFiniFunc(act func(a int)) func(inp <-chan int) (done <-chan struct{}) {
-
-	return func(inp <-chan int) (done <-chan struct{}) {
-		return intDoneFunc(inp, act)
 	}
 }
 
@@ -266,12 +310,12 @@ func intFiniFunc(act func(a int)) func(inp <-chan int) (done <-chan struct{}) {
 func intPair(inp <-chan int) (out1, out2 <-chan int) {
 	cha1 := make(chan int)
 	cha2 := make(chan int)
-	go pairint(cha1, cha2, inp)
+	go pairInt(cha1, cha2, inp)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func pairint(out1, out2 chan<- int, inp <-chan int) {
+func pairInt ( out1 , out2 chan <- int , inp <- chan int ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -280,7 +324,7 @@ func pairint(out1, out2 chan<- int, inp <-chan int) {
 	}
 } */
 
-func pairint(out1, out2 chan<- int, inp <-chan int) {
+func pairInt(out1, out2 chan<- int, inp <-chan int) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -306,12 +350,12 @@ func pairint(out1, out2 chan<- int, inp <-chan int) {
 func intFork(inp <-chan int) (out1, out2 <-chan int) {
 	cha1 := make(chan int)
 	cha2 := make(chan int)
-	go forkint(cha1, cha2, inp)
+	go forkInt(cha1, cha2, inp)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func forkint(out1, out2 chan<- int, inp <-chan int) {
+func forkInt ( out1 , out2 chan <- int , inp <- chan int ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -320,7 +364,7 @@ func forkint(out1, out2 chan<- int, inp <-chan int) {
 	}
 } */
 
-func forkint(out1, out2 chan<- int, inp <-chan int) {
+func forkInt(out1, out2 chan<- int, inp <-chan int) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -340,20 +384,20 @@ func forkint(out1, out2 chan<- int, inp <-chan int) {
 // Beg of intFanIn2 simple binary Fan-In
 
 // intFanIn2 returns a channel to receive
-// all from both `inp1` and `inp2`
+// all from both `inp` and `inp2`
 // before close.
-func intFanIn2(inp1, inp2 <-chan int) (out <-chan int) {
+func intFanIn2(inp, inp2 <-chan int) (out <-chan int) {
 	cha := make(chan int)
-	go fanIn2int(cha, inp1, inp2)
+	go fanIn2Int(cha, inp, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// fanin2int as seen in Go Concurrency Patterns
-func fanin2int(out chan<- int, inp1, inp2 <-chan int) {
+// fanin2Int as seen in Go Concurrency Patterns
+func fanin2Int ( out chan <- int , inp , inp2 <- chan int ) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -361,7 +405,7 @@ func fanin2int(out chan<- int, inp1, inp2 <-chan int) {
 	}
 } */
 
-func fanIn2int(out chan<- int, inp1, inp2 <-chan int) {
+func fanIn2Int(out chan<- int, inp, inp2 <-chan int) {
 	defer close(out)
 
 	var (
@@ -372,11 +416,11 @@ func fanIn2int(out chan<- int, inp1, inp2 <-chan int) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -388,8 +432,8 @@ func fanIn2int(out chan<- int, inp1, inp2 <-chan int) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

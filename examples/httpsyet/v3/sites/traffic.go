@@ -29,7 +29,7 @@ func (t *Traffic) Feed(urls []*url.URL, parent *url.URL, depth int) {
 func (t *Traffic) Processor(crawl func(s Site), parallel int) {
 	sites, seen := SiteForkSeenAttr(SitePipeEnter(t.Travel, t), Site.Attr)
 	for _, inp := range SiteStrew(SitePipeAdjust(sites), parallel) {
-		SiteDoneFunc(inp, crawl) // `sites` leave inside crawl
+		SiteDone(inp, crawl) // `sites` leave inside crawl
 	}
 	SiteDoneLeave(seen, t) // `seen` leave without further processing
 }

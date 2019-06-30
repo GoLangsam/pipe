@@ -16,11 +16,11 @@ package pipe
 // before close.
 func intPipeBuffered(inp <-chan int, cap int) (out <-chan int) {
 	cha := make(chan int, cap)
-	go pipeintBuffered(cha, inp)
+	go pipeIntBuffered(cha, inp)
 	return cha
 }
 
-func pipeintBuffered(out chan<- int, inp <-chan int) {
+func pipeIntBuffered(out chan<- int, inp <-chan int) {
 	defer close(out)
 	for i := range inp {
 		out <- i

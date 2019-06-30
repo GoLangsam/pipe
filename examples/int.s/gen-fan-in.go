@@ -29,23 +29,23 @@ func intFanIn(inps ...<-chan int) (out <-chan int) {
 	wg := new(sync.WaitGroup)
 	wg.Add(len(inps))
 
-	go fanInintWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
+	go fanInIntWaitAndClose(cha, wg) // Spawn "close(out)" once all inps are done
 
 	for i := range inps {
-		go fanInint(cha, inps[i], wg) // Spawn "output(c)"s
+		go fanInInt(cha, inps[i], wg) // Spawn "output(c)"s
 	}
 
 	return cha
 }
 
-func fanInint(out chan<- int, inp <-chan int, wg *sync.WaitGroup) {
+func fanInInt(out chan<- int, inp <-chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for i := range inp {
 		out <- i
 	}
 }
 
-func fanInintWaitAndClose(out chan<- int, wg *sync.WaitGroup) {
+func fanInIntWaitAndClose(out chan<- int, wg *sync.WaitGroup) {
 	wg.Wait()
 	close(out)
 }

@@ -73,7 +73,7 @@ func (c *Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 
 	crawling.Feed(urls, nil, c.Depth) // feed initial urls
 
-	return (resultFrom)(crawling.results).resultDoneFunc(c.report) // signal when results report are done
+	return (resultFrom)(crawling.results).Done(c.report) // signal when results report are done
 }
 
 // ===========================================================================

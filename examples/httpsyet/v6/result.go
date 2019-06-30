@@ -11,5 +11,5 @@ type result string
 // one signal after `act` has been applied to every `inp`
 // before close.
 func DoneFunc(inp resultFrom, act func(a result)) (done <-chan struct{}) {
-	return inp.resultDoneFunc(act)
+	return inp.Done(act)
 }

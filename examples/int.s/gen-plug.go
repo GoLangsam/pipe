@@ -19,11 +19,11 @@ package pipe
 func intPlug(inp <-chan int, stop <-chan struct{}) (out <-chan int, done <-chan struct{}) {
 	cha := make(chan int)
 	doit := make(chan struct{})
-	go plugint(cha, doit, inp, stop)
+	go plugInt(cha, doit, inp, stop)
 	return cha, doit
 }
 
-func plugint(out chan<- int, done chan<- struct{}, inp <-chan int, stop <-chan struct{}) {
+func plugInt(out chan<- int, done chan<- struct{}, inp <-chan int, stop <-chan struct{}) {
 	defer close(done)
 
 	var end bool // shall we end?

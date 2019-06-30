@@ -15,20 +15,21 @@ package result
 
 // ResultMakeChan returns a new open channel
 // (simply a 'chan Result' that is).
+//
 // Note: No 'Result-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
-/*
-var myResultPipelineStartsHere := ResultMakeChan()
-// ... lot's of code to design and build Your favourite "myResultWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-myResultPipelineStartsHere <- drop
-   }
-close(myResultPipelineStartsHere)
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// var myResultPipelineStartsHere := ResultMakeChan()
+// // ... lot's of code to design and build Your favourite "myResultWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// myResultPipelineStartsHere <- drop
+// 	}
+// close(myResultPipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
 // Note: as always (except for ResultPipeBuffer) the channel is unbuffered.
 //
@@ -124,24 +125,53 @@ func chanResultFuncErr(out chan<- Result, gen func() (Result, error)) {
 // ===========================================================================
 // Beg of ResultPipe functions
 
-// ResultPipeFunc returns a channel to receive
-// every result of action `act` applied to `inp`
+// ResultPipe
+// will apply every `op` to every `inp` and
+// returns a channel to receive
+// each `inp`
 // before close.
-// Note: it 'could' be ResultPipeMap for functional people,
-// but 'map' has a very different meaning in go lang.
-func ResultPipeFunc(inp <-chan Result, act func(a Result) Result) (out <-chan Result) {
+//
+// Note: For functional people,
+// this 'could' be named `ResultMap`.
+// Just: 'map' has a very different meaning in go lang.
+func ResultPipe(inp <-chan Result, ops ...func(a Result)) (out <-chan Result) {
 	cha := make(chan Result)
-	if act == nil { // Make `nil` value useful
-		act = func(a Result) Result { return a }
-	}
-	go pipeResultFunc(cha, inp, act)
+	go pipeResult(cha, inp, ops...)
 	return cha
 }
 
-func pipeResultFunc(out chan<- Result, inp <-chan Result, act func(a Result) Result) {
+func pipeResult(out chan<- Result, inp <-chan Result, ops ...func(a Result)) {
 	defer close(out)
 	for i := range inp {
-		out <- act(i) // apply action
+		for _, op := range ops {
+			if op != nil {
+				op(i) // chain action
+			}
+		}
+		out <- i // send it
+	}
+}
+
+// ResultPipeFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// each result
+// before close.
+func ResultPipeFunc(inp <-chan Result, acts ...func(a Result) Result) (out <-chan Result) {
+	cha := make(chan Result)
+	go pipeResultFunc(cha, inp, acts...)
+	return cha
+}
+
+func pipeResultFunc(out chan<- Result, inp <-chan Result, acts ...func(a Result) Result) {
+	defer close(out)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+		out <- i // send result
 	}
 }
 
@@ -151,11 +181,19 @@ func pipeResultFunc(out chan<- Result, inp <-chan Result, act func(a Result) Res
 // ===========================================================================
 // Beg of ResultTube closures around ResultPipe
 
-// ResultTubeFunc returns a closure around PipeResultFunc (_, act).
-func ResultTubeFunc(act func(a Result) Result) (tube func(inp <-chan Result) (out <-chan Result)) {
+// ResultTube returns a closure around PipeResult (_, ops...).
+func ResultTube(ops ...func(a Result)) (tube func(inp <-chan Result) (out <-chan Result)) {
 
 	return func(inp <-chan Result) (out <-chan Result) {
-		return ResultPipeFunc(inp, act)
+		return ResultPipe(inp, ops...)
+	}
+}
+
+// ResultTubeFunc returns a closure around PipeResultFunc (_, acts...).
+func ResultTubeFunc(acts ...func(a Result) Result) (tube func(inp <-chan Result) (out <-chan Result)) {
+
+	return func(inp <-chan Result) (out <-chan Result) {
+		return ResultPipeFunc(inp, acts...)
 	}
 }
 
@@ -165,20 +203,48 @@ func ResultTubeFunc(act func(a Result) Result) (tube func(inp <-chan Result) (ou
 // ===========================================================================
 // Beg of ResultDone terminators
 
-// ResultDone returns a channel to receive
+// ResultDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func ResultDone(inp <-chan Result) (done <-chan struct{}) {
+// upon close.
+func ResultDone(inp <-chan Result, ops ...func(a Result)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doneResult(sig, inp)
+	go doneResult(sig, inp, ops...)
 	return sig
 }
 
-func doneResult(done chan<- struct{}, inp <-chan Result) {
+func doneResult(done chan<- struct{}, inp <-chan Result, ops ...func(a Result)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// ResultDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func ResultDoneFunc(inp <-chan Result, acts ...func(a Result) Result) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneResultFunc(sig, inp, acts...)
+	return sig
+}
+
+func doneResultFunc(done chan<- struct{}, inp <-chan Result, acts ...func(a Result) Result) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -203,39 +269,25 @@ func doneResultSlice(done chan<- []Result, inp <-chan Result) {
 	done <- slice
 }
 
-// ResultDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func ResultDoneFunc(inp <-chan Result, act func(a Result)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a Result) { return }
-	}
-	go doneResultFunc(sig, inp, act)
-	return sig
-}
-
-func doneResultFunc(done chan<- struct{}, inp <-chan Result, act func(a Result)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
 // End of ResultDone terminators
 // ===========================================================================
 
 // ===========================================================================
 // Beg of ResultFini closures
 
-// ResultFini returns a closure around `ResultDone(_)`.
-func ResultFini() func(inp <-chan Result) (done <-chan struct{}) {
+// ResultFini returns a closure around `ResultDone(_, ops...)`.
+func ResultFini(ops ...func(a Result)) func(inp <-chan Result) (done <-chan struct{}) {
 
 	return func(inp <-chan Result) (done <-chan struct{}) {
-		return ResultDone(inp)
+		return ResultDone(inp, ops...)
+	}
+}
+
+// ResultFiniFunc returns a closure around `ResultDoneFunc(_, acts...)`.
+func ResultFiniFunc(acts ...func(a Result) Result) func(inp <-chan Result) (done <-chan struct{}) {
+
+	return func(inp <-chan Result) (done <-chan struct{}) {
+		return ResultDoneFunc(inp, acts...)
 	}
 }
 
@@ -244,14 +296,6 @@ func ResultFiniSlice() func(inp <-chan Result) (done <-chan []Result) {
 
 	return func(inp <-chan Result) (done <-chan []Result) {
 		return ResultDoneSlice(inp)
-	}
-}
-
-// ResultFiniFunc returns a closure around `ResultDoneFunc(_, act)`.
-func ResultFiniFunc(act func(a Result)) func(inp <-chan Result) (done <-chan struct{}) {
-
-	return func(inp <-chan Result) (done <-chan struct{}) {
-		return ResultDoneFunc(inp, act)
 	}
 }
 
@@ -271,7 +315,7 @@ func ResultPair(inp <-chan Result) (out1, out2 <-chan Result) {
 }
 
 /* not used - kept for reference only.
-func pairResult(out1, out2 chan<- Result, inp <-chan Result) {
+func pairResult ( out1 , out2 chan <- Result , inp <- chan Result ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -311,7 +355,7 @@ func ResultFork(inp <-chan Result) (out1, out2 <-chan Result) {
 }
 
 /* not used - kept for reference only.
-func forkResult(out1, out2 chan<- Result, inp <-chan Result) {
+func forkResult ( out1 , out2 chan <- Result , inp <- chan Result ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -340,20 +384,20 @@ func forkResult(out1, out2 chan<- Result, inp <-chan Result) {
 // Beg of ResultFanIn2 simple binary Fan-In
 
 // ResultFanIn2 returns a channel to receive
-// all from both `inp1` and `inp2`
+// all from both `inp` and `inp2`
 // before close.
-func ResultFanIn2(inp1, inp2 <-chan Result) (out <-chan Result) {
+func ResultFanIn2(inp, inp2 <-chan Result) (out <-chan Result) {
 	cha := make(chan Result)
-	go fanIn2Result(cha, inp1, inp2)
+	go fanIn2Result(cha, inp, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
 // fanin2Result as seen in Go Concurrency Patterns
-func fanin2Result(out chan<- Result, inp1, inp2 <-chan Result) {
+func fanin2Result ( out chan <- Result , inp , inp2 <- chan Result ) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -361,7 +405,7 @@ func fanin2Result(out chan<- Result, inp1, inp2 <-chan Result) {
 	}
 } */
 
-func fanIn2Result(out chan<- Result, inp1, inp2 <-chan Result) {
+func fanIn2Result(out chan<- Result, inp, inp2 <-chan Result) {
 	defer close(out)
 
 	var (
@@ -372,11 +416,11 @@ func fanIn2Result(out chan<- Result, inp1, inp2 <-chan Result) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -388,8 +432,8 @@ func fanIn2Result(out chan<- Result, inp1, inp2 <-chan Result) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

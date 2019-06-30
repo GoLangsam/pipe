@@ -22,11 +22,11 @@ import "time"
 func intPlugAfter(inp <-chan int, after <-chan time.Time) (out <-chan int, done <-chan struct{}) {
 	cha := make(chan int)
 	doit := make(chan struct{})
-	go plugintAfter(cha, doit, inp, after)
+	go plugIntAfter(cha, doit, inp, after)
 	return cha, doit
 }
 
-func plugintAfter(out chan<- int, done chan<- struct{}, inp <-chan int, after <-chan time.Time) {
+func plugIntAfter(out chan<- int, done chan<- struct{}, inp <-chan int, after <-chan time.Time) {
 	defer close(done)
 
 	var end bool // shall we end?

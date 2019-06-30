@@ -21,7 +21,7 @@ func siteStrew(inp <-chan site, size int) (outS [](<-chan site)) {
 		chaS[make(chan site)] = struct{}{}
 	}
 
-	go strewsite(inp, chaS)
+	go strewSite(inp, chaS)
 
 	outS = make([]<-chan site, size)
 	i := 0
@@ -33,13 +33,13 @@ func siteStrew(inp <-chan site, size int) (outS [](<-chan site)) {
 	return outS
 }
 
-// c strewsite(inp <-chan site, outS ...chan<- site) {
+// c strewSite(inp <-chan site, outS ...chan<- site) {
 // Note: go does not convert the passed slice `[]chan site` to `[]chan<- site` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewsite(inp <-chan site, outS map[chan site]struct{}) {
+func strewSite(inp <-chan site, outS map[chan site]struct{}) {
 
 	for i := range inp {
-		for !trySendsite(i, outS) {
+		for !trySendSite(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -49,7 +49,7 @@ func strewsite(inp <-chan site, outS map[chan site]struct{}) {
 	}
 }
 
-func trySendsite(inp site, outS map[chan site]struct{}) bool {
+func trySendSite(inp site, outS map[chan site]struct{}) bool {
 
 	for o := range outS {
 

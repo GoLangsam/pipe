@@ -14,11 +14,11 @@ package pipe
 // intJoin sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
 func intJoin(out chan<- int, inp ...int) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go joinint(sig, out, inp...)
+	go joinInt(sig, out, inp...)
 	return sig
 }
 
-func joinint(done chan<- struct{}, out chan<- int, inp ...int) {
+func joinInt(done chan<- struct{}, out chan<- int, inp ...int) {
 	defer close(done)
 	for i := range inp {
 		out <- inp[i]
@@ -29,11 +29,11 @@ func joinint(done chan<- struct{}, out chan<- int, inp ...int) {
 // intJoinSlice sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
 func intJoinSlice(out chan<- int, inp ...[]int) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go joinintSlice(sig, out, inp...)
+	go joinIntSlice(sig, out, inp...)
 	return sig
 }
 
-func joinintSlice(done chan<- struct{}, out chan<- int, inp ...[]int) {
+func joinIntSlice(done chan<- struct{}, out chan<- int, inp ...[]int) {
 	defer close(done)
 	for i := range inp {
 		for j := range inp[i] {
@@ -46,11 +46,11 @@ func joinintSlice(done chan<- struct{}, out chan<- int, inp ...[]int) {
 // intJoinChan sends inputs on the given out channel and returns a done channel to receive one signal when inp has been drained
 func intJoinChan(out chan<- int, inp <-chan int) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go joinintChan(sig, out, inp)
+	go joinIntChan(sig, out, inp)
 	return sig
 }
 
-func joinintChan(done chan<- struct{}, out chan<- int, inp <-chan int) {
+func joinIntChan(done chan<- struct{}, out chan<- int, inp <-chan int) {
 	defer close(done)
 	for i := range inp {
 		out <- i

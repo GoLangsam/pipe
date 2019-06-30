@@ -17,7 +17,7 @@ package sites
 
 import "container/ring"
 
-// Note: pipesiteAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeSiteAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
 // Beg of sitePipeAdjust
@@ -27,9 +27,9 @@ import "container/ring"
 // buffered by a siteSendProxy process
 // before close.
 func sitePipeAdjust(inp <-chan site, sizes ...int) (out <-chan site) {
-	cap, que := sendsiteProxySizes(sizes...)
+	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan site, cap)
-	go pipesiteAdjust(cha, inp, que)
+	go pipeSiteAdjust(cha, inp, que)
 	return cha
 }
 
@@ -45,14 +45,14 @@ func siteTubeAdjust(sizes ...int) (tube func(inp <-chan site) (out <-chan site))
 // ===========================================================================
 
 // ===========================================================================
-// Beg of sendsiteProxy
+// Beg of sendSiteProxy
 
-func sendsiteProxySizes(sizes ...int) (cap, que int) {
+func sendSiteProxySizes(sizes ...int) (cap, que int) {
 
-	// CAP is the minimum capacity of the buffered proxy channel in `siteSendProxy`
+	// CAP is the minimum capacity of the buffered proxy channel in `SiteSendProxy`
 	const CAP = 10
 
-	// QUE is the minimum initially allocated size of the circular queue in `siteSendProxy`
+	// QUE is the minimum initially allocated size of the circular queue in `SiteSendProxy`
 	const QUE = 16
 
 	cap = CAP
@@ -67,7 +67,7 @@ func sendsiteProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("siteSendProxy: too many sizes")
+		panic("SiteSendProxy: too many sizes")
 	}
 
 	return
@@ -82,17 +82,17 @@ func sendsiteProxySizes(sizes ...int) (cap, que int) {
 // and other dynamic use to be discovered
 // even so it does not fit the pipe tube pattern as sitePipeAdjust does.
 func siteSendProxy(out chan<- site, sizes ...int) chan<- site {
-	cap, que := sendsiteProxySizes(sizes...)
+	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan site, cap)
-	go pipesiteAdjust(out, cha, que)
+	go pipeSiteAdjust(out, cha, que)
 	return cha
 }
 
-// pipesiteAdjust uses an adjusting buffer to receive from 'inp'
+// pipeSiteAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func pipesiteAdjust(out chan<- site, inp <-chan site, QUE int) {
+func pipeSiteAdjust(out chan<- site, inp <-chan site, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
@@ -128,5 +128,5 @@ func pipesiteAdjust(out chan<- site, inp <-chan site, QUE int) {
 	}
 }
 
-// End of sendsiteProxy
+// End of sendSiteProxy
 // ===========================================================================

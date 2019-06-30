@@ -21,7 +21,7 @@ func intStrew(inp <-chan int, size int) (outS [](<-chan int)) {
 		chaS[make(chan int)] = struct{}{}
 	}
 
-	go strewint(inp, chaS)
+	go strewInt(inp, chaS)
 
 	outS = make([]<-chan int, size)
 	i := 0
@@ -33,13 +33,13 @@ func intStrew(inp <-chan int, size int) (outS [](<-chan int)) {
 	return outS
 }
 
-// c strewint(inp <-chan int, outS ...chan<- int) {
+// c strewInt(inp <-chan int, outS ...chan<- int) {
 // Note: go does not convert the passed slice `[]chan int` to `[]chan<- int` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
-func strewint(inp <-chan int, outS map[chan int]struct{}) {
+func strewInt(inp <-chan int, outS map[chan int]struct{}) {
 
 	for i := range inp {
-		for !trySendint(i, outS) {
+		for !trySendInt(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -49,7 +49,7 @@ func strewint(inp <-chan int, outS map[chan int]struct{}) {
 	}
 }
 
-func trySendint(inp int, outS map[chan int]struct{}) bool {
+func trySendInt(inp int, outS map[chan int]struct{}) bool {
 
 	for o := range outS {
 

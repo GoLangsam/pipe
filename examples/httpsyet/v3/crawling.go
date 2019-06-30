@@ -77,13 +77,13 @@ func (c Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 	crawling := crawling{
 		c, // "Crawler is used as configuration ..."
 		traffic{
-			make(chan site),     // the feedback traffic
-			new(sync.WaitGroup), // monitor traffic
+			Travel:    make(chan site),     // the feedback traffic
+			WaitGroup: new(sync.WaitGroup), // monitor traffic
 		},
 		make(chan result), // results - the (secondary) output
 	}
 	crawling.crawling(urls, parallel(c.Parallel))
-	return res.ResultDoneFunc(crawling.results, c.report)
+	return res.ResultDone(crawling.results, c.report)
 }
 
 // ===========================================================================

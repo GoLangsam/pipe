@@ -12,11 +12,11 @@ package pipe
 // Beg of intDoneFreq - receive a frequency histogram
 
 // intDoneFreq returns a channel to receive
-// a frequency histogram (as a `map[int]int64`)
+// a frequency histogram (as a `map[Int]int64`)
 // upon close.
 func intDoneFreq(inp <-chan int) (freq <-chan map[int]int64) {
 	cha := make(chan map[int]int64)
-	go doneintFreq(cha, inp)
+	go doneIntFreq(cha, inp)
 	return cha
 }
 
@@ -28,11 +28,11 @@ func intDoneFreq(inp <-chan int) (freq <-chan map[int]int64) {
 // If `nil` is passed as `attr` then int is used as key.
 func intDoneFreqAttr(inp <-chan int, attr func(a int) interface{}) (freq <-chan map[interface{}]int64) {
 	cha := make(chan map[interface{}]int64)
-	go doneintFreqAttr(cha, inp, attr)
+	go doneIntFreqAttr(cha, inp, attr)
 	return cha
 }
 
-func doneintFreq(out chan<- map[int]int64, inp <-chan int) {
+func doneIntFreq(out chan<- map[int]int64, inp <-chan int) {
 	defer close(out)
 	freq := make(map[int]int64)
 
@@ -42,7 +42,7 @@ func doneintFreq(out chan<- map[int]int64, inp <-chan int) {
 	out <- freq
 }
 
-func doneintFreqAttr(out chan<- map[interface{}]int64, inp <-chan int, attr func(a int) interface{}) {
+func doneIntFreqAttr(out chan<- map[interface{}]int64, inp <-chan int, attr func(a int) interface{}) {
 	defer close(out)
 	freq := make(map[interface{}]int64)
 

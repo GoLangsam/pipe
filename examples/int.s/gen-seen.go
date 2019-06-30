@@ -11,7 +11,7 @@ package pipe
 import "sync"
 
 // ===========================================================================
-// Beg of intPipeSeen/intForkSeen - an "I've seen this int before" filter / forker
+// Beg of intPipeSeen/IntForkSeen - an "I've seen this int before" filter / forker
 
 // intPipeSeen returns a channel to receive
 // all `inp`
@@ -22,7 +22,7 @@ import "sync"
 // Note: intPipeFilterNotSeenYet might be a better name, but is fairly long.
 func intPipeSeen(inp <-chan int) (out <-chan int) {
 	cha := make(chan int)
-	go pipeintSeenAttr(cha, inp, nil)
+	go pipeIntSeenAttr(cha, inp, nil)
 	return cha
 }
 
@@ -36,7 +36,7 @@ func intPipeSeen(inp <-chan int) (out <-chan int) {
 // Note: intPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
 func intPipeSeenAttr(inp <-chan int, attr func(a int) interface{}) (out <-chan int) {
 	cha := make(chan int)
-	go pipeintSeenAttr(cha, inp, attr)
+	go pipeIntSeenAttr(cha, inp, attr)
 	return cha
 }
 
@@ -52,7 +52,7 @@ func intPipeSeenAttr(inp <-chan int, attr func(a int) interface{}) (out <-chan i
 func intForkSeen(inp <-chan int) (new, old <-chan int) {
 	cha1 := make(chan int)
 	cha2 := make(chan int)
-	go forkintSeenAttr(cha1, cha2, inp, nil)
+	go forkIntSeenAttr(cha1, cha2, inp, nil)
 	return cha1, cha2
 }
 
@@ -69,11 +69,11 @@ func intForkSeen(inp <-chan int) (new, old <-chan int) {
 func intForkSeenAttr(inp <-chan int, attr func(a int) interface{}) (new, old <-chan int) {
 	cha1 := make(chan int)
 	cha2 := make(chan int)
-	go forkintSeenAttr(cha1, cha2, inp, attr)
+	go forkIntSeenAttr(cha1, cha2, inp, attr)
 	return cha1, cha2
 }
 
-func pipeintSeenAttr(out chan<- int, inp <-chan int, attr func(a int) interface{}) {
+func pipeIntSeenAttr(out chan<- int, inp <-chan int, attr func(a int) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -90,7 +90,7 @@ func pipeintSeenAttr(out chan<- int, inp <-chan int, attr func(a int) interface{
 	}
 }
 
-func forkintSeenAttr(new, old chan<- int, inp <-chan int, attr func(a int) interface{}) {
+func forkIntSeenAttr(new, old chan<- int, inp <-chan int, attr func(a int) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -128,5 +128,5 @@ func intTubeSeenAttr(attr func(a int) interface{}) (tube func(inp <-chan int) (o
 	}
 }
 
-// End of intPipeSeen/intForkSeen - an "I've seen this int before" filter / forker
+// End of intPipeSeen/IntForkSeen - an "I've seen this int before" filter / forker
 // ===========================================================================

@@ -24,14 +24,14 @@ func intMerge(less func(i, j int) bool, inps ...<-chan int) (out <-chan int) {
 	} else if len(inps) < 2 { // just one: return it
 		return inps[0]
 	} else { // tail recurse
-		return mergeint(less, inps[0], intMerge(less, inps[1:]...))
+		return mergeInt(less, inps[0], intMerge(less, inps[1:]...))
 	}
 }
 
-// mergeint takes two (eager) channels of comparable types,
+// mergeInt takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func mergeint(less func(i, j int) bool, i1, i2 <-chan int) (out <-chan int) {
+func mergeInt(less func(i, j int) bool, i1, i2 <-chan int) (out <-chan int) {
 	cha := make(chan int)
 	go func(out chan<- int, i1, i2 <-chan int) {
 		defer close(out)
@@ -83,7 +83,7 @@ func mergeint(less func(i, j int) bool, i1, i2 <-chan int) (out <-chan int) {
 	return cha
 }
 
-// Note: mergeint is not my own.
+// Note: mergeInt is not my own.
 // Just: I forgot where found the original merge2 - please accept my apologies.
 // I'd love to learn about it's origin/author, so I can give credit.
 // Thus: Your hint, dear reader, is highly appreciated!

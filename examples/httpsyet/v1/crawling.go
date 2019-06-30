@@ -89,7 +89,7 @@ func (c *crawling) crawling(urls []*url.URL, size int) (done <-chan struct{}) {
 	c.processor(size)         // build the process network
 	c.add(urls, nil, c.Depth) // feed initial urls
 	c.goWaitAndClose()        // launch the closer
-	return stringDoneFunc(c.results, c.report)
+	return stringDone(c.results, c.report)
 }
 
 // processor builds our little site processing network;
@@ -97,7 +97,7 @@ func (c *crawling) crawling(urls []*url.URL, size int) (done <-chan struct{}) {
 func (c *crawling) processor(size int) {
 	sites, seen := siteForkSeenAttr(c.sites, site.Attr)
 	for _, inp := range siteStrew(sites, size) {
-		siteDoneFunc(inp, c.crawl) // sites leave inside crawler's crawl
+		siteDone(inp, c.crawl) // sites leave inside crawler's crawl
 	}
 	siteDoneLeave(seen, c) // seen leave without further processing
 }

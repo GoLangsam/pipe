@@ -15,11 +15,11 @@ package pipe
 func intPipeDone(inp <-chan int) (out <-chan int, done <-chan struct{}) {
 	cha := make(chan int)
 	doit := make(chan struct{})
-	go pipeintDone(cha, doit, inp)
+	go pipeIntDone(cha, doit, inp)
 	return cha, doit
 }
 
-func pipeintDone(out chan<- int, done chan<- struct{}, inp <-chan int) {
+func pipeIntDone(out chan<- int, done chan<- struct{}, inp <-chan int) {
 	defer close(out)
 	defer close(done)
 	for i := range inp {

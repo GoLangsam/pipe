@@ -81,7 +81,7 @@ func (c Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 		make(chan result), // results - the (secondary) output
 	}
 	crawling.crawling(urls, parallel(c.Parallel))
-	return resultDoneFunc(crawling.results, c.report)
+	return resultDone(crawling.results, c.report)
 }
 
 // ===========================================================================

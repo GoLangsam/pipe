@@ -15,20 +15,21 @@ package sites
 
 // SiteMakeChan returns a new open channel
 // (simply a 'chan Site' that is).
+//
 // Note: No 'Site-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
-/*
-var mySitePipelineStartsHere := SiteMakeChan()
-// ... lot's of code to design and build Your favourite "mySiteWorkflowPipeline"
-   // ...
-   // ... *before* You start pouring data into it, e.g. simply via:
-   for drop := range water {
-mySitePipelineStartsHere <- drop
-   }
-close(mySitePipelineStartsHere)
-*/
-//  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
-//  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
+//
+// var mySitePipelineStartsHere := SiteMakeChan()
+// // ... lot's of code to design and build Your favourite "mySiteWorkflowPipeline"
+// 	// ...
+// 	// ... *before* You start pouring data into it, e.g. simply via:
+// 	for drop := range water {
+// mySitePipelineStartsHere <- drop
+// 	}
+// close(mySitePipelineStartsHere)
+//
+// Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
+// (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
 //
 // Note: as always (except for SitePipeBuffer) the channel is unbuffered.
 //
@@ -124,24 +125,53 @@ func chanSiteFuncErr(out chan<- Site, gen func() (Site, error)) {
 // ===========================================================================
 // Beg of SitePipe functions
 
-// SitePipeFunc returns a channel to receive
-// every result of action `act` applied to `inp`
+// SitePipe
+// will apply every `op` to every `inp` and
+// returns a channel to receive
+// each `inp`
 // before close.
-// Note: it 'could' be SitePipeMap for functional people,
-// but 'map' has a very different meaning in go lang.
-func SitePipeFunc(inp <-chan Site, act func(a Site) Site) (out <-chan Site) {
+//
+// Note: For functional people,
+// this 'could' be named `SiteMap`.
+// Just: 'map' has a very different meaning in go lang.
+func SitePipe(inp <-chan Site, ops ...func(a Site)) (out <-chan Site) {
 	cha := make(chan Site)
-	if act == nil { // Make `nil` value useful
-		act = func(a Site) Site { return a }
-	}
-	go pipeSiteFunc(cha, inp, act)
+	go pipeSite(cha, inp, ops...)
 	return cha
 }
 
-func pipeSiteFunc(out chan<- Site, inp <-chan Site, act func(a Site) Site) {
+func pipeSite(out chan<- Site, inp <-chan Site, ops ...func(a Site)) {
 	defer close(out)
 	for i := range inp {
-		out <- act(i) // apply action
+		for _, op := range ops {
+			if op != nil {
+				op(i) // chain action
+			}
+		}
+		out <- i // send it
+	}
+}
+
+// SitePipeFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// each result
+// before close.
+func SitePipeFunc(inp <-chan Site, acts ...func(a Site) Site) (out <-chan Site) {
+	cha := make(chan Site)
+	go pipeSiteFunc(cha, inp, acts...)
+	return cha
+}
+
+func pipeSiteFunc(out chan<- Site, inp <-chan Site, acts ...func(a Site) Site) {
+	defer close(out)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+		out <- i // send result
 	}
 }
 
@@ -151,11 +181,19 @@ func pipeSiteFunc(out chan<- Site, inp <-chan Site, act func(a Site) Site) {
 // ===========================================================================
 // Beg of SiteTube closures around SitePipe
 
-// SiteTubeFunc returns a closure around PipeSiteFunc (_, act).
-func SiteTubeFunc(act func(a Site) Site) (tube func(inp <-chan Site) (out <-chan Site)) {
+// SiteTube returns a closure around PipeSite (_, ops...).
+func SiteTube(ops ...func(a Site)) (tube func(inp <-chan Site) (out <-chan Site)) {
 
 	return func(inp <-chan Site) (out <-chan Site) {
-		return SitePipeFunc(inp, act)
+		return SitePipe(inp, ops...)
+	}
+}
+
+// SiteTubeFunc returns a closure around PipeSiteFunc (_, acts...).
+func SiteTubeFunc(acts ...func(a Site) Site) (tube func(inp <-chan Site) (out <-chan Site)) {
+
+	return func(inp <-chan Site) (out <-chan Site) {
+		return SitePipeFunc(inp, acts...)
 	}
 }
 
@@ -165,20 +203,48 @@ func SiteTubeFunc(act func(a Site) Site) (tube func(inp <-chan Site) (out <-chan
 // ===========================================================================
 // Beg of SiteDone terminators
 
-// SiteDone returns a channel to receive
+// SiteDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func SiteDone(inp <-chan Site) (done <-chan struct{}) {
+// upon close.
+func SiteDone(inp <-chan Site, ops ...func(a Site)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doneSite(sig, inp)
+	go doneSite(sig, inp, ops...)
 	return sig
 }
 
-func doneSite(done chan<- struct{}, inp <-chan Site) {
+func doneSite(done chan<- struct{}, inp <-chan Site, ops ...func(a Site)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// SiteDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func SiteDoneFunc(inp <-chan Site, acts ...func(a Site) Site) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneSiteFunc(sig, inp, acts...)
+	return sig
+}
+
+func doneSiteFunc(done chan<- struct{}, inp <-chan Site, acts ...func(a Site) Site) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -203,39 +269,25 @@ func doneSiteSlice(done chan<- []Site, inp <-chan Site) {
 	done <- slice
 }
 
-// SiteDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func SiteDoneFunc(inp <-chan Site, act func(a Site)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a Site) { return }
-	}
-	go doneSiteFunc(sig, inp, act)
-	return sig
-}
-
-func doneSiteFunc(done chan<- struct{}, inp <-chan Site, act func(a Site)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
 // End of SiteDone terminators
 // ===========================================================================
 
 // ===========================================================================
 // Beg of SiteFini closures
 
-// SiteFini returns a closure around `SiteDone(_)`.
-func SiteFini() func(inp <-chan Site) (done <-chan struct{}) {
+// SiteFini returns a closure around `SiteDone(_, ops...)`.
+func SiteFini(ops ...func(a Site)) func(inp <-chan Site) (done <-chan struct{}) {
 
 	return func(inp <-chan Site) (done <-chan struct{}) {
-		return SiteDone(inp)
+		return SiteDone(inp, ops...)
+	}
+}
+
+// SiteFiniFunc returns a closure around `SiteDoneFunc(_, acts...)`.
+func SiteFiniFunc(acts ...func(a Site) Site) func(inp <-chan Site) (done <-chan struct{}) {
+
+	return func(inp <-chan Site) (done <-chan struct{}) {
+		return SiteDoneFunc(inp, acts...)
 	}
 }
 
@@ -244,14 +296,6 @@ func SiteFiniSlice() func(inp <-chan Site) (done <-chan []Site) {
 
 	return func(inp <-chan Site) (done <-chan []Site) {
 		return SiteDoneSlice(inp)
-	}
-}
-
-// SiteFiniFunc returns a closure around `SiteDoneFunc(_, act)`.
-func SiteFiniFunc(act func(a Site)) func(inp <-chan Site) (done <-chan struct{}) {
-
-	return func(inp <-chan Site) (done <-chan struct{}) {
-		return SiteDoneFunc(inp, act)
 	}
 }
 
@@ -271,7 +315,7 @@ func SitePair(inp <-chan Site) (out1, out2 <-chan Site) {
 }
 
 /* not used - kept for reference only.
-func pairSite(out1, out2 chan<- Site, inp <-chan Site) {
+func pairSite ( out1 , out2 chan <- Site , inp <- chan Site ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -311,7 +355,7 @@ func SiteFork(inp <-chan Site) (out1, out2 <-chan Site) {
 }
 
 /* not used - kept for reference only.
-func forkSite(out1, out2 chan<- Site, inp <-chan Site) {
+func forkSite ( out1 , out2 chan <- Site , inp <- chan Site ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -340,20 +384,20 @@ func forkSite(out1, out2 chan<- Site, inp <-chan Site) {
 // Beg of SiteFanIn2 simple binary Fan-In
 
 // SiteFanIn2 returns a channel to receive
-// all from both `inp1` and `inp2`
+// all from both `inp` and `inp2`
 // before close.
-func SiteFanIn2(inp1, inp2 <-chan Site) (out <-chan Site) {
+func SiteFanIn2(inp, inp2 <-chan Site) (out <-chan Site) {
 	cha := make(chan Site)
-	go fanIn2Site(cha, inp1, inp2)
+	go fanIn2Site(cha, inp, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
 // fanin2Site as seen in Go Concurrency Patterns
-func fanin2Site(out chan<- Site, inp1, inp2 <-chan Site) {
+func fanin2Site ( out chan <- Site , inp , inp2 <- chan Site ) {
 	for {
 		select {
-		case e := <-inp1:
+		case e := <-inp:
 			out <- e
 		case e := <-inp2:
 			out <- e
@@ -361,7 +405,7 @@ func fanin2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 	}
 } */
 
-func fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
+func fanIn2Site(out chan<- Site, inp, inp2 <-chan Site) {
 	defer close(out)
 
 	var (
@@ -372,11 +416,11 @@ func fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 
 	for !closed {
 		select {
-		case e, ok = <-inp1:
+		case e, ok = <-inp:
 			if ok {
 				out <- e
 			} else {
-				inp1 = inp2   // swap inp2 into inp1
+				inp = inp2    // swap inp2 into inp
 				closed = true // break out of the loop
 			}
 		case e, ok = <-inp2:
@@ -388,8 +432,8 @@ func fanIn2Site(out chan<- Site, inp1, inp2 <-chan Site) {
 		}
 	}
 
-	// inp1 might not be closed yet. Drain it.
-	for e = range inp1 {
+	// inp might not be closed yet. Drain it.
+	for e = range inp {
 		out <- e
 	}
 }

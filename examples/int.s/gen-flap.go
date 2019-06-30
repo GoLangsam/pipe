@@ -41,7 +41,7 @@ type intWaiter interface {
 // until close.
 func intPipeEnter(inp <-chan int, wg intWaiter) (out <-chan int) {
 	cha := make(chan int)
-	go pipeintEnter(cha, wg, inp)
+	go pipeIntEnter(cha, wg, inp)
 	return cha
 }
 
@@ -53,7 +53,7 @@ func intPipeEnter(inp <-chan int, wg intWaiter) (out <-chan int) {
 // until close.
 func intPipeLeave(inp <-chan int, wg intWaiter) (out <-chan int) {
 	cha := make(chan int)
-	go pipeintLeave(cha, wg, inp)
+	go pipeIntLeave(cha, wg, inp)
 	return cha
 }
 
@@ -66,11 +66,11 @@ func intPipeLeave(inp <-chan int, wg intWaiter) (out <-chan int) {
 // before close.
 func intDoneLeave(inp <-chan int, wg intWaiter) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doneintLeave(sig, wg, inp)
+	go doneIntLeave(sig, wg, inp)
 	return sig
 }
 
-func pipeintEnter(out chan<- int, wg intWaiter, inp <-chan int) {
+func pipeIntEnter(out chan<- int, wg intWaiter, inp <-chan int) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -78,7 +78,7 @@ func pipeintEnter(out chan<- int, wg intWaiter, inp <-chan int) {
 	}
 }
 
-func pipeintLeave(out chan<- int, wg intWaiter, inp <-chan int) {
+func pipeIntLeave(out chan<- int, wg intWaiter, inp <-chan int) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -86,7 +86,7 @@ func pipeintLeave(out chan<- int, wg intWaiter, inp <-chan int) {
 	}
 }
 
-func doneintLeave(done chan<- struct{}, wg intWaiter, inp <-chan int) {
+func doneIntLeave(done chan<- struct{}, wg intWaiter, inp <-chan int) {
 	defer close(done)
 	for i := range inp {
 		_ = i // discard
@@ -117,7 +117,7 @@ func intTubeLeave(wg intWaiter) (tube func(inp <-chan int) (out <-chan int)) {
 	}
 }
 
-// intFiniLeave returns a closure around `intDoneLeave(_, wg)`
+// intFiniLeave returns a closure around `IntDoneLeave(_, wg)`
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
@@ -136,18 +136,18 @@ func intFiniLeave(wg intWaiter) func(inp <-chan int) (done <-chan struct{}) {
 // Note: Use only *after* You've started flooding the facilities.
 func intDoneWait(out chan<- int, wg intWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go doneintWait(cha, out, wg)
+	go doneIntWait(cha, out, wg)
 	return cha
 }
 
-func doneintWait(done chan<- struct{}, out chan<- int, wg intWaiter) {
+func doneIntWait(done chan<- struct{}, out chan<- int, wg intWaiter) {
 	defer close(done)
 	wg.Wait()
 	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// intFiniWait returns a closure around `intDoneWait(_, wg)`.
+// intFiniWait returns a closure around `IntDoneWait(_, wg)`.
 func intFiniWait(wg intWaiter) func(out chan<- int) (done <-chan struct{}) {
 
 	return func(out chan<- int) (done <-chan struct{}) {

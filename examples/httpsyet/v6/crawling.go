@@ -75,7 +75,7 @@ func (c *Crawler) crawling(urls []*url.URL) (done <-chan struct{}) {
 	many := parallel(c.Parallel) // no idea what keeps Crawler from setting `Parallel` upon validation
 
 	w = &crawling{
-		c, // "Crawler is used as configuration ..."
+		c,                     // "Crawler is used as configuration ..."
 		New(rake, attr, many), // the cirular network
 		make(chan result),     // results - the (secondary) output
 	}

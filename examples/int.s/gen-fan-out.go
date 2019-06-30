@@ -19,7 +19,7 @@ func intFanOut(inp <-chan int, size int) (outS [](<-chan int)) {
 		chaS[i] = make(chan int)
 	}
 
-	go fanintOut(inp, chaS...)
+	go fanIntOut(inp, chaS...)
 
 	outS = make([]<-chan int, size)
 	for i := 0; i < size; i++ {
@@ -29,8 +29,8 @@ func intFanOut(inp <-chan int, size int) (outS [](<-chan int)) {
 	return outS
 }
 
-// c fanintOut(inp <-chan int, outs ...chan<- int) {
-func fanintOut(inp <-chan int, outs ...chan int) {
+// c fanIntOut(inp <-chan int, outs ...chan<- int) {
+func fanIntOut(inp <-chan int, outs ...chan int) {
 
 	for i := range inp {
 		for o := range outs {

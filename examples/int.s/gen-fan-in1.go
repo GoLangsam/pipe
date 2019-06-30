@@ -24,11 +24,11 @@ import "time"
 // See intFanIn in `fan-in` for another implementation.
 func intFanIn1(inpS ...<-chan int) (out <-chan int) {
 	cha := make(chan int)
-	go fanin1int(cha, inpS...)
+	go fanin1Int(cha, inpS...)
 	return cha
 }
 
-func fanin1int(out chan<- int, inpS ...<-chan int) {
+func fanin1Int(out chan<- int, inpS ...<-chan int) {
 	defer close(out)
 
 	open := len(inpS)                 // assume: all are open

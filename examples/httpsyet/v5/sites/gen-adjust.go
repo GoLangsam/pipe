@@ -17,31 +17,31 @@ package sites
 
 import "container/ring"
 
-// Note: pipeSiteAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
-// Beg of SitePipeAdjust
+// Beg of PipeAdjust
 
-// SitePipeAdjust returns a channel to receive
+// PipeAdjust returns a channel to receive
 // all `inp`
 // buffered by a SiteSendProxy process
 // before close.
-func (inp SiteFrom) SitePipeAdjust(sizes ...int) (out SiteFrom) {
+func (inp SiteFrom) PipeAdjust(sizes ...int) (out SiteFrom) {
 	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan Site, cap)
-	go inp.pipeSiteAdjust(cha, que)
+	go inp.pipeAdjust(cha, que)
 	return cha
 }
 
-// SiteTubeAdjust returns a closure around SitePipeAdjust (_, sizes ...int).
-func (inp SiteFrom) SiteTubeAdjust(sizes ...int) (tube func(inp SiteFrom) (out SiteFrom)) {
+// TubeAdjust returns a closure around PipeAdjust (_, sizes ...int).
+func (inp SiteFrom) TubeAdjust(sizes ...int) (tube func(inp SiteFrom) (out SiteFrom)) {
 
 	return func(inp SiteFrom) (out SiteFrom) {
-		return inp.SitePipeAdjust(sizes...)
+		return inp.PipeAdjust(sizes...)
 	}
 }
 
-// End of SitePipeAdjust
+// End of PipeAdjust
 // ===========================================================================
 
 // ===========================================================================
@@ -80,19 +80,19 @@ func sendSiteProxySizes(sizes ...int) (cap, que int) {
 //
 // Note: SiteSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
-// even so it does not fit the pipe tube pattern as SitePipeAdjust does.
+// even so it does not fit the pipe tube pattern as PipeAdjust does.
 func SiteSendProxy(out SiteInto, sizes ...int) (send SiteInto) {
 	cap, que := sendSiteProxySizes(sizes...)
 	cha := make(chan Site, cap)
-	go (SiteFrom)(cha).pipeSiteAdjust(out, que)
+	go (SiteFrom)(cha).pipeAdjust(out, que)
 	return cha
 }
 
-// pipeSiteAdjust uses an adjusting buffer to receive from 'inp'
+// pipeAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (inp SiteFrom) pipeSiteAdjust(out SiteInto, QUE int) {
+func (inp SiteFrom) pipeAdjust(out SiteInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)

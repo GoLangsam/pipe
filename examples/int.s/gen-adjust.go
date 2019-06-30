@@ -17,7 +17,7 @@ package pipe
 
 import "container/ring"
 
-// Note: pipeintAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeIntAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
 // Beg of intPipeAdjust
@@ -27,9 +27,9 @@ import "container/ring"
 // buffered by a intSendProxy process
 // before close.
 func intPipeAdjust(inp <-chan int, sizes ...int) (out <-chan int) {
-	cap, que := sendintProxySizes(sizes...)
+	cap, que := sendIntProxySizes(sizes...)
 	cha := make(chan int, cap)
-	go pipeintAdjust(cha, inp, que)
+	go pipeIntAdjust(cha, inp, que)
 	return cha
 }
 
@@ -45,14 +45,14 @@ func intTubeAdjust(sizes ...int) (tube func(inp <-chan int) (out <-chan int)) {
 // ===========================================================================
 
 // ===========================================================================
-// Beg of sendintProxy
+// Beg of sendIntProxy
 
-func sendintProxySizes(sizes ...int) (cap, que int) {
+func sendIntProxySizes(sizes ...int) (cap, que int) {
 
-	// CAP is the minimum capacity of the buffered proxy channel in `intSendProxy`
+	// CAP is the minimum capacity of the buffered proxy channel in `IntSendProxy`
 	const CAP = 10
 
-	// QUE is the minimum initially allocated size of the circular queue in `intSendProxy`
+	// QUE is the minimum initially allocated size of the circular queue in `IntSendProxy`
 	const QUE = 16
 
 	cap = CAP
@@ -67,7 +67,7 @@ func sendintProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("intSendProxy: too many sizes")
+		panic("IntSendProxy: too many sizes")
 	}
 
 	return
@@ -82,17 +82,17 @@ func sendintProxySizes(sizes ...int) (cap, que int) {
 // and other dynamic use to be discovered
 // even so it does not fit the pipe tube pattern as intPipeAdjust does.
 func intSendProxy(out chan<- int, sizes ...int) chan<- int {
-	cap, que := sendintProxySizes(sizes...)
+	cap, que := sendIntProxySizes(sizes...)
 	cha := make(chan int, cap)
-	go pipeintAdjust(out, cha, que)
+	go pipeIntAdjust(out, cha, que)
 	return cha
 }
 
-// pipeintAdjust uses an adjusting buffer to receive from 'inp'
+// pipeIntAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func pipeintAdjust(out chan<- int, inp <-chan int, QUE int) {
+func pipeIntAdjust(out chan<- int, inp <-chan int, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
@@ -128,5 +128,5 @@ func pipeintAdjust(out chan<- int, inp <-chan int, QUE int) {
 	}
 }
 
-// End of sendintProxy
+// End of sendIntProxy
 // ===========================================================================
