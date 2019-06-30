@@ -25,14 +25,14 @@ type Thing generic.Type
 // Note: No 'Thing-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-var myThingPipelineStartsHere := ThingMakeChan()
+var myThingPipelineStartsHere := ThingMakeChan ( ) ;
 // ... lot's of code to design and build Your favourite "myThingWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
    for drop := range water {
-myThingPipelineStartsHere <- drop
+myThingPipelineStartsHere <- drop ;
    }
-close(myThingPipelineStartsHere)
+close ( myThingPipelineStartsHere ) ;
 */
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
@@ -131,24 +131,53 @@ func chanThingFuncErr(out chan<- Thing, gen func() (Thing, error)) {
 // ===========================================================================
 // Beg of ThingPipe functions
 
-// ThingPipeFunc returns a channel to receive
-// every result of action `act` applied to `inp`
+// ThingPipe
+// will apply every `op` to every `inp` and
+// returns a channel to receive
+// each `inp`
 // before close.
-// Note: it 'could' be ThingPipeMap for functional people,
-// but 'map' has a very different meaning in go lang.
-func ThingPipeFunc(inp <-chan Thing, act func(a Thing) Thing) (out <-chan Thing) {
+//
+// Note: For functional people,
+// this 'could' be named `ThingMap`.
+// Just: 'map' has a very different meaning in go lang.
+func ThingPipe(inp <-chan Thing, ops ...func(a Thing)) (out <-chan Thing) {
 	cha := make(chan Thing)
-	if act == nil { // Make `nil` value useful
-		act = func(a Thing) Thing { return a }
-	}
-	go pipeThingFunc(cha, inp, act)
+	go pipeThing(cha, inp, ops...)
 	return cha
 }
 
-func pipeThingFunc(out chan<- Thing, inp <-chan Thing, act func(a Thing) Thing) {
+func pipeThing(out chan<- Thing, inp <-chan Thing, ops ...func(a Thing)) {
 	defer close(out)
 	for i := range inp {
-		out <- act(i) // apply action
+		for _, op := range ops {
+			if op != nil {
+				op(i) // chain action
+			}
+		}
+		out <- i // send it
+	}
+}
+
+// ThingPipeFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// each result
+// before close.
+func ThingPipeFunc(inp <-chan Thing, acts ...func(a Thing) Thing) (out <-chan Thing) {
+	cha := make(chan Thing)
+	go pipeThingFunc(cha, inp, acts...)
+	return cha
+}
+
+func pipeThingFunc(out chan<- Thing, inp <-chan Thing, acts ...func(a Thing) Thing) {
+	defer close(out)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+		out <- i // send result
 	}
 }
 
@@ -158,11 +187,19 @@ func pipeThingFunc(out chan<- Thing, inp <-chan Thing, act func(a Thing) Thing) 
 // ===========================================================================
 // Beg of ThingTube closures around ThingPipe
 
-// ThingTubeFunc returns a closure around PipeThingFunc (_, act).
-func ThingTubeFunc(act func(a Thing) Thing) (tube func(inp <-chan Thing) (out <-chan Thing)) {
+// ThingTube returns a closure around PipeThing (_, ops...).
+func ThingTube(ops ...func(a Thing)) (tube func(inp <-chan Thing) (out <-chan Thing)) {
 
 	return func(inp <-chan Thing) (out <-chan Thing) {
-		return ThingPipeFunc(inp, act)
+		return ThingPipe(inp, ops...)
+	}
+}
+
+// ThingTubeFunc returns a closure around PipeThingFunc (_, acts...).
+func ThingTubeFunc(acts ...func(a Thing) Thing) (tube func(inp <-chan Thing) (out <-chan Thing)) {
+
+	return func(inp <-chan Thing) (out <-chan Thing) {
+		return ThingPipeFunc(inp, acts...)
 	}
 }
 
@@ -172,20 +209,48 @@ func ThingTubeFunc(act func(a Thing) Thing) (tube func(inp <-chan Thing) (out <-
 // ===========================================================================
 // Beg of ThingDone terminators
 
-// ThingDone returns a channel to receive
+// ThingDone
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func ThingDone(inp <-chan Thing) (done <-chan struct{}) {
+// upon close.
+func ThingDone(inp <-chan Thing, ops ...func(a Thing)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go doneThing(sig, inp)
+	go doneThing(sig, inp, ops...)
 	return sig
 }
 
-func doneThing(done chan<- struct{}, inp <-chan Thing) {
+func doneThing(done chan<- struct{}, inp <-chan Thing, ops ...func(a Thing)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// ThingDoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
+// upon close.
+func ThingDoneFunc(inp <-chan Thing, acts ...func(a Thing) Thing) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go doneThingFunc(sig, inp, acts...)
+	return sig
+}
+
+func doneThingFunc(done chan<- struct{}, inp <-chan Thing, acts ...func(a Thing) Thing) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -210,39 +275,25 @@ func doneThingSlice(done chan<- []Thing, inp <-chan Thing) {
 	done <- slice
 }
 
-// ThingDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func ThingDoneFunc(inp <-chan Thing, act func(a Thing)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a Thing) { return }
-	}
-	go doneThingFunc(sig, inp, act)
-	return sig
-}
-
-func doneThingFunc(done chan<- struct{}, inp <-chan Thing, act func(a Thing)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
 // End of ThingDone terminators
 // ===========================================================================
 
 // ===========================================================================
 // Beg of ThingFini closures
 
-// ThingFini returns a closure around `ThingDone(_)`.
-func ThingFini() func(inp <-chan Thing) (done <-chan struct{}) {
+// ThingFini returns a closure around `ThingDone(_, ops...)`.
+func ThingFini(ops ...func(a Thing)) func(inp <-chan Thing) (done <-chan struct{}) {
 
 	return func(inp <-chan Thing) (done <-chan struct{}) {
-		return ThingDone(inp)
+		return ThingDone(inp, ops...)
+	}
+}
+
+// ThingFiniFunc returns a closure around `ThingDoneFunc(_, acts...)`.
+func ThingFiniFunc(acts ...func(a Thing) Thing) func(inp <-chan Thing) (done <-chan struct{}) {
+
+	return func(inp <-chan Thing) (done <-chan struct{}) {
+		return ThingDoneFunc(inp, acts...)
 	}
 }
 
@@ -251,14 +302,6 @@ func ThingFiniSlice() func(inp <-chan Thing) (done <-chan []Thing) {
 
 	return func(inp <-chan Thing) (done <-chan []Thing) {
 		return ThingDoneSlice(inp)
-	}
-}
-
-// ThingFiniFunc returns a closure around `ThingDoneFunc(_, act)`.
-func ThingFiniFunc(act func(a Thing)) func(inp <-chan Thing) (done <-chan struct{}) {
-
-	return func(inp <-chan Thing) (done <-chan struct{}) {
-		return ThingDoneFunc(inp, act)
 	}
 }
 
@@ -278,7 +321,7 @@ func ThingPair(inp <-chan Thing) (out1, out2 <-chan Thing) {
 }
 
 /* not used - kept for reference only.
-func pairThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+func pairThing ( out1 , out2 chan <- Thing , inp <- chan Thing ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -318,7 +361,7 @@ func ThingFork(inp <-chan Thing) (out1, out2 <-chan Thing) {
 }
 
 /* not used - kept for reference only.
-func forkThing(out1, out2 chan<- Thing, inp <-chan Thing) {
+func forkThing ( out1 , out2 chan <- Thing , inp <- chan Thing ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -357,7 +400,7 @@ func ThingFanIn2(inp1, inp2 <-chan Thing) (out <-chan Thing) {
 
 /* not used - kept for reference only.
 // fanin2Thing as seen in Go Concurrency Patterns
-func fanin2Thing(out chan<- Thing, inp1, inp2 <-chan Thing) {
+func fanin2Thing ( out chan <- Thing , inp1 , inp2 <- chan Thing ) {
 	for {
 		select {
 		case e := <-inp1:
