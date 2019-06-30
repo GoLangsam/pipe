@@ -1,6 +1,6 @@
 # Notice
 
-This version of Genny has been corected: trailing comment lines are not lost any more.
+This version of Genny has been corrected: trailing comment lines are not lost any more.
 
 `pares/parse.go` - `func generateSpecific`
 
