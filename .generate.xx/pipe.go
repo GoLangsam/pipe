@@ -30,7 +30,7 @@ func anyThingChan(inp ...anyThing) (out anymode) {
 func chananyThing(out anymode, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
-		out.Provide(inp[i])
+		out.Put(inp[i])
 	}
 }
 
@@ -47,7 +47,7 @@ func chananyThingSlice(out anymode, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
-			out.Provide(inp[i][j])
+			out.Put(inp[i][j])
 		}
 	}
 }
@@ -69,7 +69,7 @@ func chananyThingFuncNok(out anymode, gen func() (anyThing, bool)) {
 		if !ok {
 			return
 		}
-		out.Provide(res)
+		out.Put(res)
 	}
 }
 
@@ -90,7 +90,7 @@ func chananyThingFuncErr(out anymode, gen func() (anyThing, error)) {
 		if err != nil {
 			return
 		}
-		out.Provide(res)
+		out.Put(res)
 	}
 }
 
@@ -113,17 +113,17 @@ func anyThingPipe(inp anymode, ops ...func(a anyThing)) (out anymode) {
 	cha := anymodeMakeChan()
 	go pipeanyThing(cha, inp, ops...)
 	return cha
-	}
+}
 
 func pipeanyThing(out anymode, inp anymode, ops ...func(a anyThing)) {
 	defer out.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, op := range ops {
 			if op != nil {
 				op(i) // chain action
-	}
-}
-		out.Provide(i) // send it
+			}
+		}
+		out.Put(i) // send it
 	}
 }
 
@@ -140,13 +140,13 @@ func anyThingPipeFunc(inp anymode, acts ...func(a anyThing) anyThing) (out anymo
 
 func pipeanyThingFunc(out anymode, inp anymode, acts ...func(a anyThing) anyThing) {
 	defer out.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, act := range acts {
 			if act != nil {
 				i = act(i) // chain action
 			}
 		}
-		out.Provide(i) // send result
+		out.Put(i) // send result
 	}
 }
 
@@ -191,15 +191,15 @@ func anyThingDone(inp anymode, ops ...func(a anyThing)) (done <-chan struct{}) {
 
 func doneanyThing(done chan<- struct{}, inp anymode, ops ...func(a anyThing)) {
 	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, op := range ops {
 			if op != nil {
 				op(i) // apply operation
+			}
+		}
 	}
-}
-}
 	done <- struct{}{}
-	}
+}
 
 // anyThingDoneFunc
 // will chain every `act` to every `inp` and
@@ -210,16 +210,16 @@ func anyThingDoneFunc(inp anymode, acts ...func(a anyThing) anyThing) (done <-ch
 	sig := make(chan struct{})
 	go doneanyThingFunc(sig, inp, acts...)
 	return sig
-	}
+}
 
 func doneanyThingFunc(done chan<- struct{}, inp anymode, acts ...func(a anyThing) anyThing) {
 	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, act := range acts {
 			if act != nil {
 				i = act(i) // chain action
-	}
-}
+			}
+		}
 	}
 	done <- struct{}{}
 }
@@ -238,7 +238,7 @@ func anyThingDoneSlice(inp anymode) (done <-chan []anyThing) {
 func doneanyThingSlice(done chan<- []anyThing, inp anymode) {
 	defer close(done)
 	slice := []anyThing{}
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		slice = append(slice, i)
 	}
 	done <- slice
@@ -292,9 +292,9 @@ func anyThingPair(inp anymode) (out1, out2 anymode) {
 func pairanyThing(out1, out2 anymode, inp anymode) {
 	defer out1.Close()
 	defer out2.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
-		out1.Provide(i)
-		out2.Provide(i)
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
+		out1.Put(i)
+		out2.Put(i)
 	}
 }
 
