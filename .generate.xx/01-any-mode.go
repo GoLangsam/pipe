@@ -21,7 +21,7 @@ type anyMode generic.Type
 // anyMode is a
 // mode channel
 type anyMode struct {
-	dat chan anyThing
+	ch chan anyThing
 	req chan struct{}
 }
 */
@@ -29,10 +29,10 @@ type anyMode struct {
 // anyModeMakeChan returns
 // a (pointer to a) fresh
 // unbuffered
-// mode channel
+// mode channel.
 func anyModeMakeChan() *anyMode {
 	d := anyMode{
-		dat: make(chan anyThing),
+		ch:  make(chan anyThing),
 		req: make(chan struct{}),
 	}
 	return &d
@@ -41,50 +41,72 @@ func anyModeMakeChan() *anyMode {
 // anyModeMakeBuff returns
 // a (pointer to a) fresh
 // buffered (with capacity=`cap`)
-// mode channel
+// mode channel.
 func anyModeMakeBuff(cap int) *anyMode {
 	d := anyMode{
-		dat: make(chan anyThing, cap),
+		ch:  make(chan anyThing, cap),
 		req: make(chan struct{}),
 	}
 	return &d
 }
 
-// Provide is the send method
-// - aka "myAnyChan <- myAny"
-func (c *anyMode) Provide(dat anyThing) {
-	<-c.req
-	c.dat <- dat
+// ---------------------------------------------------------------------------
+
+// Get is the comma-ok multi-valued form to receive from the channel and
+// reports whether a received value was sent before the channel was closed.
+//
+// Get blocks until the request is accepted and value `val` has been received from `from`.
+func (from *anyMode) Get() (val anyThing, open bool) {
+	from.req <- struct{}{}
+	val, open = <-from.ch
+	return
 }
 
-// Receive is the receive operator as method
-// - aka "myAny := <-myAnyChan"
-func (c *anyMode) Receive() (dat anyThing) {
-	c.req <- struct{}{}
-	return <-c.dat
+// From returns the handshaking channels
+// (for use in `select` statements)
+// to receive values:
+//  `req` to send a request `req <- struct{}{}` and
+//  `rcv` to reveive such requested value from.
+func (from *anyMode) From() (req chan<- struct{}, rcv <-chan anyThing) {
+	return from.req, from.ch
 }
 
-// Request is the comma-ok multi-valued form of Receive and
-// reports whether a received value was sent before the anyThing channel was closed
-func (c *anyMode) Request() (dat anyThing, open bool) {
-	c.req <- struct{}{}
-	dat, open = <-c.dat
-	return dat, open
+// ---------------------------------------------------------------------------
+
+// Put is the send-upon-request method
+// - aka "myAnyChan <- myAny".
+//
+// Put blocks until requsted to send value `val` into `into`.
+func (into *anyMode) Put(val anyThing) {
+	<-into.req
+	into.ch <- val
 }
 
-// Close closes the underlying anyThing channel
-func (c *anyMode) Close() {
-	close(c.dat)
+// Into returns the handshaking channels
+// (for use in `select` statements)
+// to send values:
+//  `req` to receive a request `<-req` and
+//  `snd` to send such requested value into.
+func (into *anyMode) Into() (req <-chan struct{}, snd chan<- anyThing) {
+	return into.req, into.ch
 }
 
-// Cap reports the capacity of the underlying anyThing channel
+// Close is to be called by a producer when finished sending.
+// The value channel is closed in order to broadcast this.
+func (into *anyMode) Close() {
+	close(into.ch)
+}
+
+// ---------------------------------------------------------------------------
+
+// Cap reports the capacity of the underlying value channel.
 func (c *anyMode) Cap() int {
-	return cap(c.dat)
+	return cap(c.ch)
 }
 
-// Len reports the length of the underlying anyThing channel
+// Len reports the length of the underlying value channel.
 func (c *anyMode) Len() int {
-	return len(c.dat)
+	return len(c.ch)
 }
 
 // End of anyMode channel object
