@@ -109,8 +109,7 @@ var (
 	dstPath    = flag.String("dst", "", "set destination import `path` (default taken from current directory)")
 	pkgName    = flag.String("pkg", "", "set destination package `name` (default taken from current directory)")
 	prefix     = flag.String("prefix", "", "set bundled identifier prefix to `p`") // (default source package name + \"_\")")
-	underscore = flag.Bool("underscore", false, "rewrite golang.org to golang_org in imports; temporary workaround for golang.org/issue/16333")
-
+	underscore = flag.Bool("underscore", false, "rewrite golang.org/x/* to internal/x/* imports; temporary workaround for golang.org/issue/16333")
 	importMap = map[string]string{}
 
 	licence = `// Copyright 2017 Andreas Pannewitz. All rights reserved.
@@ -138,7 +137,7 @@ func addImportMap(s string) {
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "A quick and dirty patch of bundle!\n")
-	fmt.Fprintf(os.Stderr, "Usage: bundledotgo [options] <src>\n")
+	fmt.Fprintf(os.Stderr, "Usage: bundle [options] <src>\n")
 	flag.PrintDefaults()
 }
 
@@ -315,7 +314,7 @@ func bundle(src, dst, dstpkg, prefix string) ([]byte, error) {
 				pkgStd[spec] = true
 			} else {
 				if *underscore {
-					spec = strings.Replace(spec, "golang.org/", "golang_org/", 1)
+					spec = strings.Replace(spec, "golang.org/x/", "internal/x/", 1)
 				}
 				pkgExt[spec] = true
 			}
