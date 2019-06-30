@@ -165,6 +165,12 @@ func generateSpecific(filename string, in io.ReadSeeker, typeSet map[string]stri
 		buf.WriteString(makeLine(line))
 	}
 
+	// write trailing comment, if any
+	if comment != "" {
+		buf.WriteString(makeLine(comment))
+		comment = ""
+	}
+
 	// write it out
 	return buf.Bytes(), nil
 }
