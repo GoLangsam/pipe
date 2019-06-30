@@ -19,9 +19,9 @@ func anyThingPair(inp anymode) (out1, out2 anymode) {
 func pairanyThing(out1, out2 anymode, inp anymode) {
 	defer out1.Close()
 	defer out2.Close()
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
-		out1.Provide(i)
-		out2.Provide(i)
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
+		out1.Put(i)
+		out2.Put(i)
 	}
 }
 

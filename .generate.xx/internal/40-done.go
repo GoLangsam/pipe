@@ -20,7 +20,7 @@ func anyThingDone(inp anymode, ops ...func(a anyThing)) (done <-chan struct{}) {
 
 func doneanyThing(done chan<- struct{}, inp anymode, ops ...func(a anyThing)) {
 	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, op := range ops {
 			if op != nil {
 				op(i) // apply operation
@@ -43,7 +43,7 @@ func anyThingDoneFunc(inp anymode, acts ...func(a anyThing) anyThing) (done <-ch
 
 func doneanyThingFunc(done chan<- struct{}, inp anymode, acts ...func(a anyThing) anyThing) {
 	defer close(done)
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		for _, act := range acts {
 			if act != nil {
 				i = act(i) // chain action
@@ -67,7 +67,7 @@ func anyThingDoneSlice(inp anymode) (done <-chan []anyThing) {
 func doneanyThingSlice(done chan<- []anyThing, inp anymode) {
 	defer close(done)
 	slice := []anyThing{}
-	for i, ok := inp.Request(); ok; i, ok = inp.Request() {
+	for i, ok := inp.Get(); ok; i, ok = inp.Get() {
 		slice = append(slice, i)
 	}
 	done <- slice

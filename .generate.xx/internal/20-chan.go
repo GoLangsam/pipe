@@ -19,7 +19,7 @@ func anyThingChan(inp ...anyThing) (out anymode) {
 func chananyThing(out anymode, inp ...anyThing) {
 	defer out.Close()
 	for i := range inp {
-		out.Provide(inp[i])
+		out.Put(inp[i])
 	}
 }
 
@@ -36,7 +36,7 @@ func chananyThingSlice(out anymode, inp ...[]anyThing) {
 	defer out.Close()
 	for i := range inp {
 		for j := range inp[i] {
-			out.Provide(inp[i][j])
+			out.Put(inp[i][j])
 		}
 	}
 }
@@ -58,7 +58,7 @@ func chananyThingFuncNok(out anymode, gen func() (anyThing, bool)) {
 		if !ok {
 			return
 		}
-		out.Provide(res)
+		out.Put(res)
 	}
 }
 
@@ -79,7 +79,7 @@ func chananyThingFuncErr(out anymode, gen func() (anyThing, error)) {
 		if err != nil {
 			return
 		}
-		out.Provide(res)
+		out.Put(res)
 	}
 }
 
