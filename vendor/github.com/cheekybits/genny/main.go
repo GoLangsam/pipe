@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 
+	"github.com/cheekybits/genny/out"
 	"github.com/cheekybits/genny/parse"
 )
 
@@ -61,21 +61,10 @@ func main() {
 		fatal(exitcodeInvalidTypeSet, err)
 	}
 
-	var outWriter io.Writer
-	if len(*out) > 0 {
-		err := os.MkdirAll(path.Dir(*out), 0755)
-		if err != nil {
-			fatal(exitcodeDestFileFailed, err)
-		}
-
-		outFile, err := os.Create(*out)
-		if err != nil {
-			fatal(exitcodeDestFileFailed, err)
-		}
-		defer outFile.Close()
-		outWriter = outFile
-	} else {
-		outWriter = os.Stdout
+	outWriter := newWriter(*out)
+	outputFilename := *out
+	if outputFilename == "" {
+		outputFilename = "stdout"
 	}
 
 	if strings.ToLower(args[0]) == "get" {
@@ -94,7 +83,7 @@ func main() {
 		}
 		r.Body.Close()
 		br := bytes.NewReader(b)
-		err = gen(*in, *pkgName, br, typeSets, outWriter)
+		err = gen(*in, outputFilename, *pkgName, br, typeSets, outWriter)
 	} else if len(*in) > 0 {
 		var file *os.File
 		file, err = os.Open(*in)
@@ -102,7 +91,7 @@ func main() {
 			fatal(exitcodeSourceFileInvalid, err)
 		}
 		defer file.Close()
-		err = gen(*in, *pkgName, file, typeSets, outWriter)
+		err = gen(*in, outputFilename, *pkgName, file, typeSets, outWriter)
 	} else {
 		var source []byte
 		source, err = ioutil.ReadAll(os.Stdin)
@@ -110,7 +99,7 @@ func main() {
 			fatal(exitcodeStdinFailed, err)
 		}
 		reader := bytes.NewReader(source)
-		err = gen("stdin", *pkgName, reader, typeSets, outWriter)
+		err = gen("stdin", outputFilename, *pkgName, reader, typeSets, outWriter)
 	}
 
 	// do the work
@@ -139,18 +128,27 @@ Flags:`)
 	flag.PrintDefaults()
 }
 
+func newWriter(fileName string) io.Writer {
+	if fileName == "" {
+		return os.Stdout
+	}
+	lf := &out.LazyFile{FileName: fileName}
+	defer lf.Close()
+	return lf
+}
+
 func fatal(code int, a ...interface{}) {
 	fmt.Println(a...)
 	os.Exit(code)
 }
 
 // gen performs the generic generation.
-func gen(filename, pkgName string, in io.ReadSeeker, typesets []map[string]string, out io.Writer) error {
+func gen(filename, outputFilename, pkgName string, in io.ReadSeeker, typesets []map[string]string, out io.Writer) error {
 
 	var output []byte
 	var err error
 
-	output, err = parse.Generics(filename, pkgName, in, typesets)
+	output, err = parse.Generics(filename, outputFilename, pkgName, in, typesets)
 	if err != nil {
 		return err
 	}
