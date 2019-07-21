@@ -40,8 +40,9 @@ func anyModeMakeChan() *anyMode {
 
 // anyModeMakeBuff returns
 // a (pointer to a) fresh
-// buffered (with capacity=`cap`)
-// mode channel.
+// buffered
+// mode channel
+// (with capacity=`cap`).
 func anyModeMakeBuff(cap int) *anyMode {
 	d := anyMode{
 		ch:  make(chan anyThing, cap),
@@ -62,6 +63,18 @@ func (from *anyMode) Get() (val anyThing, open bool) {
 	return
 }
 
+// Drop is to be called by a consumer when finished requesting.
+// The request channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending sends are drained.
+func (from *anyMode) Drop() {
+	close(from.req)
+	go func(from *anyMode) {
+		for range from.ch {
+		} // drain values - there could be some
+	}(from)
+}
+
 // From returns the handshaking channels
 // (for use in `select` statements)
 // to receive values:
@@ -73,13 +86,65 @@ func (from *anyMode) From() (req chan<- struct{}, rcv <-chan anyThing) {
 
 // ---------------------------------------------------------------------------
 
+// NextGetFrom `from` for `into` and report success.
+// Follow it with `into.Send( f(val) )`, if ok.
+func (into *anyMode) NextGetFrom(from *anyMode) (val anyThing, ok bool) {
+	if ok = into.Next(); ok {
+		val, ok = from.Get()
+	}
+	if !ok {
+		from.Drop()
+		into.Close()
+	}
+	return
+}
+
 // Put is the send-upon-request method
 // - aka "myAnyChan <- myAny".
 //
-// Put blocks until requsted to send value `val` into `into`.
-func (into *anyMode) Put(val anyThing) {
-	<-into.req
+// Put blocks until requested to send value `val` into `into` and
+// reports whether the request channel was open.
+//
+// Put is a convenience for
+//  if Next() { Send(v) } else { Close() }
+//
+func (into *anyMode) Put(val anyThing) (ok bool) {
+	_, ok = <-into.req
+	if ok {
+		into.ch <- val
+	} else {
+		into.Close()
+	}
+	return
+}
+
+// Next is the request method.
+// It blocks until a request is received and
+// reports whether the request channel was open.
+//
+// A successful Next is to be followed by one Send(v).
+func (into *anyMode) Next() (ok bool) {
+	_, ok = <-into.req
+	return
+}
+
+// Send is to be used after a successful Next()
+func (into *anyMode) Send(val anyThing) {
 	into.ch <- val
+}
+
+// Provide is the low-level send-upon-request method
+// - aka "myAnyChan <- myAny".
+//
+// Note: Provide is low-level and differs from Put
+// as the latter closes the channel upon nok.
+// Use with care.
+func (into *anyMode) Provide(val anyThing) (ok bool) {
+	_, ok = <-into.req
+	if ok {
+		into.ch <- val
+	}
+	return ok
 }
 
 // Into returns the handshaking channels
@@ -93,11 +158,22 @@ func (into *anyMode) Into() (req <-chan struct{}, snd chan<- anyThing) {
 
 // Close is to be called by a producer when finished sending.
 // The value channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending requests are drained.
 func (into *anyMode) Close() {
 	close(into.ch)
+	go func(into *anyMode) {
+		for range into.req {
+		} // drain requests - there could be some
+	}(into)
 }
 
 // ---------------------------------------------------------------------------
+
+// MyanyMode returns itself.
+func (c *anyMode) MyanyMode() *anyMode {
+	return c
+}
 
 // Cap reports the capacity of the underlying value channel.
 func (c *anyMode) Cap() int {

@@ -37,8 +37,9 @@ func anySupplyMakeChan() *anySupply {
 
 // anySupplyMakeBuff returns
 // a (pointer to a) fresh
-// buffered (with capacity=`cap`)
-// supply channel.
+// buffered
+// supply channel
+// (with capacity=`cap`).
 func anySupplyMakeBuff(cap int) *anySupply {
 	d := anySupply{
 		ch: make(chan anyThing, cap),
@@ -59,24 +60,123 @@ func (from *anySupply) Get() (val anyThing, open bool) {
 	return
 }
 
+// Drop is to be called by a consumer when finished requesting.
+// The request channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending sends are drained.
+func (from *anySupply) Drop() {
+	// se(from.req)
+	go func(from *anySupply) {
+		for range from.ch {
+		} // drain values - there could be some
+	}(from)
+}
+
+// From returns the handshaking channels
+// (for use in `select` statements)
+// to receive values:
+//  `req` to send a request `req <- struct{}{}` and
+//  `rcv` to reveive such requested value from.
+func (from *anySupply) From() (req chan<- struct{}, rcv <-chan anyThing) {
+	cha := make(chan struct{})
+	close(cha)
+	return cha, from.ch
+}
+
 // ---------------------------------------------------------------------------
+
+// NextGetFrom `from` for `into` and report success.
+// Follow it with `into.Send( f(val) )`, if ok.
+func (into *anySupply) NextGetFrom(from *anySupply) (val anyThing, ok bool) {
+	if ok = into.Next(); ok {
+		val, ok = from.Get()
+	}
+	if !ok {
+		from.Drop()
+		into.Close()
+	}
+	return
+}
 
 // Put is the send-upon-request method
 // - aka "myAnyChan <- myAny".
 //
-// Put blocks until requsted to send value `val` into `into`.
-func (into *anySupply) Put(val anyThing) {
-	// nto.req
+// Put blocks until requested to send value `val` into `into` and
+// reports whether the request channel was open.
+//
+// Put is a convenience for
+//  if Next() { Send(v) } else { Close() }
+//
+func (into *anySupply) Put(val anyThing) (ok bool) {
+	ok = true // <-into.req
+	if ok {
+		into.ch <- val
+	} else {
+		into.Close()
+	}
+	return
+}
+
+// Next is the request method.
+// It blocks until a request is received and
+// reports whether the request channel was open.
+//
+// A successful Next is to be followed by one Send(v).
+func (into *anySupply) Next() (ok bool) {
+	ok = true // <-into.req
+	return
+}
+
+// Send is to be used after a successful Next()
+func (into *anySupply) Send(val anyThing) {
 	into.ch <- val
+}
+
+// Provide is the low-level send-upon-request method
+// - aka "myAnyChan <- myAny".
+//
+// Note: Provide is low-level and differs from Put
+// as the latter closes the channel upon nok.
+// Use with care.
+func (into *anySupply) Provide(val anyThing) (ok bool) {
+	ok = true // <-into.req
+	if ok {
+		into.ch <- val
+	}
+	return ok
+}
+
+// Into returns the handshaking channels
+// (for use in `select` statements)
+// to send values:
+//  `req` to receive a request `<-req` and
+//  `snd` to send such requested value into.
+func (into *anySupply) Into() (req <-chan struct{}, snd chan<- anyThing) {
+	cha := make(chan struct{})
+	close(cha)
+	return cha, into.ch
 }
 
 // Close is to be called by a producer when finished sending.
 // The value channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending requests are drained.
 func (into *anySupply) Close() {
 	close(into.ch)
+	/*
+		go func(into *anySupply) {
+			for range into.req {
+			} // drain requests - there could be some
+		}(into)
+	*/
 }
 
 // ---------------------------------------------------------------------------
+
+// MyAnySupply returns itself.
+func (c *anySupply) MyAnySupply() *anySupply {
+	return c
+}
 
 // Cap reports the capacity of the underlying value channel.
 func (c *anySupply) Cap() int {

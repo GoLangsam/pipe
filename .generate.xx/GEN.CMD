@@ -16,7 +16,7 @@ go generate .
 go generate .
 @Echo.
 @Echo compare xxl\internal\01-any-mode.go* -  4 Differences
-@Echo compare xxs\internal\01-any-mode.go* - 11 Differences
+@Echo compare xxs\internal\01-any-mode.go* - 16 Differences
 @Echo.
 
 @pause

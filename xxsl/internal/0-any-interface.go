@@ -41,7 +41,7 @@ type AnyPutr interface {
 }
 
 type providerAny interface {
-	Put(data anyThing) // the send method - aka `MyAnyproviderAny <- MyAny`
+	Put(data anyThing) bool // the send method - aka `MyAnyproviderAny <- MyAny`
 }
 
 // AnyChanCore represents basic methods common to every
