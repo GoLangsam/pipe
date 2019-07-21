@@ -20,7 +20,7 @@ Who is who? Here some names of people encountered during the journey.
 started the project in late 2007
 
 ---
-- "Ian Lance Taylor" - [@ianlancetaylor](https://github.com/ianlancetaylor/)
+- "Ian Lance Taylor" <iant@golang.org> - [@ianlancetaylor](https://github.com/ianlancetaylor/)
   - e.g. `gccgo`
 
 - "Russ Cox" <rsc@swtch.com> - [@rsc](https://github.com/rsc) - ![rsc](rsc.png)
@@ -33,7 +33,7 @@ joined in 2008
 ---
 plus David Symonds, Nigel Tao, Andrew Gerrand, Stephen Ma, and others
 
-- "Andrew Gerrand" - [@enneff](http://twitter.com/enneff)
+- "Andrew Gerrand" <adg@golang.org> - [@adg](https://github.com/adg) - [@enneff](http://twitter.com/enneff)
   - [AndrewGerrand.com](http://andrewgerrand.com/)
   - [Go and the Zen of Python](https://talks.golang.org/2012/zen.slide#1)
 
@@ -50,6 +50,9 @@ plus David Symonds, Nigel Tao, Andrew Gerrand, Stephen Ma, and others
 ---
 ### Bloggers
 - [Dave Cheney](https://dave.cheney.net/) The acme of foolishness
+
+- [A Walter Schulze](https://awalterschulze.github.io/blog/) TODO: Normalize Name
+
 - [Sam Boyer](https://sdboyer.io/)
 - [0xDEADBEEF](https://deadbeef.me/)
 - [Matt Farina - Code Engineered](https://codeengineered.com/)

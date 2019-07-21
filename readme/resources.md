@@ -34,9 +34,25 @@ Some links to related informations.
 
 - [Golang Internals Part 2: Nice benefits of named return values](https://blog.minio.io/golang-internals-part-2-nice-benefits-of-named-return-values-1e95305c8687)
 
+- [] TODO: Name - see also: people.md Blogs
+  - [](https://awalterschulze.github.io/blog/post/sum-types-over-multiple-returns/)
+  Functions return Tuples - Tuples are _not(!)_ first class citizens.
+    - [Richard Feldman @ twitter](https://twitter.com/rtfeldman)
+
+  - [Monads for Go Programmers](https://awalterschulze.github.io/blog/post/monads-for-goprogrammers/)
+  
+
+- [Doing Well by Doing Bad: Writing Bad Code with Go Part 1](https://medium.com/capital-one-tech/doing-well-by-doing-bad-writing-bad-code-with-go-part-1-2dbb96ce079a) - A Satirical Take on Programming in Go
+
+  Doing evil by looking like you are doing good is the best kind of evil.
+
+- [Doing Well by Doing Bad: Writing Bad Code with Go Part 2](https://medium.com/capital-one-tech/doing-well-by-doing-bad-writing-bad-code-with-go-part-2-e270d305c9f7) - A Satirical Take on Programming in Go
+
 - [Go by Example: Channels](https://gobyexample.com/channels)
 
-  "*Channels* are the pipes that connect concurrent goroutines. You can send values into channels from one goroutine and receive those values into another goroutine."
+  " _Channels_ are the pipes that connect concurrent goroutines.
+   You can send values into channels from one goroutine and receive those values into another goroutine."
+  
   "Channels are typed by the values they convey."
 
 - [Go101](http://Go101.org/ "Go101")
@@ -49,7 +65,7 @@ Some links to related informations.
 
   "In this example we are building a simple processing pipeline that consumes a text line from a socket and sends it through a series of processes to extract independent words, filter the ones starting with # and printing the result to the console. For this, a set of structures and functions were created so we can try around and build other kind of pipelines at will."
 
-  - Has a `Collector.Execute` as `Fan-In(cap=1)` and a `Processor.Execute`,and a `ChannelDemux.Execute` for non-random FanOut.
+  - Has a `Collector.Execute` as `Fan-In (cap=1)` and a `Processor.Execute`, and a `ChannelDemux.Execute` for non-random FanOut.
   - Uses `type ProcessFunction func(name string, input Message, out chan Message)`
   - Code flavour is `ssss`
 
@@ -85,6 +101,13 @@ by [@kachayev](https://twitter.com/kachayev)
   Contrasts his 'JavaScripterâ€™s mindset' with an 'abundance mindset'. 
 
 - [Buffered Channels](https://medium.com/capital-one-developers/buffered-channels-in-go-what-are-they-good-for-43703871828)
+
+- [Go Concurrency Patterns](https://blog.afoolishmanifesto.com/posts/golang-concurrency-patterns/)
+
+  I feel compelled to point out that, due to the fact that Go uses a coöperative scheduler, any goroutine that is CPU bound could starve your whole program.
+  If you know for sure that you are writing such a function and that it’s likely to take a while, it would be wise to add a `runtime.Gosched()` (formerly spelled `time.Sleep(0)`) in a few places.
+
+- [The X-files: Avoiding concurrency boilerplate with golang.org/x/sync](https://rodaine.com/2018/08/x-files-sync-golang/) - Or abstracting common synchronization patterns in go
 
 ---
 [Back to overview](overview.md)
