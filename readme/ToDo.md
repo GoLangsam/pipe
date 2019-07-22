@@ -1,6 +1,22 @@
 # ToDo - all kinds of notes and scribblings
 
-General: 
+## Consistency:
+
+- pipe/s versus pipe/m - not in m:
+	- balance.forever - compare with any/balance
+	- bool (empty!)	- see Partition below
+	- proc	 // TODO: We do not know whether or not proc closed out
+
+- pipe/s versus pipe/m - unintended differences:
+	- internal/pipe-make: comments differ 
+
+	- internal/strew: comments differ
+	- internal/merge: mergeThing inp-args differ
+
+- generic/internal/genny.go versus generic/internal/genny.go
+	- m/sema is not bundled yet!
+
+## General: 
 
 --- pipe/m/strew/strew.go
 Line 52: warning: receiver name static should be consistent with previous receiver name inp for anyThingFrom (golint)
@@ -9,6 +25,7 @@ Ignore it?
 --- pipe/m/adjust 
 -- func anyThingSendProxy(out anyThingInto, sizes ...int) (send anyThingInto) {
 => func (out anyThingInto)anyThingSendProxy(sizes ...int) (send anyThingInto) {
+??? no good, may be
 
 - rename sizes
 - sendanyThingProxySizes
@@ -20,20 +37,15 @@ Ignore it?
 - func ThingDaisyChaiN(inp chan Thing, somany int, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
 - func ThingDaisyChain(inp chan Thing, procs ...func(out ThingInto, inp ThingFrom)) (out chan Thing)
 
----todo: finish `s/proc`
-
----todo: finish `s/bool` & `s/true`
-
-Partition: github.com\tobyhede\go-underscore\
+---
+## Partition
+github.com\tobyhede\go-underscore\
 
 ?PipeTrue: func(item Any) bool => chan - filter function
 ?ForkBool: func(item Any) bool => chan & chan aka true & fail - discriminator function
 
 ---
-golang.org\x\build\internal\lru\cache.go - a concurrency-safe lru cache
-
----
-
+## => README.md
 rfc1925.txt
 - (10)  One size never fits all.
 
@@ -109,7 +121,7 @@ Todo & Proc:	panic iff called after non-empty Feed(...)
 Lesson learned: Not a struct with methods! The pointer in the embedding struct (which may be used in proc's feedback) arrives too late.
 The problem is feed - the struct may have Gone() & Done() as we do lazy init upon first feed
 
-The network rule: Any Feed(item) *MUST* go either go to Todo(item) or to Gone() 
+The network rule: Any Feed(item) *MUST* go either to Todo(item) or to Gone() 
 
 ---
 [Back to overview](overview.md)

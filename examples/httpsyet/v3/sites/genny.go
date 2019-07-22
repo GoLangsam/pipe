@@ -5,7 +5,7 @@
 // This file uses geanny to pull the type specific generic code
 
 // Oh my god!		-in github.com/GoLangsam/pipe/s/pipe.go does not work :-(
-// have to keep using	-in ../../../s/pipe.go
+// have to keep using	-in ../../../../s/pipe.go
 
 //go:generate genny     -in ../../../../s/pipe.go		-out gen-pipe.go	-pkg sites gen "anyThing=Site"
 //go:generate genny	-in ../../../../s/adjust/adjust.go	-out gen-adjust.go	-pkg sites gen "anyThing=Site"

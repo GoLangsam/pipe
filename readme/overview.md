@@ -14,7 +14,6 @@
 - [Directories](directories.md) - Where is what? & What is where?
 
 ---
-- [An evolution](evolve.md)
 - [Seen in the wild](in-the-wild.md) - slides from a master - too short & too simple
 - [Pitfalls](pitfalls.md) and popular easy-to-do mistakes - vaccines and protective habits
 
@@ -29,6 +28,8 @@
 
 ---
 - [Asciiart](asciiart.md) - just for the fun of it.
+
+---
 - [ToDo](ToDo.md) - all kinds of notes and scribblings
 
 ---

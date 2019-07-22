@@ -7,7 +7,7 @@ Note: As of now this collection is in it's infancy. Your kind understanding is a
 
 Go does not do too much to enforce a discipline of ownership.
 
-This opens a can of worms - and go leaves it to the skill and discipline of the programmer to avoid worms to becoming nasty bugs.
+This opens a can of worms - and go leaves it to the skill and discipline of the programmer to avoid worms becoming nasty bugs.
 
 ### `go vet -copylocks`
 Yes, `go vet -copylocks` can detect disallowed copying of values who implement `Lock()`,
@@ -21,13 +21,18 @@ Note: Pointers to such values are safe to copy -
 https://golang.org/issues/8005#issuecomment-190753527
 
 
-### Closures
-
-
-
 ### Who owns the duty (or privilege) to close this channel?
 
+This duty may be left to the garbage collector. In rare cases, this is the only solution available.
 
+Just: this is lazy thinking, and most likely results in dangerous buggy implementation:
+it's all too easy to overlook (and thus: leak) some go routine working on such channel.
+
+In the context of our pipe implementation here, this important question has a simple answer:
+
+> The function which provided the channel (and its associated processing) has to close the provided channel(s).
+
+This simplicity is an advantage of the fact that we 'follow the flow': functions implement a process and supply some read-only channel(s).
 
 ## Blog posts and articles
 
