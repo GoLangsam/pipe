@@ -31,9 +31,9 @@ func ThingMerge(less func(i, j Thing) bool, inps ...<-chan Thing) (out <-chan Th
 // mergeThing takes two (eager) channels of comparable types,
 // each of which needs to be sorted ascending and free of duplicates,
 // and merges them into the returned channel, which will be sorted ascending and free of duplicates.
-func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thing) {
+func mergeThing(less func(i, j Thing) bool, inp, inp2 <-chan Thing) (out <-chan Thing) {
 	cha := make(chan Thing)
-	go func(out chan<- Thing, i1, i2 <-chan Thing) {
+	go func(out chan<- Thing, inp, inp2 <-chan Thing) {
 		defer close(out)
 		var (
 			clos1, clos2 bool  // we found the chan closed
@@ -45,7 +45,7 @@ func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thi
 		for !clos1 || !clos2 {
 
 			if !clos1 && !buff1 {
-				if from1, ok = <-i1; ok {
+				if from1, ok = <-inp; ok {
 					buff1 = true
 				} else {
 					clos1 = true
@@ -53,7 +53,7 @@ func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thi
 			}
 
 			if !clos2 && !buff2 {
-				if from2, ok = <-i2; ok {
+				if from2, ok = <-inp2; ok {
 					buff2 = true
 				} else {
 					clos2 = true
@@ -79,7 +79,7 @@ func mergeThing(less func(i, j Thing) bool, i1, i2 <-chan Thing) (out <-chan Thi
 				buff2 = false
 			}
 		}
-	}(cha, i1, i2)
+	}(cha, inp, inp2)
 	return cha
 }
 
