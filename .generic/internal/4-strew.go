@@ -33,6 +33,7 @@ func ThingStrew(inp <-chan Thing, size int) (outS [](<-chan Thing)) {
 	return outS
 }
 
+// c strewThing(inp <-chan Thing, outS ...chan<- Thing) {
 // Note: go does not convert the passed slice `[]chan Thing` to `[]chan<- Thing` automatically.
 // So, we do neither here, as we are lazy (we just call an internal helper function).
 func strewThing(inp <-chan Thing, outS map[chan Thing]struct{}) {

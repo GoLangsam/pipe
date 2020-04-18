@@ -21,8 +21,8 @@ type anyMode generic.Type
 // anyMode is a
 // mode channel
 type anyMode struct {
-	ch  chan anyThing
 	req chan struct{}
+	ch  chan anyThing
 }
 */
 
@@ -32,8 +32,8 @@ type anyMode struct {
 // mode channel.
 func anyModeMakeChan() *anyMode {
 	d := anyMode{
-		ch:  make(chan anyThing),
 		req: make(chan struct{}),
+		ch:  make(chan anyThing),
 	}
 	return &d
 }
@@ -45,8 +45,8 @@ func anyModeMakeChan() *anyMode {
 // (with capacity=`cap`).
 func anyModeMakeBuff(cap int) *anyMode {
 	d := anyMode{
-		ch:  make(chan anyThing, cap),
 		req: make(chan struct{}),
+		ch:  make(chan anyThing, cap),
 	}
 	return &d
 }
@@ -54,7 +54,8 @@ func anyModeMakeBuff(cap int) *anyMode {
 // ---------------------------------------------------------------------------
 
 // Get is the comma-ok multi-valued form to receive from the channel and
-// reports whether a received value was sent before the channel was closed.
+// reports whether a value was received from an open channel
+// or not (as it has been closed).
 //
 // Get blocks until the request is accepted and value `val` has been received from `from`.
 func (from *anyMode) Get() (val anyThing, open bool) {
@@ -63,41 +64,8 @@ func (from *anyMode) Get() (val anyThing, open bool) {
 	return
 }
 
-// Drop is to be called by a consumer when finished requesting.
-// The request channel is closed in order to broadcast this.
-//
-// In order to avoid deadlock, pending sends are drained.
-func (from *anyMode) Drop() {
-	close(from.req)
-	go func(from *anyMode) {
-		for range from.ch {
-		} // drain values - there could be some
-	}(from)
-}
-
-// From returns the handshaking channels
-// (for use in `select` statements)
-// to receive values:
-//  `req` to send a request `req <- struct{}{}` and
-//  `rcv` to reveive such requested value from.
-func (from *anyMode) From() (req chan<- struct{}, rcv <-chan anyThing) {
-	return from.req, from.ch
-}
-
 // ---------------------------------------------------------------------------
-
-// NextGetFrom `from` for `into` and report success.
-// Follow it with `into.Send( f(val) )`, if ok.
-func (into *anyMode) NextGetFrom(from *anyMode) (val anyThing, ok bool) {
-	if ok = into.Next(); ok {
-		val, ok = from.Get()
-	}
-	if !ok {
-		from.Drop()
-		into.Close()
-	}
-	return
-}
+// Put or {`defer into.Close()` and Provide }
 
 // Put is the send-upon-request method
 // - aka "myAnyChan <- myAny".
@@ -108,11 +76,52 @@ func (into *anyMode) NextGetFrom(from *anyMode) (val anyThing, ok bool) {
 // Put is a convenience for
 //  if Next() { Send(v) } else { Close() }
 //
+// Put includes housekeeping:
+// If `into` has been dropped, `into` is closed. 
 func (into *anyMode) Put(val anyThing) (ok bool) {
-	_, ok = <-into.req
+	ok = into.Next()
 	if ok {
 		into.ch <- val
 	} else {
+		into.Close()
+	}
+	return
+}
+
+// Provide is the low-level send-upon-request method
+// - aka "myAnyChan <- myAny".
+//
+// Note: Provide is low-level - its cousin `Put`
+// includes housekeeping: `Put`
+// closes the channel upon nok.
+//
+// Hint: Provide is useful in constructors
+// together with `defer into.Close()`.
+func (into *anyMode) Provide(val anyThing) (ok bool) {
+	ok = into.Next()
+	if ok {
+		into.ch <- val
+	}
+	return ok
+}
+
+// ---------------------------------------------------------------------------
+// Next... => Send
+
+// NextGetFrom `from` for `into` and report success.
+//
+// Follow it with `into.Send( f(val) )`, if ok.
+//
+// NextGetFrom includes housekeeping:
+// If `into` has been dropped or `from` has been closed,
+// `from` is dropped and `into` is closed.
+func (into *anyMode) NextGetFrom(from *anyMode) (val anyThing, ok bool) {
+	ok = into.Next()
+	if ok {
+		val, ok = from.Get()
+	}
+	if !ok {
+		from.Drop()
 		into.Close()
 	}
 	return
@@ -133,27 +142,19 @@ func (into *anyMode) Send(val anyThing) {
 	into.ch <- val
 }
 
-// Provide is the low-level send-upon-request method
-// - aka "myAnyChan <- myAny".
-//
-// Note: Provide is low-level and differs from Put
-// as the latter closes the channel upon nok.
-// Use with care.
-func (into *anyMode) Provide(val anyThing) (ok bool) {
-	_, ok = <-into.req
-	if ok {
-		into.ch <- val
-	}
-	return ok
-}
+// ---------------------------------------------------------------------------
+// Drop & Close signal requesting / sending as being finished
 
-// Into returns the handshaking channels
-// (for use in `select` statements)
-// to send values:
-//  `req` to receive a request `<-req` and
-//  `snd` to send such requested value into.
-func (into *anyMode) Into() (req <-chan struct{}, snd chan<- anyThing) {
-	return into.req, into.ch
+// Drop is to be called by a consumer when finished requesting.
+// The request channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending sends are drained.
+func (from *anyMode) Drop() {
+	close(from.req)
+	go func(from *anyMode) {
+		for range from.ch {
+		} // drain values - there could be some
+	}(from)
 }
 
 // Close is to be called by a producer when finished sending.
@@ -169,9 +170,41 @@ func (into *anyMode) Close() {
 }
 
 // ---------------------------------------------------------------------------
+// obtain directional handshaking channels
+// (for use e.g. in `select` statements)
 
-// MyanyMode returns itself.
-func (c *anyMode) MyanyMode() *anyMode {
+// From returns the handshaking channels
+// (for use e.g. in `select` statements)
+// to receive values:
+//  `req` to send a request `req <- struct{}{}` and
+//  `rcv` to reveive such requested value from.
+func (from *anyMode) From() (req chan<- struct{}, rcv <-chan anyThing) {
+	return from.req, from.ch
+}
+
+// Into returns the handshaking channels
+// (for use e.g. in `select` statements)
+// to send values:
+//  `req` to receive a request `<-req` and
+//  `snd` to send such requested value into.
+func (into *anyMode) Into() (req <-chan struct{}, snd chan<- anyThing) {
+	return into.req, into.ch
+}
+
+// ---------------------------------------------------------------------------
+
+// New returns a new similar channel.
+//
+// Useful e.g. when embedded anonymously.
+func (c *anyMode) New() *anyMode {
+	return anyModeMakeChan()
+}
+
+// Self returns itself.
+//
+// Useful e.g. when embedded anonymously
+// and e.g. wrappers for multi-value methods are required.
+func (c *anyMode) Self() *anyMode {
 	return c
 }
 

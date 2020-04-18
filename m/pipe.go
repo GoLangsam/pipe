@@ -160,8 +160,8 @@ func (inp anyThingFrom) pipeFunc(out anyThingInto, act func(a anyThing) anyThing
 // ===========================================================================
 // Beg of Tube closures around Pipe
 
-// TubeFunc returns a closure around PipeFunc (_, act).
-func TubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingFrom) (out anyThingFrom)) {
+// anyThingTubeFunc returns a closure around PipeFunc (_, act).
+func anyThingTubeFunc(act func(a anyThing) anyThing) (tube func(inp anyThingFrom) (out anyThingFrom)) {
 
 	return func(inp anyThingFrom) (out anyThingFrom) {
 		return inp.PipeFunc(act)

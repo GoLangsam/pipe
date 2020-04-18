@@ -21,17 +21,17 @@ type itemInto chan<- item
 
 // itemMakeChan returns a new open channel
 // (simply a 'chan item' that is).
-// Note: No 'item-producer' is launched here yet! (as is in all the other functions).
+// Note: No 'Item-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-var myitemPipelineStartsHere := itemMakeChan()
-// ... lot's of code to design and build Your favourite "myitemWorkflowPipeline"
+var myItemPipelineStartsHere := itemMakeChan ( ) ;
+// ... lot's of code to design and build Your favourite "myItemWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
    for drop := range water {
-myitemPipelineStartsHere <- drop
+myItemPipelineStartsHere <- drop ;
    }
-close(myitemPipelineStartsHere)
+close ( myItemPipelineStartsHere ) ;
 */
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
@@ -53,11 +53,11 @@ func itemMakeChan() (out chan item) {
 // before close.
 func itemChan(inp ...item) (out itemFrom) {
 	cha := make(chan item)
-	go chanitem(cha, inp...)
+	go chanItem(cha, inp...)
 	return cha
 }
 
-func chanitem(out itemInto, inp ...item) {
+func chanItem(out itemInto, inp ...item) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -69,11 +69,11 @@ func chanitem(out itemInto, inp ...item) {
 // before close.
 func itemChanSlice(inp ...[]item) (out itemFrom) {
 	cha := make(chan item)
-	go chanitemSlice(cha, inp...)
+	go chanItemSlice(cha, inp...)
 	return cha
 }
 
-func chanitemSlice(out itemInto, inp ...[]item) {
+func chanItemSlice(out itemInto, inp ...[]item) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -88,11 +88,11 @@ func chanitemSlice(out itemInto, inp ...[]item) {
 // before close.
 func itemChanFuncNok(gen func() (item, bool)) (out itemFrom) {
 	cha := make(chan item)
-	go chanitemFuncNok(cha, gen)
+	go chanItemFuncNok(cha, gen)
 	return cha
 }
 
-func chanitemFuncNok(out itemInto, gen func() (item, bool)) {
+func chanItemFuncNok(out itemInto, gen func() (item, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -109,11 +109,11 @@ func chanitemFuncNok(out itemInto, gen func() (item, bool)) {
 // before close.
 func itemChanFuncErr(gen func() (item, error)) (out itemFrom) {
 	cha := make(chan item)
-	go chanitemFuncErr(cha, gen)
+	go chanItemFuncErr(cha, gen)
 	return cha
 }
 
-func chanitemFuncErr(out itemInto, gen func() (item, error)) {
+func chanItemFuncErr(out itemInto, gen func() (item, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -128,79 +128,107 @@ func chanitemFuncErr(out itemInto, gen func() (item, error)) {
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemPipe functions
+// Beg of Pipe functions
 
-// itemPipeFunc returns a channel to receive
+// PipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be itemPipeMap for functional people,
+// Note: it 'could' be PipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (inp itemFrom) itemPipeFunc(act func(a item) item) (out itemFrom) {
+func (inp itemFrom) PipeFunc(act func(a item) item) (out itemFrom) {
 	cha := make(chan item)
 	if act == nil { // Make `nil` value useful
 		act = func(a item) item { return a }
 	}
-	go inp.pipeitemFunc(cha, act)
+	go inp.pipeFunc(cha, act)
 	return cha
 }
 
-func (inp itemFrom) pipeitemFunc(out itemInto, act func(a item) item) {
+func (inp itemFrom) pipeFunc(out itemInto, act func(a item) item) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action
 	}
 }
 
-// End of itemPipe functions
+// End of Pipe functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemTube closures around itemPipe
+// Beg of Tube closures around Pipe
 
-// itemTubeFunc returns a closure around PipeItemFunc (_, act).
-func itemTubeFunc(act func(a item) item) (tube func(inp itemFrom) (out itemFrom)) {
+// TubeFunc returns a closure around PipeFunc (_, act).
+func TubeFunc(act func(a item) item) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeFunc(act)
+		return inp.PipeFunc(act)
 	}
 }
 
-// End of itemTube closures around itemPipe
+// End of Tube closures around itemPipe
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemDone terminators
+// Beg of Done terminators
 
-// itemDone returns a channel to receive
+// Done
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func (inp itemFrom) itemDone() (done <-chan struct{}) {
+// upon close.
+func (inp itemFrom) Done(ops ...func(a item)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneitem(sig)
+	go inp.done(sig, ops...)
 	return sig
 }
 
-func (inp itemFrom) doneitem(done chan<- struct{}) {
+func (inp itemFrom) done(done chan<- struct{}, ops ...func(a item)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
 	}
 	done <- struct{}{}
 }
 
-// itemDoneSlice returns a channel to receive
-// a slice with every item received on `inp`
+// DoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
 // upon close.
-//
-// Note: Unlike itemDone, itemDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (inp itemFrom) itemDoneSlice() (done <-chan []item) {
-	sig := make(chan []item)
-	go inp.doneitemSlice(sig)
+func (inp itemFrom) DoneFunc(acts ...func(a item) item) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go inp.doneFunc(sig, acts...)
 	return sig
 }
 
-func (inp itemFrom) doneitemSlice(done chan<- []item) {
+func (inp itemFrom) doneFunc(done chan<- struct{}, acts ...func(a item) item) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// DoneSlice returns a channel to receive
+// a slice with every item received on `inp`
+// upon close.
+//
+//  Note: Unlike Done, DoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func (inp itemFrom) DoneSlice() (done <-chan []item) {
+	sig := make(chan []item)
+	go inp.doneSlice(sig)
+	return sig
+}
+
+func (inp itemFrom) doneSlice(done chan<- []item) {
 	defer close(done)
 	slice := []item{}
 	for i := range inp {
@@ -209,75 +237,53 @@ func (inp itemFrom) doneitemSlice(done chan<- []item) {
 	done <- slice
 }
 
-// itemDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func (inp itemFrom) itemDoneFunc(act func(a item)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a item) { return }
-	}
-	go inp.doneitemFunc(sig, act)
-	return sig
-}
-
-func (inp itemFrom) doneitemFunc(done chan<- struct{}, act func(a item)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
-// End of itemDone terminators
+// End of Done terminators
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemFini closures
+// Beg of Fini closures
 
-// itemFini returns a closure around `itemDone()`.
-func (inp itemFrom) itemFini() func(inp itemFrom) (done <-chan struct{}) {
+// Fini returns a closure around `Done(ops...)`.
+func (inp itemFrom) Fini(ops ...func(a item)) func(inp itemFrom) (done <-chan struct{}) {
 
 	return func(inp itemFrom) (done <-chan struct{}) {
-		return inp.itemDone()
+		return inp.Done(ops...)
 	}
 }
 
-// itemFiniSlice returns a closure around `itemDoneSlice()`.
-func (inp itemFrom) itemFiniSlice() func(inp itemFrom) (done <-chan []item) {
+// FiniFunc returns a closure around `DoneFunc(acts...)`.
+func (inp itemFrom) FiniFunc(acts ...func(a item) item) func(inp itemFrom) (done <-chan struct{}) {
+
+	return func(inp itemFrom) (done <-chan struct{}) {
+		return inp.DoneFunc(acts...)
+	}
+}
+
+// FiniSlice returns a closure around `DoneSlice()`.
+func (inp itemFrom) FiniSlice() func(inp itemFrom) (done <-chan []item) {
 
 	return func(inp itemFrom) (done <-chan []item) {
-		return inp.itemDoneSlice()
+		return inp.DoneSlice()
 	}
 }
 
-// itemFiniFunc returns a closure around `itemDoneFunc(act)`.
-func (inp itemFrom) itemFiniFunc(act func(a item)) func(inp itemFrom) (done <-chan struct{}) {
-
-	return func(inp itemFrom) (done <-chan struct{}) {
-		return inp.itemDoneFunc(act)
-	}
-}
-
-// End of itemFini closures
+// End of Fini closures
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemPair functions
+// Beg of Pair functions
 
-// itemPair returns a pair of channels to receive every result of inp before close.
+// Pair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (inp itemFrom) itemPair() (out1, out2 itemFrom) {
+func (inp itemFrom) Pair() (out1, out2 itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.pairitem(cha1, cha2)
+	go inp.pair(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (inp itemFrom) pairitem(out1, out2 itemInto, inp itemFrom) {
+func ( inp itemFrom ) pair ( out1 , out2 itemInto , inp itemFrom ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -286,7 +292,7 @@ func (inp itemFrom) pairitem(out1, out2 itemInto, inp itemFrom) {
 	}
 } */
 
-func (inp itemFrom) pairitem(out1, out2 itemInto) {
+func (inp itemFrom) pair(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -299,25 +305,25 @@ func (inp itemFrom) pairitem(out1, out2 itemInto) {
 	}
 }
 
-// End of itemPair functions
+// End of Pair functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemFork functions
+// Beg of Fork functions
 
-// itemFork returns two channels
+// Fork returns two channels
 // either of which is to receive
 // every result of inp
 // before close.
-func (inp itemFrom) itemFork() (out1, out2 itemFrom) {
+func (inp itemFrom) Fork() (out1, out2 itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.forkitem(cha1, cha2)
+	go inp.fork(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (inp itemFrom) forkitem(out1, out2 itemInto) {
+func ( inp itemFrom ) fork ( out1 , out2 itemInto ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -326,7 +332,7 @@ func (inp itemFrom) forkitem(out1, out2 itemInto) {
 	}
 } */
 
-func (inp itemFrom) forkitem(out1, out2 itemInto) {
+func (inp itemFrom) fork(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -339,24 +345,24 @@ func (inp itemFrom) forkitem(out1, out2 itemInto) {
 	}
 }
 
-// End of itemFork functions
+// End of Fork functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemFanIn2 simple binary Fan-In
+// Beg of FanIn2 simple binary Fan-In
 
-// itemFanIn2 returns a channel to receive
+// FanIn2 returns a channel to receive
 // all from both `inp` and `inp2`
 // before close.
-func (inp itemFrom) itemFanIn2(inp2 itemFrom) (out itemFrom) {
+func (inp itemFrom) FanIn2(inp2 itemFrom) (out itemFrom) {
 	cha := make(chan item)
-	go inp.fanIn2item(cha, inp2)
+	go inp.fanIn2(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (inp itemFrom) fanin2item as seen in Go Concurrency Patterns
-func fanin2item(out itemInto, inp, inp2 itemFrom) {
+// (inp itemFrom) fanin2 as seen in Go Concurrency Patterns
+func fanin2 ( out itemInto , inp , inp2 itemFrom ) {
 	for {
 		select {
 		case e := <-inp:
@@ -367,7 +373,7 @@ func fanin2item(out itemInto, inp, inp2 itemFrom) {
 	}
 } */
 
-func (inp itemFrom) fanIn2item(out itemInto, inp2 itemFrom) {
+func (inp itemFrom) fanIn2(out itemInto, inp2 itemFrom) {
 	defer close(out)
 
 	var (
@@ -400,5 +406,5 @@ func (inp itemFrom) fanIn2item(out itemInto, inp2 itemFrom) {
 	}
 }
 
-// End of itemFanIn2 simple binary Fan-In
+// End of FanIn2 simple binary Fan-In
 // ===========================================================================

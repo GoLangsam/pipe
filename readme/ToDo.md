@@ -2,19 +2,33 @@
 
 ## Consistency:
 
-- pipe/s versus pipe/m - not in m:
+### pipe/s <-> pipe/m
+- not in m:
 	- balance.forever - compare with any/balance
 	- bool (empty!)	- see Partition below
 	- proc	 // TODO: We do not know whether or not proc closed out
 
-- pipe/s versus pipe/m - unintended differences:
+### .generic/internal/ <-> .generic.m/internal/
+- unintended differences: (2020-04-18)
 	- internal/pipe-make: comments differ 
 
-	- internal/strew: comments differ
-	- internal/merge: mergeThing inp-args differ
+### regenerate: expected differences:
+Let A and B be respective compare-pattern (Lines added & Lines removed).
 
-- generic/internal/genny.go versus generic/internal/genny.go
-	- m/sema is not bundled yet!
+Compare-pattern must apply as follows:
+
+A - xxl/internal/01-any-mode.go
+A - xxl/internal/01-any-mode.go.demand
+A - xxl/pipe.go
+
+B - xxs/internal/01-any-mode.go
+A - xxs/internal/01-any-mode.go.supply
+B - xxs/pipe.go
+
+A - xxsl/internal/01-any-demand.go
+B - xxsl/internal/01-any-supply.go
+A+B xxsl/pipe.go
+
 
 ## General: 
 

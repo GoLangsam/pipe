@@ -11,36 +11,36 @@ package rake
 import "sync"
 
 // ===========================================================================
-// Beg of itemPipeSeen/itemForkSeen - an "I've seen this item before" filter / forker
+// Beg of PipeSeen/ForkSeen - an "I've seen this item before" filter / forker
 
-// itemPipeSeen returns a channel to receive
+// PipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: itemPipeFilterNotSeenYet might be a better name, but is fairly long.
-func (inp itemFrom) itemPipeSeen() (out itemFrom) {
+//  Note: PipeFilterNotSeenYet might be a better name, but is fairly long.
+func (inp itemFrom) PipeSeen() (out itemFrom) {
 	cha := make(chan item)
-	go inp.pipeitemSeenAttr(cha, nil)
+	go inp.pipeSeenAttr(cha, nil)
 	return cha
 }
 
-// itemPipeSeenAttr returns a channel to receive
+// PipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: itemPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (inp itemFrom) itemPipeSeenAttr(attr func(a item) interface{}) (out itemFrom) {
+//  Note: PipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func (inp itemFrom) PipeSeenAttr(attr func(a item) interface{}) (out itemFrom) {
 	cha := make(chan item)
-	go inp.pipeitemSeenAttr(cha, attr)
+	go inp.pipeSeenAttr(cha, attr)
 	return cha
 }
 
-// itemForkSeen returns two channels, `new` and `old`,
+// ForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -49,14 +49,14 @@ func (inp itemFrom) itemPipeSeenAttr(attr func(a item) interface{}) (out itemFro
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp itemFrom) itemForkSeen() (new, old itemFrom) {
+func (inp itemFrom) ForkSeen() (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.forkitemSeenAttr(cha1, cha2, nil)
+	go inp.forkSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
-// itemForkSeenAttr returns two channels, `new` and `old`,
+// ForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -66,14 +66,14 @@ func (inp itemFrom) itemForkSeen() (new, old itemFrom) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp itemFrom) itemForkSeenAttr(attr func(a item) interface{}) (new, old itemFrom) {
+func (inp itemFrom) ForkSeenAttr(attr func(a item) interface{}) (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.forkitemSeenAttr(cha1, cha2, attr)
+	go inp.forkSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (inp itemFrom) pipeitemSeenAttr(out itemInto, attr func(a item) interface{}) {
+func (inp itemFrom) pipeSeenAttr(out itemInto, attr func(a item) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -90,7 +90,7 @@ func (inp itemFrom) pipeitemSeenAttr(out itemInto, attr func(a item) interface{}
 	}
 }
 
-func (inp itemFrom) forkitemSeenAttr(new, old itemInto, attr func(a item) interface{}) {
+func (inp itemFrom) forkSeenAttr(new, old itemInto, attr func(a item) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -108,25 +108,25 @@ func (inp itemFrom) forkitemSeenAttr(new, old itemInto, attr func(a item) interf
 	}
 }
 
-// itemTubeSeen returns a closure around itemPipeSeen()
+// TubeSeen returns a closure around PipeSeen()
 // (silently dropping every item seen before).
-func (inp itemFrom) itemTubeSeen() (tube func(inp itemFrom) (out itemFrom)) {
+func (inp itemFrom) TubeSeen() (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeSeen()
+		return inp.PipeSeen()
 	}
 }
 
-// itemTubeSeenAttr returns a closure around itemPipeSeenAttr(attr)
+// TubeSeenAttr returns a closure around PipeSeenAttr(attr)
 // (silently dropping every item
 // whose attribute `attr` was
 // seen before).
-func (inp itemFrom) itemTubeSeenAttr(attr func(a item) interface{}) (tube func(inp itemFrom) (out itemFrom)) {
+func (inp itemFrom) TubeSeenAttr(attr func(a item) interface{}) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeSeenAttr(attr)
+		return inp.PipeSeenAttr(attr)
 	}
 }
 
-// End of itemPipeSeen/itemForkSeen - an "I've seen this item before" filter / forker
+// End of PipeSeen/ForkSeen - an "I've seen this item before" filter / forker
 // ===========================================================================

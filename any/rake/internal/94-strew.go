@@ -11,17 +11,17 @@ package rake
 import "time"
 
 // ===========================================================================
-// Beg of itemStrew - scatter them
+// Beg of Strew - scatter them
 
-// itemStrew returns a slice (of size = size) of channels
+// Strew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (inp itemFrom) itemStrew(size int) (outS []itemFrom) {
+func (inp itemFrom) Strew(size int) (outS []itemFrom) {
 	chaS := make(map[chan item]struct{}, size)
 	for i := 0; i < size; i++ {
 		chaS[make(chan item)] = struct{}{}
 	}
 
-	go inp.strewitem(chaS)
+	go inp.strew(chaS)
 
 	outS = make([]itemFrom, size)
 	i := 0
@@ -33,10 +33,10 @@ func (inp itemFrom) itemStrew(size int) (outS []itemFrom) {
 	return outS
 }
 
-func (inp itemFrom) strewitem(outS map[chan item]struct{}) {
+func (inp itemFrom) strew(outS map[chan item]struct{}) {
 
 	for i := range inp {
-		for !inp.trySenditem(i, outS) {
+		for !inp.trySend(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -46,7 +46,7 @@ func (inp itemFrom) strewitem(outS map[chan item]struct{}) {
 	}
 }
 
-func (static itemFrom) trySenditem(inp item, outS map[chan item]struct{}) bool {
+func (static itemFrom) trySend(inp item, outS map[chan item]struct{}) bool {
 
 	for o := range outS {
 
@@ -61,5 +61,5 @@ func (static itemFrom) trySenditem(inp item, outS map[chan item]struct{}) bool {
 	return false
 }
 
-// End of itemStrew - scatter them
+// End of Strew - scatter them
 // ===========================================================================

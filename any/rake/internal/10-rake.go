@@ -70,11 +70,11 @@ func (my *Rake) init() *Rake {
 	}
 
 	// build the concurrent pipe network
-	items, seen := (itemFrom)(my.items).itemForkSeenAttr(my.attr)
-	_ = seen.itemDoneLeave(my.wg) // `seen` leave without further processing
+	items, seen := (itemFrom)(my.items).ForkSeenAttr(my.attr)
+	_ = seen.DoneLeave(my.wg) // `seen` leave without further processing
 
-	for _, items := range items.itemPipeAdjust().itemStrew(my.many) {
-		_ = items.itemDoneFunc(proc) // strewed `items` leave in wrapped `crawl`
+	for _, items := range items.PipeAdjust().Strew(my.many) {
+		_ = items.Done(proc) // strewed `items` leave in wrapped `crawl`
 	}
 
 	return my
@@ -88,7 +88,7 @@ func (my *Rake) start() {
 }
 
 func (my *Rake) closer() *Rake {
-	my.done <- <-(itemInto)(my.items).itemDoneWait(my.wg)
+	my.done <- <-(itemInto)(my.items).DoneWait(my.wg)
 	close(my.done)
 	return my
 }

@@ -17,42 +17,42 @@ package rake
 
 import "container/ring"
 
-// Note: pipeitemAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
-// Beg of itemPipeAdjust
+// Beg of PipeAdjust
 
-// itemPipeAdjust returns a channel to receive
+// PipeAdjust returns a channel to receive
 // all `inp`
 // buffered by a itemSendProxy process
 // before close.
-func (inp itemFrom) itemPipeAdjust(sizes ...int) (out itemFrom) {
-	cap, que := senditemProxySizes(sizes...)
+func (inp itemFrom) PipeAdjust(sizes ...int) (out itemFrom) {
+	cap, que := sendItemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go inp.pipeitemAdjust(cha, que)
+	go inp.pipeAdjust(cha, que)
 	return cha
 }
 
-// itemTubeAdjust returns a closure around itemPipeAdjust (_, sizes ...int).
-func (inp itemFrom) itemTubeAdjust(sizes ...int) (tube func(inp itemFrom) (out itemFrom)) {
+// TubeAdjust returns a closure around PipeAdjust (_, sizes ...int).
+func (inp itemFrom) TubeAdjust(sizes ...int) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeAdjust(sizes...)
+		return inp.PipeAdjust(sizes...)
 	}
 }
 
-// End of itemPipeAdjust
+// End of PipeAdjust
 // ===========================================================================
 
 // ===========================================================================
-// Beg of senditemProxy
+// Beg of sendItemProxy
 
-func senditemProxySizes(sizes ...int) (cap, que int) {
+func sendItemProxySizes(sizes ...int) (cap, que int) {
 
-	// CAP is the minimum capacity of the buffered proxy channel in `itemSendProxy`
+	// CAP is the minimum capacity of the buffered proxy channel in `ItemSendProxy`
 	const CAP = 10
 
-	// QUE is the minimum initially allocated size of the circular queue in `itemSendProxy`
+	// QUE is the minimum initially allocated size of the circular queue in `ItemSendProxy`
 	const QUE = 16
 
 	cap = CAP
@@ -67,7 +67,7 @@ func senditemProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("itemSendProxy: too many sizes")
+		panic("ItemSendProxy: too many sizes")
 	}
 
 	return
@@ -80,19 +80,19 @@ func senditemProxySizes(sizes ...int) (cap, que int) {
 //
 // Note: itemSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
-// even so it does not fit the pipe tube pattern as itemPipeAdjust does.
+// even so it does not fit the pipe tube pattern as PipeAdjust does.
 func itemSendProxy(out itemInto, sizes ...int) (send itemInto) {
-	cap, que := senditemProxySizes(sizes...)
+	cap, que := sendItemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go (itemFrom)(cha).pipeitemAdjust(out, que)
+	go (itemFrom)(cha).pipeAdjust(out, que)
 	return cha
 }
 
-// pipeitemAdjust uses an adjusting buffer to receive from 'inp'
+// pipeAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (inp itemFrom) pipeitemAdjust(out itemInto, QUE int) {
+func (inp itemFrom) pipeAdjust(out itemInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
@@ -128,5 +128,5 @@ func (inp itemFrom) pipeitemAdjust(out itemInto, QUE int) {
 	}
 }
 
-// End of senditemProxy
+// End of sendItemProxy
 // ===========================================================================

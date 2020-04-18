@@ -80,11 +80,11 @@ func (my *Rake) init() *Rake {
 	}
 
 	// build the concurrent pipe network
-	items, seen := (itemFrom)(my.items).itemForkSeenAttr(my.attr)
-	_ = seen.itemDoneLeave(my.wg) // `seen` leave without further processing
+	items, seen := (itemFrom)(my.items).ForkSeenAttr(my.attr)
+	_ = seen.DoneLeave(my.wg) // `seen` leave without further processing
 
-	for _, items := range items.itemPipeAdjust().itemStrew(my.many) {
-		_ = items.itemDoneFunc(proc) // strewed `items` leave in wrapped `crawl`
+	for _, items := range items.PipeAdjust().Strew(my.many) {
+		_ = items.Done(proc) // strewed `items` leave in wrapped `crawl`
 	}
 
 	return my
@@ -98,7 +98,7 @@ func (my *Rake) start() {
 }
 
 func (my *Rake) closer() *Rake {
-	my.done <- <-(itemInto)(my.items).itemDoneWait(my.wg)
+	my.done <- <-(itemInto)(my.items).DoneWait(my.wg)
 	close(my.done)
 	return my
 }
@@ -177,17 +177,17 @@ type itemInto chan<- item
 
 // itemMakeChan returns a new open channel
 // (simply a 'chan item' that is).
-// Note: No 'item-producer' is launched here yet! (as is in all the other functions).
+// Note: No 'Item-producer' is launched here yet! (as is in all the other functions).
 //  This is useful to easily create corresponding variables such as:
 /*
-var myitemPipelineStartsHere := itemMakeChan()
-// ... lot's of code to design and build Your favourite "myitemWorkflowPipeline"
+var myItemPipelineStartsHere := itemMakeChan ( ) ;
+// ... lot's of code to design and build Your favourite "myItemWorkflowPipeline"
    // ...
    // ... *before* You start pouring data into it, e.g. simply via:
    for drop := range water {
-myitemPipelineStartsHere <- drop
+myItemPipelineStartsHere <- drop ;
    }
-close(myitemPipelineStartsHere)
+close ( myItemPipelineStartsHere ) ;
 */
 //  Hint: especially helpful, if Your piping library operates on some hidden (non-exported) type
 //  (or on a type imported from elsewhere - and You don't want/need or should(!) have to care.)
@@ -209,11 +209,11 @@ func itemMakeChan() (out chan item) {
 // before close.
 func itemChan(inp ...item) (out itemFrom) {
 	cha := make(chan item)
-	go chanitem(cha, inp...)
+	go chanItem(cha, inp...)
 	return cha
 }
 
-func chanitem(out itemInto, inp ...item) {
+func chanItem(out itemInto, inp ...item) {
 	defer close(out)
 	for i := range inp {
 		out <- inp[i]
@@ -225,11 +225,11 @@ func chanitem(out itemInto, inp ...item) {
 // before close.
 func itemChanSlice(inp ...[]item) (out itemFrom) {
 	cha := make(chan item)
-	go chanitemSlice(cha, inp...)
+	go chanItemSlice(cha, inp...)
 	return cha
 }
 
-func chanitemSlice(out itemInto, inp ...[]item) {
+func chanItemSlice(out itemInto, inp ...[]item) {
 	defer close(out)
 	for i := range inp {
 		for j := range inp[i] {
@@ -244,11 +244,11 @@ func chanitemSlice(out itemInto, inp ...[]item) {
 // before close.
 func itemChanFuncNok(gen func() (item, bool)) (out itemFrom) {
 	cha := make(chan item)
-	go chanitemFuncNok(cha, gen)
+	go chanItemFuncNok(cha, gen)
 	return cha
 }
 
-func chanitemFuncNok(out itemInto, gen func() (item, bool)) {
+func chanItemFuncNok(out itemInto, gen func() (item, bool)) {
 	defer close(out)
 	for {
 		res, ok := gen() // generate
@@ -265,11 +265,11 @@ func chanitemFuncNok(out itemInto, gen func() (item, bool)) {
 // before close.
 func itemChanFuncErr(gen func() (item, error)) (out itemFrom) {
 	cha := make(chan item)
-	go chanitemFuncErr(cha, gen)
+	go chanItemFuncErr(cha, gen)
 	return cha
 }
 
-func chanitemFuncErr(out itemInto, gen func() (item, error)) {
+func chanItemFuncErr(out itemInto, gen func() (item, error)) {
 	defer close(out)
 	for {
 		res, err := gen() // generate
@@ -284,79 +284,107 @@ func chanitemFuncErr(out itemInto, gen func() (item, error)) {
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemPipe functions
+// Beg of Pipe functions
 
-// itemPipeFunc returns a channel to receive
+// PipeFunc returns a channel to receive
 // every result of action `act` applied to `inp`
 // before close.
-// Note: it 'could' be itemPipeMap for functional people,
+// Note: it 'could' be PipeMap for functional people,
 // but 'map' has a very different meaning in go lang.
-func (inp itemFrom) itemPipeFunc(act func(a item) item) (out itemFrom) {
+func (inp itemFrom) PipeFunc(act func(a item) item) (out itemFrom) {
 	cha := make(chan item)
 	if act == nil { // Make `nil` value useful
 		act = func(a item) item { return a }
 	}
-	go inp.pipeitemFunc(cha, act)
+	go inp.pipeFunc(cha, act)
 	return cha
 }
 
-func (inp itemFrom) pipeitemFunc(out itemInto, act func(a item) item) {
+func (inp itemFrom) pipeFunc(out itemInto, act func(a item) item) {
 	defer close(out)
 	for i := range inp {
 		out <- act(i) // apply action
 	}
 }
 
-// End of itemPipe functions
+// End of Pipe functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemTube closures around itemPipe
+// Beg of Tube closures around Pipe
 
-// itemTubeFunc returns a closure around PipeItemFunc (_, act).
+// itemTubeFunc returns a closure around PipeFunc (_, act).
 func itemTubeFunc(act func(a item) item) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeFunc(act)
+		return inp.PipeFunc(act)
 	}
 }
 
-// End of itemTube closures around itemPipe
+// End of Tube closures around itemPipe
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemDone terminators
+// Beg of Done terminators
 
-// itemDone returns a channel to receive
+// Done
+// will apply every `op` to every `inp` and
+// returns a channel to receive
 // one signal
-// upon close
-// and after `inp` has been drained.
-func (inp itemFrom) itemDone() (done <-chan struct{}) {
+// upon close.
+func (inp itemFrom) Done(ops ...func(a item)) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneitem(sig)
+	go inp.done(sig, ops...)
 	return sig
 }
 
-func (inp itemFrom) doneitem(done chan<- struct{}) {
+func (inp itemFrom) done(done chan<- struct{}, ops ...func(a item)) {
 	defer close(done)
 	for i := range inp {
-		_ = i // Drain inp
+		for _, op := range ops {
+			if op != nil {
+				op(i) // apply operation
+			}
+		}
 	}
 	done <- struct{}{}
 }
 
-// itemDoneSlice returns a channel to receive
-// a slice with every item received on `inp`
+// DoneFunc
+// will chain every `act` to every `inp` and
+// returns a channel to receive
+// one signal
 // upon close.
-//
-// Note: Unlike itemDone, itemDoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
-func (inp itemFrom) itemDoneSlice() (done <-chan []item) {
-	sig := make(chan []item)
-	go inp.doneitemSlice(sig)
+func (inp itemFrom) DoneFunc(acts ...func(a item) item) (done <-chan struct{}) {
+	sig := make(chan struct{})
+	go inp.doneFunc(sig, acts...)
 	return sig
 }
 
-func (inp itemFrom) doneitemSlice(done chan<- []item) {
+func (inp itemFrom) doneFunc(done chan<- struct{}, acts ...func(a item) item) {
+	defer close(done)
+	for i := range inp {
+		for _, act := range acts {
+			if act != nil {
+				i = act(i) // chain action
+			}
+		}
+	}
+	done <- struct{}{}
+}
+
+// DoneSlice returns a channel to receive
+// a slice with every item received on `inp`
+// upon close.
+//
+//  Note: Unlike Done, DoneSlice sends the fully accumulated slice, not just an event, once upon close of inp.
+func (inp itemFrom) DoneSlice() (done <-chan []item) {
+	sig := make(chan []item)
+	go inp.doneSlice(sig)
+	return sig
+}
+
+func (inp itemFrom) doneSlice(done chan<- []item) {
 	defer close(done)
 	slice := []item{}
 	for i := range inp {
@@ -365,75 +393,53 @@ func (inp itemFrom) doneitemSlice(done chan<- []item) {
 	done <- slice
 }
 
-// itemDoneFunc
-// will apply `act` to every `inp` and
-// returns a channel to receive
-// one signal
-// upon close.
-func (inp itemFrom) itemDoneFunc(act func(a item)) (done <-chan struct{}) {
-	sig := make(chan struct{})
-	if act == nil {
-		act = func(a item) { return }
-	}
-	go inp.doneitemFunc(sig, act)
-	return sig
-}
-
-func (inp itemFrom) doneitemFunc(done chan<- struct{}, act func(a item)) {
-	defer close(done)
-	for i := range inp {
-		act(i) // apply action
-	}
-	done <- struct{}{}
-}
-
-// End of itemDone terminators
+// End of Done terminators
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemFini closures
+// Beg of Fini closures
 
-// itemFini returns a closure around `itemDone()`.
-func (inp itemFrom) itemFini() func(inp itemFrom) (done <-chan struct{}) {
+// Fini returns a closure around `Done(ops...)`.
+func (inp itemFrom) Fini(ops ...func(a item)) func(inp itemFrom) (done <-chan struct{}) {
 
 	return func(inp itemFrom) (done <-chan struct{}) {
-		return inp.itemDone()
+		return inp.Done(ops...)
 	}
 }
 
-// itemFiniSlice returns a closure around `itemDoneSlice()`.
-func (inp itemFrom) itemFiniSlice() func(inp itemFrom) (done <-chan []item) {
+// FiniFunc returns a closure around `DoneFunc(acts...)`.
+func (inp itemFrom) FiniFunc(acts ...func(a item) item) func(inp itemFrom) (done <-chan struct{}) {
+
+	return func(inp itemFrom) (done <-chan struct{}) {
+		return inp.DoneFunc(acts...)
+	}
+}
+
+// FiniSlice returns a closure around `DoneSlice()`.
+func (inp itemFrom) FiniSlice() func(inp itemFrom) (done <-chan []item) {
 
 	return func(inp itemFrom) (done <-chan []item) {
-		return inp.itemDoneSlice()
+		return inp.DoneSlice()
 	}
 }
 
-// itemFiniFunc returns a closure around `itemDoneFunc(act)`.
-func (inp itemFrom) itemFiniFunc(act func(a item)) func(inp itemFrom) (done <-chan struct{}) {
-
-	return func(inp itemFrom) (done <-chan struct{}) {
-		return inp.itemDoneFunc(act)
-	}
-}
-
-// End of itemFini closures
+// End of Fini closures
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemPair functions
+// Beg of Pair functions
 
-// itemPair returns a pair of channels to receive every result of inp before close.
+// Pair returns a pair of channels to receive every result of inp before close.
 //  Note: Yes, it is a VERY simple fanout - but sometimes all You need.
-func (inp itemFrom) itemPair() (out1, out2 itemFrom) {
+func (inp itemFrom) Pair() (out1, out2 itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.pairitem(cha1, cha2)
+	go inp.pair(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (inp itemFrom) pairitem(out1, out2 itemInto, inp itemFrom) {
+func ( inp itemFrom ) pair ( out1 , out2 itemInto , inp itemFrom ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -442,7 +448,7 @@ func (inp itemFrom) pairitem(out1, out2 itemInto, inp itemFrom) {
 	}
 } */
 
-func (inp itemFrom) pairitem(out1, out2 itemInto) {
+func (inp itemFrom) pair(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -455,25 +461,25 @@ func (inp itemFrom) pairitem(out1, out2 itemInto) {
 	}
 }
 
-// End of itemPair functions
+// End of Pair functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemFork functions
+// Beg of Fork functions
 
-// itemFork returns two channels
+// Fork returns two channels
 // either of which is to receive
 // every result of inp
 // before close.
-func (inp itemFrom) itemFork() (out1, out2 itemFrom) {
+func (inp itemFrom) Fork() (out1, out2 itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.forkitem(cha1, cha2)
+	go inp.fork(cha1, cha2)
 	return cha1, cha2
 }
 
 /* not used - kept for reference only.
-func (inp itemFrom) forkitem(out1, out2 itemInto) {
+func ( inp itemFrom ) fork ( out1 , out2 itemInto ) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -482,7 +488,7 @@ func (inp itemFrom) forkitem(out1, out2 itemInto) {
 	}
 } */
 
-func (inp itemFrom) forkitem(out1, out2 itemInto) {
+func (inp itemFrom) fork(out1, out2 itemInto) {
 	defer close(out1)
 	defer close(out2)
 	for i := range inp {
@@ -495,24 +501,24 @@ func (inp itemFrom) forkitem(out1, out2 itemInto) {
 	}
 }
 
-// End of itemFork functions
+// End of Fork functions
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemFanIn2 simple binary Fan-In
+// Beg of FanIn2 simple binary Fan-In
 
-// itemFanIn2 returns a channel to receive
+// FanIn2 returns a channel to receive
 // all from both `inp` and `inp2`
 // before close.
-func (inp itemFrom) itemFanIn2(inp2 itemFrom) (out itemFrom) {
+func (inp itemFrom) FanIn2(inp2 itemFrom) (out itemFrom) {
 	cha := make(chan item)
-	go inp.fanIn2item(cha, inp2)
+	go inp.fanIn2(cha, inp2)
 	return cha
 }
 
 /* not used - kept for reference only.
-// (inp itemFrom) fanin2item as seen in Go Concurrency Patterns
-func fanin2item(out itemInto, inp, inp2 itemFrom) {
+// (inp itemFrom) fanin2 as seen in Go Concurrency Patterns
+func fanin2 ( out itemInto , inp , inp2 itemFrom ) {
 	for {
 		select {
 		case e := <-inp:
@@ -523,7 +529,7 @@ func fanin2item(out itemInto, inp, inp2 itemFrom) {
 	}
 } */
 
-func (inp itemFrom) fanIn2item(out itemInto, inp2 itemFrom) {
+func (inp itemFrom) fanIn2(out itemInto, inp2 itemFrom) {
 	defer close(out)
 
 	var (
@@ -556,45 +562,45 @@ func (inp itemFrom) fanIn2item(out itemInto, inp2 itemFrom) {
 	}
 }
 
-// End of itemFanIn2 simple binary Fan-In
+// End of FanIn2 simple binary Fan-In
 // ===========================================================================
 
-// Note: pipeitemAdjust imports "container/ring" for the expanding buffer.
+// Note: pipeAdjust imports "container/ring" for the expanding buffer.
 
 // ===========================================================================
-// Beg of itemPipeAdjust
+// Beg of PipeAdjust
 
-// itemPipeAdjust returns a channel to receive
+// PipeAdjust returns a channel to receive
 // all `inp`
 // buffered by a itemSendProxy process
 // before close.
-func (inp itemFrom) itemPipeAdjust(sizes ...int) (out itemFrom) {
-	cap, que := senditemProxySizes(sizes...)
+func (inp itemFrom) PipeAdjust(sizes ...int) (out itemFrom) {
+	cap, que := sendItemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go inp.pipeitemAdjust(cha, que)
+	go inp.pipeAdjust(cha, que)
 	return cha
 }
 
-// itemTubeAdjust returns a closure around itemPipeAdjust (_, sizes ...int).
-func (inp itemFrom) itemTubeAdjust(sizes ...int) (tube func(inp itemFrom) (out itemFrom)) {
+// TubeAdjust returns a closure around PipeAdjust (_, sizes ...int).
+func (inp itemFrom) TubeAdjust(sizes ...int) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeAdjust(sizes...)
+		return inp.PipeAdjust(sizes...)
 	}
 }
 
-// End of itemPipeAdjust
+// End of PipeAdjust
 // ===========================================================================
 
 // ===========================================================================
-// Beg of senditemProxy
+// Beg of sendItemProxy
 
-func senditemProxySizes(sizes ...int) (cap, que int) {
+func sendItemProxySizes(sizes ...int) (cap, que int) {
 
-	// CAP is the minimum capacity of the buffered proxy channel in `itemSendProxy`
+	// CAP is the minimum capacity of the buffered proxy channel in `ItemSendProxy`
 	const CAP = 10
 
-	// QUE is the minimum initially allocated size of the circular queue in `itemSendProxy`
+	// QUE is the minimum initially allocated size of the circular queue in `ItemSendProxy`
 	const QUE = 16
 
 	cap = CAP
@@ -609,7 +615,7 @@ func senditemProxySizes(sizes ...int) (cap, que int) {
 	}
 
 	if len(sizes) > 2 {
-		panic("itemSendProxy: too many sizes")
+		panic("ItemSendProxy: too many sizes")
 	}
 
 	return
@@ -622,19 +628,19 @@ func senditemProxySizes(sizes ...int) (cap, que int) {
 //
 // Note: itemSendProxy is kept for the Sieve example
 // and other dynamic use to be discovered
-// even so it does not fit the pipe tube pattern as itemPipeAdjust does.
+// even so it does not fit the pipe tube pattern as PipeAdjust does.
 func itemSendProxy(out itemInto, sizes ...int) (send itemInto) {
-	cap, que := senditemProxySizes(sizes...)
+	cap, que := sendItemProxySizes(sizes...)
 	cha := make(chan item, cap)
-	go (itemFrom)(cha).pipeitemAdjust(out, que)
+	go (itemFrom)(cha).pipeAdjust(out, que)
 	return cha
 }
 
-// pipeitemAdjust uses an adjusting buffer to receive from 'inp'
+// pipeAdjust uses an adjusting buffer to receive from 'inp'
 // even so 'out' is not ready to receive yet. The buffer may grow
 // until 'inp' is closed and then will shrink by every send to 'out'.
 //  Note: the adjusting buffer is implemented via "container/ring"
-func (inp itemFrom) pipeitemAdjust(out itemInto, QUE int) {
+func (inp itemFrom) pipeAdjust(out itemInto, QUE int) {
 	defer close(out)
 	n := QUE // the allocated size of the circular queue
 	first := ring.New(n)
@@ -670,22 +676,22 @@ func (inp itemFrom) pipeitemAdjust(out itemInto, QUE int) {
 	}
 }
 
-// End of senditemProxy
+// End of sendItemProxy
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemPipeEnter/Leave - Flapdoors observed by a Waiter
+// Beg of PipeEnter/Leave - Flapdoors observed by a Waiter
 
 // itemWaiter - as implemented by `*sync.WaitGroup` -
 // attends Flapdoors and keeps counting
 // who enters and who leaves.
 //
-// Use itemDoneWait to learn about
+// Use DoneWait to learn about
 // when the facilities are closed.
 //
 // Note: You may also use Your provided `*sync.WaitGroup.Wait()`
 // to know when to close the facilities.
-// Just: itemDoneWait is more convenient
+// Just: DoneWait is more convenient
 // as it also closes the primary channel for You.
 //
 // Just make sure to have _all_ entrances and exits attended,
@@ -698,44 +704,44 @@ type itemWaiter interface {
 
 // Note: The name is intentionally generic in order to avoid eventual multiple-declaration clashes.
 
-// itemPipeEnter returns a channel to receive
+// PipeEnter returns a channel to receive
 // all `inp`
 // and registers throughput
 // as arrival
 // on the given `sync.WaitGroup`
 // until close.
-func (inp itemFrom) itemPipeEnter(wg itemWaiter) (out itemFrom) {
+func (inp itemFrom) PipeEnter(wg itemWaiter) (out itemFrom) {
 	cha := make(chan item)
-	go inp.pipeitemEnter(cha, wg)
+	go inp.pipeEnter(cha, wg)
 	return cha
 }
 
-// itemPipeLeave returns a channel to receive
+// PipeLeave returns a channel to receive
 // all `inp`
 // and registers throughput
 // as departure
 // on the given `sync.WaitGroup`
 // until close.
-func (inp itemFrom) itemPipeLeave(wg itemWaiter) (out itemFrom) {
+func (inp itemFrom) PipeLeave(wg itemWaiter) (out itemFrom) {
 	cha := make(chan item)
-	go inp.pipeitemLeave(cha, wg)
+	go inp.pipeLeave(cha, wg)
 	return cha
 }
 
-// itemDoneLeave returns a channel to receive
+// DoneLeave returns a channel to receive
 // one signal after
 // all throughput on `inp`
 // has been registered
 // as departure
 // on the given `sync.WaitGroup`
 // before close.
-func (inp itemFrom) itemDoneLeave(wg itemWaiter) (done <-chan struct{}) {
+func (inp itemFrom) DoneLeave(wg itemWaiter) (done <-chan struct{}) {
 	sig := make(chan struct{})
-	go inp.doneitemLeave(sig, wg)
+	go inp.doneLeave(sig, wg)
 	return sig
 }
 
-func (inp itemFrom) pipeitemEnter(out itemInto, wg itemWaiter) {
+func (inp itemFrom) pipeEnter(out itemInto, wg itemWaiter) {
 	defer close(out)
 	for i := range inp {
 		wg.Add(1)
@@ -743,7 +749,7 @@ func (inp itemFrom) pipeitemEnter(out itemInto, wg itemWaiter) {
 	}
 }
 
-func (inp itemFrom) pipeitemLeave(out itemInto, wg itemWaiter) {
+func (inp itemFrom) pipeLeave(out itemInto, wg itemWaiter) {
 	defer close(out)
 	for i := range inp {
 		out <- i
@@ -751,7 +757,7 @@ func (inp itemFrom) pipeitemLeave(out itemInto, wg itemWaiter) {
 	}
 }
 
-func (inp itemFrom) doneitemLeave(done chan<- struct{}, wg itemWaiter) {
+func (inp itemFrom) doneLeave(done chan<- struct{}, wg itemWaiter) {
 	defer close(done)
 	for i := range inp {
 		_ = i // discard
@@ -760,81 +766,81 @@ func (inp itemFrom) doneitemLeave(done chan<- struct{}, wg itemWaiter) {
 	done <- struct{}{}
 }
 
-// itemTubeEnter returns a closure around itemPipeEnter (wg)
+// TubeEnter returns a closure around PipeEnter (wg)
 // registering throughput
 // as arrival
 // on the given `sync.WaitGroup`.
-func (inp itemFrom) itemTubeEnter(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
+func (inp itemFrom) TubeEnter(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeEnter(wg)
+		return inp.PipeEnter(wg)
 	}
 }
 
-// itemTubeLeave returns a closure around itemPipeLeave (wg)
+// TubeLeave returns a closure around PipeLeave (wg)
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (inp itemFrom) itemTubeLeave(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
+func (inp itemFrom) TubeLeave(wg itemWaiter) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeLeave(wg)
+		return inp.PipeLeave(wg)
 	}
 }
 
-// itemFiniLeave returns a closure around `itemDoneLeave(wg)`
+// FiniLeave returns a closure around `DoneLeave(wg)`
 // registering throughput
 // as departure
 // on the given `sync.WaitGroup`.
-func (inp itemFrom) itemFiniLeave(wg itemWaiter) func(inp itemFrom) (done <-chan struct{}) {
+func (inp itemFrom) FiniLeave(wg itemWaiter) func(inp itemFrom) (done <-chan struct{}) {
 
 	return func(inp itemFrom) (done <-chan struct{}) {
-		return inp.itemDoneLeave(wg)
+		return inp.DoneLeave(wg)
 	}
 }
 
-// itemDoneWait returns a channel to receive
+// DoneWait returns a channel to receive
 // one signal
 // after wg.Wait() has returned and out has been closed
 // before close.
 //
 // Note: Use only *after* You've started flooding the facilities.
-func (out itemInto) itemDoneWait(wg itemWaiter) (done <-chan struct{}) {
+func (out itemInto) DoneWait(wg itemWaiter) (done <-chan struct{}) {
 	cha := make(chan struct{})
-	go out.doneitemWait(cha, wg)
+	go out.doneWait(cha, wg)
 	return cha
 }
 
-func (out itemInto) doneitemWait(done chan<- struct{}, wg itemWaiter) {
+func (out itemInto) doneWait(done chan<- struct{}, wg itemWaiter) {
 	defer close(done)
 	wg.Wait()
 	close(out)
 	done <- struct{}{} // not really needed - but looks better
 }
 
-// itemFiniWait returns a closure around `itemDoneWait(wg)`.
-func (out itemInto) itemFiniWait(wg itemWaiter) func(out itemInto) (done <-chan struct{}) {
+// FiniWait returns a closure around `DoneWait(wg)`.
+func (out itemInto) FiniWait(wg itemWaiter) func(out itemInto) (done <-chan struct{}) {
 
 	return func(out itemInto) (done <-chan struct{}) {
-		return out.itemDoneWait(wg)
+		return out.DoneWait(wg)
 	}
 }
 
-// End of itemPipeEnter/Leave - Flapdoors observed by a Waiter
+// End of PipeEnter/Leave - Flapdoors observed by a Waiter
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemStrew - scatter them
+// Beg of Strew - scatter them
 
-// itemStrew returns a slice (of size = size) of channels
+// Strew returns a slice (of size = size) of channels
 // one of which shall receive each inp before close.
-func (inp itemFrom) itemStrew(size int) (outS []itemFrom) {
+func (inp itemFrom) Strew(size int) (outS []itemFrom) {
 	chaS := make(map[chan item]struct{}, size)
 	for i := 0; i < size; i++ {
 		chaS[make(chan item)] = struct{}{}
 	}
 
-	go inp.strewitem(chaS)
+	go inp.strew(chaS)
 
 	outS = make([]itemFrom, size)
 	i := 0
@@ -846,10 +852,10 @@ func (inp itemFrom) itemStrew(size int) (outS []itemFrom) {
 	return outS
 }
 
-func (inp itemFrom) strewitem(outS map[chan item]struct{}) {
+func (inp itemFrom) strew(outS map[chan item]struct{}) {
 
 	for i := range inp {
-		for !inp.trySenditem(i, outS) {
+		for !inp.trySend(i, outS) {
 			time.Sleep(time.Millisecond * 10) // wait a little before retry
 		} // !sent
 	} // inp
@@ -859,7 +865,7 @@ func (inp itemFrom) strewitem(outS map[chan item]struct{}) {
 	}
 }
 
-func (static itemFrom) trySenditem(inp item, outS map[chan item]struct{}) bool {
+func (static itemFrom) trySend(inp item, outS map[chan item]struct{}) bool {
 
 	for o := range outS {
 
@@ -874,40 +880,40 @@ func (static itemFrom) trySenditem(inp item, outS map[chan item]struct{}) bool {
 	return false
 }
 
-// End of itemStrew - scatter them
+// End of Strew - scatter them
 // ===========================================================================
 
 // ===========================================================================
-// Beg of itemPipeSeen/itemForkSeen - an "I've seen this item before" filter / forker
+// Beg of PipeSeen/ForkSeen - an "I've seen this item before" filter / forker
 
-// itemPipeSeen returns a channel to receive
+// PipeSeen returns a channel to receive
 // all `inp`
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: itemPipeFilterNotSeenYet might be a better name, but is fairly long.
-func (inp itemFrom) itemPipeSeen() (out itemFrom) {
+//  Note: PipeFilterNotSeenYet might be a better name, but is fairly long.
+func (inp itemFrom) PipeSeen() (out itemFrom) {
 	cha := make(chan item)
-	go inp.pipeitemSeenAttr(cha, nil)
+	go inp.pipeSeenAttr(cha, nil)
 	return cha
 }
 
-// itemPipeSeenAttr returns a channel to receive
+// PipeSeenAttr returns a channel to receive
 // all `inp`
 // whose attribute `attr` has
 // not been seen before
 // while silently dropping everything seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-// Note: itemPipeFilterAttrNotSeenYet might be a better name, but is fairly long.
-func (inp itemFrom) itemPipeSeenAttr(attr func(a item) interface{}) (out itemFrom) {
+//  Note: PipeFilterAttrNotSeenYet might be a better name, but is fairly long.
+func (inp itemFrom) PipeSeenAttr(attr func(a item) interface{}) (out itemFrom) {
 	cha := make(chan item)
-	go inp.pipeitemSeenAttr(cha, attr)
+	go inp.pipeSeenAttr(cha, attr)
 	return cha
 }
 
-// itemForkSeen returns two channels, `new` and `old`,
+// ForkSeen returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // not been seen before
@@ -916,14 +922,14 @@ func (inp itemFrom) itemPipeSeenAttr(attr func(a item) interface{}) (out itemFro
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp itemFrom) itemForkSeen() (new, old itemFrom) {
+func (inp itemFrom) ForkSeen() (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.forkitemSeenAttr(cha1, cha2, nil)
+	go inp.forkSeenAttr(cha1, cha2, nil)
 	return cha1, cha2
 }
 
-// itemForkSeenAttr returns two channels, `new` and `old`,
+// ForkSeenAttr returns two channels, `new` and `old`,
 // where `new` is to receive
 // all `inp`
 // whose attribute `attr` has
@@ -933,14 +939,14 @@ func (inp itemFrom) itemForkSeen() (new, old itemFrom) {
 // seen before
 // (internally growing a `sync.Map` to discriminate)
 // until close.
-func (inp itemFrom) itemForkSeenAttr(attr func(a item) interface{}) (new, old itemFrom) {
+func (inp itemFrom) ForkSeenAttr(attr func(a item) interface{}) (new, old itemFrom) {
 	cha1 := make(chan item)
 	cha2 := make(chan item)
-	go inp.forkitemSeenAttr(cha1, cha2, attr)
+	go inp.forkSeenAttr(cha1, cha2, attr)
 	return cha1, cha2
 }
 
-func (inp itemFrom) pipeitemSeenAttr(out itemInto, attr func(a item) interface{}) {
+func (inp itemFrom) pipeSeenAttr(out itemInto, attr func(a item) interface{}) {
 	defer close(out)
 
 	if attr == nil { // Make `nil` value useful
@@ -957,7 +963,7 @@ func (inp itemFrom) pipeitemSeenAttr(out itemInto, attr func(a item) interface{}
 	}
 }
 
-func (inp itemFrom) forkitemSeenAttr(new, old itemInto, attr func(a item) interface{}) {
+func (inp itemFrom) forkSeenAttr(new, old itemInto, attr func(a item) interface{}) {
 	defer close(new)
 	defer close(old)
 
@@ -975,25 +981,25 @@ func (inp itemFrom) forkitemSeenAttr(new, old itemInto, attr func(a item) interf
 	}
 }
 
-// itemTubeSeen returns a closure around itemPipeSeen()
+// TubeSeen returns a closure around PipeSeen()
 // (silently dropping every item seen before).
-func (inp itemFrom) itemTubeSeen() (tube func(inp itemFrom) (out itemFrom)) {
+func (inp itemFrom) TubeSeen() (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeSeen()
+		return inp.PipeSeen()
 	}
 }
 
-// itemTubeSeenAttr returns a closure around itemPipeSeenAttr(attr)
+// TubeSeenAttr returns a closure around PipeSeenAttr(attr)
 // (silently dropping every item
 // whose attribute `attr` was
 // seen before).
-func (inp itemFrom) itemTubeSeenAttr(attr func(a item) interface{}) (tube func(inp itemFrom) (out itemFrom)) {
+func (inp itemFrom) TubeSeenAttr(attr func(a item) interface{}) (tube func(inp itemFrom) (out itemFrom)) {
 
 	return func(inp itemFrom) (out itemFrom) {
-		return inp.itemPipeSeenAttr(attr)
+		return inp.PipeSeenAttr(attr)
 	}
 }
 
-// End of itemPipeSeen/itemForkSeen - an "I've seen this item before" filter / forker
+// End of PipeSeen/ForkSeen - an "I've seen this item before" filter / forker
 // ===========================================================================
