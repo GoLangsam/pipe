@@ -5,6 +5,7 @@ A pipers bag - generic functions to gain concurrency - batteries included :-)
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoLangsam/pipe)](https://goreportcard.com/report/github.com/GoLangsam/pipe)
 [![Build Status](https://travis-ci.org/GoLangsam/pipe.svg?branch=master)](https://travis-ci.org/GoLangsam/pipe)
 [![GoDoc](https://godoc.org/github.com/GoLangsam/pipe?status.svg)](https://godoc.org/github.com/GoLangsam/pipe)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FGoLangsam%2Fpipe.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FGoLangsam%2Fpipe?ref=badge_shield)
 
 `pipe/s` - an extensive and systematic ensemble of [concurrency](readme/adverts.md)-based mechanisms
 
@@ -46,3 +47,6 @@ Your suggestions, remarks, questions and/or contributions are welcome ;-)
 Hey dude! Help me out for a couple of :beers:!
 
 [![Beerpay](https://beerpay.io/GoLangsam/pipe/badge.svg?style=beer-square)](https://beerpay.io/GoLangsam/pipe)  [![Beerpay](https://beerpay.io/GoLangsam/pipe/make-wish.svg?style=flat-square)](https://beerpay.io/GoLangsam/pipe?focus=wish)
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FGoLangsam%2Fpipe.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FGoLangsam%2Fpipe?ref=badge_large)
